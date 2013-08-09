@@ -79,6 +79,7 @@ func TestStatsite_Conn(t *testing.T) {
 			t.Fatalf("bad line %s", line)
 		}
 
+		conn.Close()
 		done <- true
 	}()
 	s, err := NewStatsiteSink(addr)
@@ -93,7 +94,8 @@ func TestStatsite_Conn(t *testing.T) {
 
 	select {
 	case <-done:
-	case <-time.After(time.Second):
+		s.Shutdown()
+	case <-time.After(3 * time.Second):
 		t.Fatalf("timeout")
 	}
 }

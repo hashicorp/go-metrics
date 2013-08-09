@@ -98,8 +98,8 @@ func (m *Metrics) emitRuntimeStats() {
 		m.lastNumGC = num - 255
 	}
 
-	for i := m.lastNumGC; i <= num; i++ {
-		pause := stats.PauseNs[(i+255)%256]
+	for i := m.lastNumGC; i < num; i++ {
+		pause := stats.PauseNs[i%256]
 		m.AddSample([]string{"runtime", "gc_pause_ns"}, float32(pause))
 	}
 	m.lastNumGC = num
