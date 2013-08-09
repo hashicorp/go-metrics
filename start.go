@@ -9,6 +9,7 @@ import (
 // Config is used to configure metrics settings
 type Config struct {
 	ServiceName          string        // Prefixed with keys to seperate services
+	HostName             string        // Hostname to use. If not provided and EnableHostname, it will be os.Hostname
 	EnableHostname       bool          // Enable prefixing gauge values with hostname
 	EnableRuntimeMetrics bool          // Enables profiling of runtime metrics (GC, Goroutines, Memory)
 	EnableTypePrefix     bool          // Prefixes key with a type ("counter", "gauge", "timer")
@@ -20,7 +21,6 @@ type Config struct {
 // be used to emit
 type Metrics struct {
 	Config
-	hostName  string
 	lastNumGC uint32
 	sink      MetricSink
 }
@@ -35,31 +35,26 @@ func init() {
 
 // DefaultConfig provides a sane default configuration
 func DefaultConfig(serviceName string) *Config {
-	return &Config{
-		serviceName,      // Use client provided service
+	c := &Config{
+		serviceName, // Use client provided service
+		"",
 		true,             // Enable hostname prefix
 		true,             // Enable runtime profiling
 		true,             // Enable type prefix
 		time.Millisecond, // Timers are in milliseconds
 		time.Second,      // Poll runtime every second
 	}
+
+	// Try to get the hostname
+	name, _ := os.Hostname()
+	c.HostName = name
+	return c
 }
 
-// New is used to create a new instance of Metrics. It takes a
-// service name which is prefixed to all keys (unless blank), a
-// bool to enableHostname when emiting gauges, and a sink implementation.
+// New is used to create a new instance of Metrics
 func New(conf *Config, sink MetricSink) (*Metrics, error) {
 	met := &Metrics{}
 	met.Config = *conf
-
-	// Get the hostname
-	if conf.EnableHostname {
-		hostName, err := os.Hostname()
-		if err != nil {
-			return nil, fmt.Errorf("Failed to get hostname! Got: %s", err)
-		}
-		met.hostName = hostName
-	}
 
 	// Start the runtime collector
 	if conf.EnableRuntimeMetrics {

@@ -6,11 +6,14 @@ import (
 )
 
 func (m *Metrics) SetGauge(key []string, val float32) {
-	if m.EnableHostname {
-		key = insert(0, m.hostName, key)
+	if m.HostName != "" {
+		key = insert(0, m.HostName, key)
 	}
 	if m.EnableTypePrefix {
 		key = insert(0, "gauge", key)
+	}
+	if m.ServiceName != "" {
+		key = insert(0, m.ServiceName, key)
 	}
 	m.sink.SetGauge(key, val)
 }
@@ -19,12 +22,18 @@ func (m *Metrics) EmitKey(key []string, val float32) {
 	if m.EnableTypePrefix {
 		key = insert(0, "kv", key)
 	}
+	if m.ServiceName != "" {
+		key = insert(0, m.ServiceName, key)
+	}
 	m.sink.EmitKey(key, val)
 }
 
 func (m *Metrics) IncrCounter(key []string, val float32) {
 	if m.EnableTypePrefix {
 		key = insert(0, "counter", key)
+	}
+	if m.ServiceName != "" {
+		key = insert(0, m.ServiceName, key)
 	}
 	m.sink.IncrCounter(key, val)
 }
@@ -33,12 +42,18 @@ func (m *Metrics) AddSample(key []string, val float32) {
 	if m.EnableTypePrefix {
 		key = insert(0, "sample", key)
 	}
+	if m.ServiceName != "" {
+		key = insert(0, m.ServiceName, key)
+	}
 	m.sink.AddSample(key, val)
 }
 
 func (m *Metrics) MeasureSince(key []string, start time.Time) {
 	if m.EnableTypePrefix {
 		key = insert(0, "timer", key)
+	}
+	if m.ServiceName != "" {
+		key = insert(0, m.ServiceName, key)
 	}
 	now := time.Now()
 	elapsed := now.Sub(start)
