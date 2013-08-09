@@ -1,13 +1,18 @@
 go-metrics
 ==========
 
-This library provides the `metrics` package which can be used to instrument code and
-expose application and runtime metrics in a flexible manner.
+This library provides a `metrics` package which can be used to instrument code,
+expose application metrics, and profile runtime performance in a flexible manner.
 
-The `metrics` package exposes a few methods to emit stats which are delivered to a
-configurable backends. Currently the following backends are supported:
+Sinks
+=====
 
-* Statsite / Statsd
+The `metrics` package makes use of a `MetricSink` interface to support delivery
+to any type of backend. Currently the following sinks are provided:
+
+* StatsiteSink : Sinks to a statsite or statsd instance
+* FanoutSink : Sinks to multiple sinks. Enables writing to multiple statsite instances for example.
+* BlackholeSink : Sinks to nowhere
 
 Examples
 ========
