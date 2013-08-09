@@ -8,12 +8,12 @@ import (
 
 // Config is used to configure metrics settings
 type Config struct {
-	serviceName          string        // Prefixed with keys to seperate services
-	enableHostname       bool          // Enable prefixing gauge values with hostname
-	enableRuntimeMetrics bool          // Enables profiling of runtime metrics (GC, Goroutines, Memory)
-	enableTypePrefix     bool          // Prefixes key with a type ("counter", "gauge", "timer")
-	timerGranularity     time.Duration // Granularity of timers.
-	profileInterval      time.Duration // Interval to profile runtime metrics
+	ServiceName          string        // Prefixed with keys to seperate services
+	EnableHostname       bool          // Enable prefixing gauge values with hostname
+	EnableRuntimeMetrics bool          // Enables profiling of runtime metrics (GC, Goroutines, Memory)
+	EnableTypePrefix     bool          // Prefixes key with a type ("counter", "gauge", "timer")
+	TimerGranularity     time.Duration // Granularity of timers.
+	ProfileInterval      time.Duration // Interval to profile runtime metrics
 }
 
 // Metrics represents an instance of a metrics sink that can
@@ -53,7 +53,7 @@ func New(conf *Config, sink MetricSink) (*Metrics, error) {
 	met.Config = *conf
 
 	// Get the hostname
-	if conf.enableHostname {
+	if conf.EnableHostname {
 		hostName, err := os.Hostname()
 		if err != nil {
 			return nil, fmt.Errorf("Failed to get hostname! Got: %s", err)
@@ -62,7 +62,7 @@ func New(conf *Config, sink MetricSink) (*Metrics, error) {
 	}
 
 	// Start the runtime collector
-	if conf.enableRuntimeMetrics {
+	if conf.EnableRuntimeMetrics {
 		go met.collectStats()
 	}
 	return met, nil

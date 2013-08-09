@@ -6,50 +6,50 @@ import (
 )
 
 func (m *Metrics) SetGauge(key []string, val float32) {
-	if m.enableHostname {
+	if m.EnableHostname {
 		key = insert(0, m.hostName, key)
 	}
-	if m.enableTypePrefix {
+	if m.EnableTypePrefix {
 		key = insert(0, "gauge", key)
 	}
 	m.sink.SetGauge(key, val)
 }
 
 func (m *Metrics) EmitKey(key []string, val float32) {
-	if m.enableTypePrefix {
+	if m.EnableTypePrefix {
 		key = insert(0, "kv", key)
 	}
 	m.sink.EmitKey(key, val)
 }
 
 func (m *Metrics) IncrCounter(key []string, val float32) {
-	if m.enableTypePrefix {
+	if m.EnableTypePrefix {
 		key = insert(0, "counter", key)
 	}
 	m.sink.IncrCounter(key, val)
 }
 
 func (m *Metrics) AddSample(key []string, val float32) {
-	if m.enableTypePrefix {
+	if m.EnableTypePrefix {
 		key = insert(0, "sample", key)
 	}
 	m.sink.AddSample(key, val)
 }
 
 func (m *Metrics) MeasureSince(key []string, start time.Time) {
-	if m.enableTypePrefix {
+	if m.EnableTypePrefix {
 		key = insert(0, "timer", key)
 	}
 	now := time.Now()
 	elapsed := now.Sub(start)
-	msec := float32(elapsed.Nanoseconds()) / float32(m.timerGranularity)
+	msec := float32(elapsed.Nanoseconds()) / float32(m.TimerGranularity)
 	m.sink.AddSample(key, msec)
 }
 
 // Periodically collects runtime stats to publish
 func (m *Metrics) collectStats() {
 	for {
-		time.Sleep(m.profileInterval)
+		time.Sleep(m.ProfileInterval)
 		m.emitRuntimeStats()
 	}
 }
