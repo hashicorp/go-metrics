@@ -23,3 +23,30 @@ func (*BlackholeSink) SetGauge(key []string, val float32)    {}
 func (*BlackholeSink) EmitKey(key []string, val float32)     {}
 func (*BlackholeSink) IncrCounter(key []string, val float32) {}
 func (*BlackholeSink) AddSample(key []string, val float32)   {}
+
+// FanoutSink is used to sink to fanout values to multiple sinks
+type FanoutSink []MetricSink
+
+func (fh FanoutSink) SetGauge(key []string, val float32) {
+	for _, s := range fh {
+		s.SetGauge(key, val)
+	}
+}
+
+func (fh FanoutSink) EmitKey(key []string, val float32) {
+	for _, s := range fh {
+		s.EmitKey(key, val)
+	}
+}
+
+func (fh FanoutSink) IncrCounter(key []string, val float32) {
+	for _, s := range fh {
+		s.IncrCounter(key, val)
+	}
+}
+
+func (fh FanoutSink) AddSample(key []string, val float32) {
+	for _, s := range fh {
+		s.AddSample(key, val)
+	}
+}
