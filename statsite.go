@@ -65,6 +65,7 @@ func (s *StatsiteSink) pushMetric(m string) {
 func (s *StatsiteSink) flushMetrics() {
 	var sock net.Conn
 	var err error
+	var wait <-chan time.Time
 
 CONNECT:
 	// Attempt to connect
@@ -78,8 +79,7 @@ CONNECT:
 		// Get a metric from the queue
 		metric, ok := <-s.metricQueue
 		if !ok {
-			s.metricQueue = nil
-			return
+			goto QUIT
 		}
 
 		// Try to send to statsite
@@ -92,13 +92,18 @@ CONNECT:
 
 WAIT:
 	// Wait for a while
-	wait := time.After(time.Duration(5) * time.Second)
+	wait = time.After(time.Duration(5) * time.Second)
 	for {
 		select {
-		case <-s.metricQueue:
-			// Dequeue the messages to avoid backlog
+		// Dequeue the messages to avoid backlog
+		case _, ok := <-s.metricQueue:
+			if !ok {
+				goto QUIT
+			}
 		case <-wait:
 			goto CONNECT
 		}
 	}
+QUIT:
+	s.metricQueue = nil
 }
