@@ -47,9 +47,10 @@ func (s *StatsiteSink) AddSample(key []string, val float32) {
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
 
-// Flattens the key for formatting
+// Flattens the key for formatting, removes spaces
 func (s *StatsiteSink) flattenKey(parts []string) string {
-	return strings.Join(parts, ".")
+	joined := strings.Join(parts, ".")
+	return strings.Replace(joined, " ", "_", -1)
 }
 
 // Does a non-blocking push to the metrics queue
