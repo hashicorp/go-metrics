@@ -39,7 +39,7 @@ func DefaultConfig(serviceName string) *Config {
 		"",
 		true,             // Enable hostname prefix
 		true,             // Enable runtime profiling
-		true,             // Enable type prefix
+		false,            // Disable type prefix
 		time.Millisecond, // Timers are in milliseconds
 		time.Second,      // Poll runtime every second
 	}

@@ -14,8 +14,11 @@ func TestDefaultConfig(t *testing.T) {
 	if conf.HostName == "" {
 		t.Fatalf("missing hostname")
 	}
-	if !conf.EnableHostname || !conf.EnableRuntimeMetrics || !conf.EnableTypePrefix {
+	if !conf.EnableHostname || !conf.EnableRuntimeMetrics {
 		t.Fatalf("expect true")
+	}
+	if conf.EnableTypePrefix {
+		t.Fatalf("expect false")
 	}
 	if conf.TimerGranularity != time.Millisecond {
 		t.Fatalf("bad granularity")
