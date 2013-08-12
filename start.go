@@ -54,6 +54,7 @@ func DefaultConfig(serviceName string) *Config {
 func New(conf *Config, sink MetricSink) (*Metrics, error) {
 	met := &Metrics{}
 	met.Config = *conf
+	met.sink = sink
 
 	// Start the runtime collector
 	if conf.EnableRuntimeMetrics {
