@@ -67,7 +67,7 @@ func New(conf *Config, sink MetricSink) (*Metrics, error) {
 // used globally as well as returning it.
 func NewGlobal(conf *Config, sink MetricSink) (*Metrics, error) {
 	metrics, err := New(conf, sink)
-	if err != nil {
+	if err == nil {
 		globalMetrics = metrics
 	}
 	return metrics, err
