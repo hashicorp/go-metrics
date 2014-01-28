@@ -10,7 +10,8 @@ Sinks
 The `metrics` package makes use of a `MetricSink` interface to support delivery
 to any type of backend. Currently the following sinks are provided:
 
-* StatsiteSink : Sinks to a statsite or statsd instance
+* StatsiteSink : Sinks to a statsite instance
+* InmemSink : Provides in-memory aggregation, can be used to export stats
 * FanoutSink : Sinks to multiple sinks. Enables writing to multiple statsite instances for example.
 * BlackholeSink : Sinks to nowhere
 
@@ -21,8 +22,7 @@ Here is an example of using the package:
 
     func SlowMethod() {
         // Profiling the runtime of a method
-        start := time.Now()
-        defer metrics.MeasureSince([]{"SlowMethod"}, start)
+        defer metrics.MeasureSince([]string{"SlowMethod"}, time.Now())
     }
 
     // Configure a statsite sink as the global metrics sink
