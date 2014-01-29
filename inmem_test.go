@@ -10,7 +10,7 @@ func TestInmemSink(t *testing.T) {
 	inm := NewInmemSink(10*time.Millisecond, 50*time.Millisecond)
 
 	data := inm.Data()
-	if len(data) != 0 {
+	if len(data) != 1 {
 		t.Fatalf("bad: %v", data)
 	}
 

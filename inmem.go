@@ -177,6 +177,9 @@ func (i *InmemSink) AddSample(key []string, val float32) {
 // Data is used to retrieve all the aggregated metrics
 // Intervals may be in use, and a read lock should be acquired
 func (i *InmemSink) Data() []*IntervalMetrics {
+	// Get the current interval, forces creation
+	i.getInterval()
+
 	i.intervalLock.RLock()
 	defer i.intervalLock.RUnlock()
 

@@ -17,40 +17,41 @@ func TestMetrics_SetGauge(t *testing.T) {
 	m, met := mockMetric()
 	met.SetGauge([]string{"key"}, float32(1))
 	if m.keys[0][0] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.HostName = "test"
+	met.EnableHostname = true
 	met.SetGauge([]string{"key"}, float32(1))
 	if m.keys[0][0] != "test" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.EnableTypePrefix = true
 	met.SetGauge([]string{"key"}, float32(1))
 	if m.keys[0][0] != "gauge" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.ServiceName = "service"
 	met.SetGauge([]string{"key"}, float32(1))
 	if m.keys[0][0] != "service" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 }
 
@@ -58,30 +59,30 @@ func TestMetrics_EmitKey(t *testing.T) {
 	m, met := mockMetric()
 	met.EmitKey([]string{"key"}, float32(1))
 	if m.keys[0][0] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.EnableTypePrefix = true
 	met.EmitKey([]string{"key"}, float32(1))
 	if m.keys[0][0] != "kv" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.ServiceName = "service"
 	met.EmitKey([]string{"key"}, float32(1))
 	if m.keys[0][0] != "service" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 }
 
@@ -89,30 +90,30 @@ func TestMetrics_IncrCounter(t *testing.T) {
 	m, met := mockMetric()
 	met.IncrCounter([]string{"key"}, float32(1))
 	if m.keys[0][0] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.EnableTypePrefix = true
 	met.IncrCounter([]string{"key"}, float32(1))
 	if m.keys[0][0] != "counter" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.ServiceName = "service"
 	met.IncrCounter([]string{"key"}, float32(1))
 	if m.keys[0][0] != "service" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 }
 
@@ -120,30 +121,30 @@ func TestMetrics_AddSample(t *testing.T) {
 	m, met := mockMetric()
 	met.AddSample([]string{"key"}, float32(1))
 	if m.keys[0][0] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.EnableTypePrefix = true
 	met.AddSample([]string{"key"}, float32(1))
 	if m.keys[0][0] != "sample" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
 	met.ServiceName = "service"
 	met.AddSample([]string{"key"}, float32(1))
 	if m.keys[0][0] != "service" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 }
 
@@ -153,10 +154,10 @@ func TestMetrics_MeasureSince(t *testing.T) {
 	n := time.Now()
 	met.MeasureSince([]string{"key"}, n)
 	if m.keys[0][0] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] > 0.1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
@@ -164,10 +165,10 @@ func TestMetrics_MeasureSince(t *testing.T) {
 	met.EnableTypePrefix = true
 	met.MeasureSince([]string{"key"}, n)
 	if m.keys[0][0] != "timer" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] > 0.1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 
 	m, met = mockMetric()
@@ -175,10 +176,10 @@ func TestMetrics_MeasureSince(t *testing.T) {
 	met.ServiceName = "service"
 	met.MeasureSince([]string{"key"}, n)
 	if m.keys[0][0] != "service" || m.keys[0][1] != "key" {
-		t.FailNow()
+		t.Fatalf("")
 	}
 	if m.vals[0] > 0.1 {
-		t.FailNow()
+		t.Fatalf("")
 	}
 }
 

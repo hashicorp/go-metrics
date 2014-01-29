@@ -74,7 +74,9 @@ func (i *InmemSignal) dumpStats() {
 	buf := bytes.NewBuffer(nil)
 
 	data := i.inm.Data()
-	for _, intv := range data {
+	// Skip the last period which is still being aggregated
+	for i := 0; i < len(data)-1; i++ {
+		intv := data[i]
 		intv.RLock()
 		for name, val := range intv.Gauges {
 			fmt.Fprintf(buf, "[%v][G] '%s': %0.3f\n", intv.Interval, name, val)

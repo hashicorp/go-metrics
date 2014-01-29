@@ -20,6 +20,9 @@ func TestInmemSignal(t *testing.T) {
 	inm.IncrCounter([]string{"baz"}, 42)
 	inm.AddSample([]string{"wow"}, 42)
 
+	// Wait for period to end
+	time.Sleep(15 * time.Millisecond)
+
 	// Send signal!
 	syscall.Kill(os.Getpid(), syscall.SIGUSR1)
 

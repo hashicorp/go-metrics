@@ -6,7 +6,7 @@ import (
 )
 
 func (m *Metrics) SetGauge(key []string, val float32) {
-	if m.HostName != "" {
+	if m.HostName != "" && m.EnableHostname {
 		key = insert(0, m.HostName, key)
 	}
 	if m.EnableTypePrefix {
