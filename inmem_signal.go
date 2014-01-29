@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -71,8 +71,7 @@ func (i *InmemSignal) run() {
 
 // dumpStats is used to dump the data to output writer
 func (i *InmemSignal) dumpStats() {
-	buf := bufio.NewWriter(i.w)
-	defer buf.Flush()
+	buf := bytes.NewBuffer(nil)
 
 	data := i.inm.Data()
 	for _, intv := range data {
@@ -93,4 +92,7 @@ func (i *InmemSignal) dumpStats() {
 		}
 		intv.RUnlock()
 	}
+
+	// Write out the bytes
+	i.w.Write(buf.Bytes())
 }
