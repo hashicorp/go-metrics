@@ -39,9 +39,9 @@ func NewInmemSignal(inmem *InmemSink, sig syscall.Signal, w io.Writer) *InmemSig
 }
 
 // DefaultInmemSignal returns a new InmemSignal that responds to SIGUSR1
-// and writes output to stderr
+// and writes output to stderr. Windows uses SIGBREAK
 func DefaultInmemSignal(inmem *InmemSink) *InmemSignal {
-	return NewInmemSignal(inmem, syscall.SIGUSR1, os.Stderr)
+	return NewInmemSignal(inmem, DefaultSignal, os.Stderr)
 }
 
 // Stop is used to stop the InmemSignal from listening

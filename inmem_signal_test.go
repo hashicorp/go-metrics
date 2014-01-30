@@ -37,10 +37,10 @@ func TestInmemSignal(t *testing.T) {
 	if !strings.Contains(out, "[P] 'bar': 42") {
 		t.Fatalf("bad: %v", out)
 	}
-	if !strings.Contains(out, "[C] 'baz': Count: 1 Value: 42") {
+	if !strings.Contains(out, "[C] 'baz': Count: 1 Sum: 42") {
 		t.Fatalf("bad: %v", out)
 	}
-	if !strings.Contains(out, "[S] 'wow': Count: 1 Value: 42") {
+	if !strings.Contains(out, "[S] 'wow': Count: 1 Sum: 42") {
 		t.Fatalf("bad: %v", out)
 	}
 }
