@@ -1,11 +1,19 @@
 package metrics
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net"
 	"strings"
 	"time"
+)
+
+const (
+	// We force flush the statsite metrics after this period of
+	// inactivity. Prevents stats from getting stuck in a buffer
+	// forever.
+	flushInterval = 100 * time.Millisecond
 )
 
 // StatsiteSink provides a MetricSink that can be used with a
@@ -66,6 +74,9 @@ func (s *StatsiteSink) flushMetrics() {
 	var sock net.Conn
 	var err error
 	var wait <-chan time.Time
+	var buffered *bufio.Writer
+	ticker := time.NewTicker(flushInterval)
+	defer ticker.Stop()
 
 CONNECT:
 	// Attempt to connect
@@ -75,18 +86,28 @@ CONNECT:
 		goto WAIT
 	}
 
-	for {
-		// Get a metric from the queue
-		metric, ok := <-s.metricQueue
-		if !ok {
-			goto QUIT
-		}
+	// Create a buffered writer
+	buffered = bufio.NewWriter(sock)
 
-		// Try to send to statsite
-		_, err := sock.Write([]byte(metric))
-		if err != nil {
-			log.Printf("[ERR] Error writing to statsite! Err: %s", err)
-			goto WAIT
+	for {
+		select {
+		case metric, ok := <-s.metricQueue:
+			// Get a metric from the queue
+			if !ok {
+				goto QUIT
+			}
+
+			// Try to send to statsite
+			_, err := buffered.Write([]byte(metric))
+			if err != nil {
+				log.Printf("[ERR] Error writing to statsite! Err: %s", err)
+				goto WAIT
+			}
+		case <-ticker.C:
+			if err := buffered.Flush(); err != nil {
+				log.Printf("[ERR] Error flushing to statsite! Err: %s", err)
+				goto WAIT
+			}
 		}
 	}
 
