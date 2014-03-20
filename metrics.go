@@ -79,6 +79,7 @@ func (m *Metrics) emitRuntimeStats() {
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)
 	m.SetGauge([]string{"runtime", "alloc_bytes"}, float32(stats.Alloc))
+	m.SetGauge([]string{"runtime", "total_alloc_bytes"}, float32(stats.TotalAlloc))
 	m.SetGauge([]string{"runtime", "malloc_count"}, float32(stats.Mallocs))
 	m.SetGauge([]string{"runtime", "free_count"}, float32(stats.Frees))
 	m.SetGauge([]string{"runtime", "heap_objects"}, float32(stats.HeapObjects))
