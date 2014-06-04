@@ -189,36 +189,47 @@ func (i *InmemSink) Data() []*IntervalMetrics {
 	return intervals
 }
 
-// getInterval returns the current interval to write to
-func (i *InmemSink) getInterval() *IntervalMetrics {
-	intv := time.Now().Truncate(i.interval)
-
-	// Check if the last interval is a match
+func (i *InmemSink) getExistingInterval(intv time.Time) *IntervalMetrics {
 	i.intervalLock.RLock()
+	defer i.intervalLock.RUnlock()
+
 	n := len(i.intervals)
 	if n > 0 && i.intervals[n-1].Interval == intv {
-		i.intervalLock.RUnlock()
 		return i.intervals[n-1]
 	}
-	i.intervalLock.RUnlock()
+	return nil
+}
 
-	// Create a new interval
+func (i *InmemSink) createInterval(intv time.Time) *IntervalMetrics {
 	i.intervalLock.Lock()
 	defer i.intervalLock.Unlock()
 
-	// Create a new interval
-	current := NewIntervalMetrics(intv)
-
-	// If we're at the max intervals, remove the last interval
-	if n == i.maxIntervals {
-		copy(i.intervals[0:], i.intervals[1:])
-		i.intervals[n-1] = current
-	} else {
-		i.intervals = append(i.intervals, current)
+	// Check for an existing interval
+	n := len(i.intervals)
+	if n > 0 && i.intervals[n-1].Interval == intv {
+		return i.intervals[n-1]
 	}
 
-	// Return the new interval
+	// Add the current interval
+	current := NewIntervalMetrics(intv)
+	i.intervals = append(i.intervals, current)
+	n++
+
+	// Truncate the intervals if they are too long
+	if n >= i.maxIntervals {
+		copy(i.intervals[0:], i.intervals[n-i.maxIntervals:])
+		i.intervals = i.intervals[:i.maxIntervals]
+	}
 	return current
+}
+
+// getInterval returns the current interval to write to
+func (i *InmemSink) getInterval() *IntervalMetrics {
+	intv := time.Now().Truncate(i.interval)
+	if m := i.getExistingInterval(intv); m != nil {
+		return m
+	}
+	return i.createInterval(intv)
 }
 
 // Flattens the key for formatting, removes spaces

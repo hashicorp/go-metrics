@@ -202,45 +202,52 @@ func TestMetrics_EmitRuntimeStats(t *testing.T) {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
-	if m.keys[2][0] != "runtime" || m.keys[2][1] != "malloc_count" {
+	if m.keys[2][0] != "runtime" || m.keys[2][1] != "sys_bytes" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[2] <= 100 {
+	if m.vals[2] <= 100000 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
-	if m.keys[3][0] != "runtime" || m.keys[3][1] != "free_count" {
+	if m.keys[3][0] != "runtime" || m.keys[3][1] != "malloc_count" {
 		t.Fatalf("bad key %v", m.keys)
 	}
 	if m.vals[3] <= 100 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
-	if m.keys[4][0] != "runtime" || m.keys[4][1] != "heap_objects" {
+	if m.keys[4][0] != "runtime" || m.keys[4][1] != "free_count" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[4] <= 200 {
+	if m.vals[4] <= 100 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
-	if m.keys[5][0] != "runtime" || m.keys[5][1] != "total_gc_pause_ns" {
+	if m.keys[5][0] != "runtime" || m.keys[5][1] != "heap_objects" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[5] <= 100000 {
+	if m.vals[5] <= 200 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
-	if m.keys[6][0] != "runtime" || m.keys[6][1] != "total_gc_runs" {
+	if m.keys[6][0] != "runtime" || m.keys[6][1] != "total_gc_pause_ns" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[6] <= 1 {
+	if m.vals[6] <= 100000 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
-	if m.keys[7][0] != "runtime" || m.keys[7][1] != "gc_pause_ns" {
+	if m.keys[7][0] != "runtime" || m.keys[7][1] != "total_gc_runs" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[7] <= 1000 {
+	if m.vals[7] <= 1 {
+		t.Fatalf("bad val: %v", m.vals)
+	}
+
+	if m.keys[8][0] != "runtime" || m.keys[8][1] != "gc_pause_ns" {
+		t.Fatalf("bad key %v", m.keys)
+	}
+	if m.vals[8] <= 1000 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 }

@@ -69,11 +69,11 @@ func TestInmemSink(t *testing.T) {
 
 	intvM.RUnlock()
 
-	for i := 1; i < 5; i++ {
+	for i := 1; i < 10; i++ {
 		time.Sleep(10 * time.Millisecond)
 		inm.SetGauge([]string{"foo", "bar"}, 42)
 		data = inm.Data()
-		if len(data) != i+1 {
+		if len(data) != min(i+1, 5) {
 			t.Fatalf("bad: %v", data)
 		}
 	}
@@ -85,4 +85,11 @@ func TestInmemSink(t *testing.T) {
 	if len(data) != 5 {
 		t.Fatalf("bad: %v", data)
 	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
