@@ -58,7 +58,16 @@ func (s *StatsdSink) AddSample(key []string, val float32) {
 // Flattens the key for formatting, removes spaces
 func (s *StatsdSink) flattenKey(parts []string) string {
 	joined := strings.Join(parts, ".")
-	return strings.Replace(joined, " ", "_", -1)
+	return strings.Map(func(r rune) rune {
+		switch r {
+		case ':':
+			fallthrough
+		case ' ':
+			return '_'
+		default:
+			return r
+		}
+	}, joined)
 }
 
 // Does a non-blocking push to the metrics queue
