@@ -17,7 +17,7 @@ const (
 )
 
 // StatsiteSink provides a MetricSink that can be used with a
-// statsite or statsd metrics server
+// statsite metrics server
 type StatsiteSink struct {
 	addr        string
 	metricQueue chan string
