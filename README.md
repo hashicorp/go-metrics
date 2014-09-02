@@ -10,7 +10,8 @@ Sinks
 The `metrics` package makes use of a `MetricSink` interface to support delivery
 to any type of backend. Currently the following sinks are provided:
 
-* StatsiteSink : Sinks to a statsite instance
+* StatsiteSink : Sinks to a statsite instance (TCP)
+* StatsdSink: Sinks to a statsd / statsite instance (UDP)
 * InmemSink : Provides in-memory aggregation, can be used to export stats
 * FanoutSink : Sinks to multiple sinks. Enables writing to multiple statsite instances for example.
 * BlackholeSink : Sinks to nowhere
