@@ -35,13 +35,13 @@ func init() {
 // DefaultConfig provides a sane default configuration
 func DefaultConfig(serviceName string) *Config {
 	c := &Config{
-		serviceName, // Use client provided service
-		"",
-		true,             // Enable hostname prefix
-		true,             // Enable runtime profiling
-		false,            // Disable type prefix
-		time.Millisecond, // Timers are in milliseconds
-		time.Second,      // Poll runtime every second
+		ServiceName:          serviceName, // Use client provided service
+		HostName:             "",
+		EnableHostname:       true,             // Enable hostname prefix
+		EnableRuntimeMetrics: true,             // Enable runtime profiling
+		EnableTypePrefix:     false,            // Disable type prefix
+		TimerGranularity:     time.Millisecond, // Timers are in milliseconds
+		ProfileInterval:      time.Second,      // Poll runtime every second
 	}
 
 	// Try to get the hostname
