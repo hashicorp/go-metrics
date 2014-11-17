@@ -25,7 +25,10 @@ type StatsiteSink struct {
 
 // NewStatsiteSink is used to create a new StatsiteSink
 func NewStatsiteSink(addr string) (*StatsiteSink, error) {
-	s := &StatsiteSink{addr, make(chan string, 4096)}
+	s := &StatsiteSink{
+		addr:        addr,
+		metricQueue: make(chan string, 4096),
+	}
 	go s.flushMetrics()
 	return s, nil
 }
