@@ -41,8 +41,8 @@ Here is an example of using the package:
 Here is an example of setting up an signal handler:
 
     // Setup the inmem sink and signal handler
-    inm := NewInmemSink(10*time.Second, time.Minute)
-    sig := DefaultInmemSignal(inm)
+    inm := metrics.NewInmemSink(10*time.Second, time.Minute)
+    sig := metrics.DefaultInmemSignal(inm)
     metrics.NewGlobal(metrics.DefaultConfig("service-name"), inm)
 
     // Run some code
