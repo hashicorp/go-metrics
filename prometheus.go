@@ -25,7 +25,7 @@ func NewPrometheusSink() (*PrometheusSink, error) {
 
 func (p *PrometheusSink) flattenKey(parts []string) string {
 	joined := strings.Join(parts, "_")
-	return strings.Replace(strings.Replace(joined, " ", "_", -1), ".", "_", -1)
+	return strings.Replace(strings.Replace(strings.Replace(joined, " ", "_", -1), ".", "_", -1), "-", "_", -1)
 }
 
 func (p *PrometheusSink) SetGauge(parts []string, val float32) {
