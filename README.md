@@ -10,8 +10,9 @@ Sinks
 The `metrics` package makes use of a `MetricSink` interface to support delivery
 to any type of backend. Currently the following sinks are provided:
 
-* StatsiteSink : Sinks to a statsite instance (TCP)
-* StatsdSink: Sinks to a statsd / statsite instance (UDP)
+* StatsiteSink : Sinks to a [statsite](https://github.com/armon/statsite/) instance (TCP)
+* StatsdSink: Sinks to a [StatsD](https://github.com/etsy/statsd/) / statsite instance (UDP)
+* PrometheusSink: Sinks to a [Prometheus](http://prometheus.io/) metrics endpoint (exposed via HTTP for scrapes)
 * InmemSink : Provides in-memory aggregation, can be used to export stats
 * FanoutSink : Sinks to multiple sinks. Enables writing to multiple statsite instances for example.
 * BlackholeSink : Sinks to nowhere
