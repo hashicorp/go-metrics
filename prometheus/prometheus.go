@@ -1,6 +1,5 @@
 // +build go1.3
-
-package metrics
+package prometheus
 
 import (
 	"strings"
