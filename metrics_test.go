@@ -198,7 +198,7 @@ func TestMetrics_EmitRuntimeStats(t *testing.T) {
 	if m.keys[1][0] != "runtime" || m.keys[1][1] != "alloc_bytes" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[1] <= 100000 {
+	if m.vals[1] <= 40000 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
@@ -226,7 +226,7 @@ func TestMetrics_EmitRuntimeStats(t *testing.T) {
 	if m.keys[5][0] != "runtime" || m.keys[5][1] != "heap_objects" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[5] <= 200 {
+	if m.vals[5] <= 100 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
