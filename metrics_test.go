@@ -66,6 +66,17 @@ func TestMetrics_EmitKey(t *testing.T) {
 	}
 
 	m, met = mockMetric()
+	met.HostName = "test"
+	met.EnableHostname = true
+	met.EmitKey([]string{"key"}, float32(1))
+	if m.keys[0][0] != "test" || m.keys[0][1] != "key" {
+		t.Fatalf("")
+	}
+	if m.vals[0] != 1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
 	met.EnableTypePrefix = true
 	met.EmitKey([]string{"key"}, float32(1))
 	if m.keys[0][0] != "kv" || m.keys[0][1] != "key" {
@@ -90,6 +101,17 @@ func TestMetrics_IncrCounter(t *testing.T) {
 	m, met := mockMetric()
 	met.IncrCounter([]string{"key"}, float32(1))
 	if m.keys[0][0] != "key" {
+		t.Fatalf("")
+	}
+	if m.vals[0] != 1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
+	met.HostName = "test"
+	met.EnableHostname = true
+	met.IncrCounter([]string{"key"}, float32(1))
+	if m.keys[0][0] != "test" || m.keys[0][1] != "key" {
 		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
@@ -128,6 +150,17 @@ func TestMetrics_AddSample(t *testing.T) {
 	}
 
 	m, met = mockMetric()
+	met.HostName = "test"
+	met.EnableHostname = true
+	met.AddSample([]string{"key"}, float32(1))
+	if m.keys[0][0] != "test" || m.keys[0][1] != "key" {
+		t.Fatalf("")
+	}
+	if m.vals[0] != 1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
 	met.EnableTypePrefix = true
 	met.AddSample([]string{"key"}, float32(1))
 	if m.keys[0][0] != "sample" || m.keys[0][1] != "key" {
@@ -154,6 +187,19 @@ func TestMetrics_MeasureSince(t *testing.T) {
 	n := time.Now()
 	met.MeasureSince([]string{"key"}, n)
 	if m.keys[0][0] != "key" {
+		t.Fatalf("")
+	}
+	if m.vals[0] > 0.1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
+	met.TimerGranularity = time.Millisecond
+	n = time.Now()
+	met.HostName = "test"
+	met.EnableHostname = true
+	met.MeasureSince([]string{"key"}, n)
+	if m.keys[0][0] != "test" || m.keys[0][1] != "key" {
 		t.Fatalf("")
 	}
 	if m.vals[0] > 0.1 {
