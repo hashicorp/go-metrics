@@ -1,51 +1,45 @@
-package metrics
+package datadog
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/Datadog/datadog-go/statsd"
+	"github.com/DataDog/datadog-go/statsd"
 )
 
-// HostnameGetter is a generic function to retrieve a hostname
-type HostnameGetter func() string
-
 // DogStatsdSink provides a MetricSink that can be used
-// with a dogstatsd server. It utilizes the Dogstatsd client at github.com/Datadog/datadog-go/statsd
+// with a dogstatsd server. It utilizes the Dogstatsd client at github.com/DataDog/datadog-go/statsd
 type DogStatsdSink struct {
 	client            *statsd.Client
-	hostnameGetter    HostnameGetter
+	hostName          string
 	propagateHostname bool
 }
 
-func getHostname() string {
-	conf, _ := GetConfig()
-	return conf.HostName
-}
-
 // NewDogStatsdSink is used to create a new DogStatsdSink with sane defaults
-func NewDogStatsdSink(addr string) (*DogStatsdSink, error) {
+func NewDogStatsdSink(addr string, hostName string) (*DogStatsdSink, error) {
 	client, err := statsd.New(addr)
 	if err != nil {
 		return nil, err
 	}
-
 	sink := &DogStatsdSink{
 		client:            client,
-		hostnameGetter:    getHostname, // Defaults to reading from the global configuration `HostName`
+		hostName:          hostName,
 		propagateHostname: false,
 	}
 	return sink, nil
 }
 
-func (s *DogStatsdSink) setTags(tags []string) {
+// SetTags sets common tags on the Dogstatsd Client that will be sent
+// along with all dogstatsd packets.
+// Ref: http://docs.datadoghq.com/guides/dogstatsd/#tags
+func (s *DogStatsdSink) SetTags(tags []string) {
 	s.client.Tags = tags
 }
 
-func (s *DogStatsdSink) enableHostnamePropagation() {
-	// Forces a Dogstatsd `host` tag with the value specified by `globalMetrics.Config.HostName`
-	// Since the go-metrics package has its own mechanism for attaching a hostname to metrics,
-	// setting the `propagateHostname` flag ensures that `globalMetrics.Config.HostName` overrides the host tag naively set by the DogStatsd server
+// EnableHostnamePropagation forces a Dogstatsd `host` tag with the value specified by `s.HostName`
+// Since the go-metrics package has its own mechanism for attaching a hostname to metrics,
+// setting the `propagateHostname` flag ensures that `s.HostName` overrides the host tag naively set by the DogStatsd server
+func (s *DogStatsdSink) EnableHostNamePropagation() {
 	s.propagateHostname = true
 }
 
@@ -68,7 +62,7 @@ func (s *DogStatsdSink) parseKey(key []string) ([]string, []string) {
 	// The `host` tag is either forced here, or set downstream by the DogStatsd server
 
 	var tags []string
-	hostName := s.hostnameGetter()
+	hostName := s.hostName
 
 	//Splice the hostname out of the key
 	for i, el := range key {

@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"os"
 	"time"
 )
@@ -72,14 +71,6 @@ func NewGlobal(conf *Config, sink MetricSink) (*Metrics, error) {
 		globalMetrics = metrics
 	}
 	return metrics, err
-}
-
-// GetConfig returns the Config for the globalMetrics instance if available
-func GetConfig() (*Config, error) {
-	if globalMetrics != nil {
-		return &globalMetrics.Config, nil
-	}
-	return nil, fmt.Errorf("Global configuration not available!")
 }
 
 // Proxy all the methods to the globalMetrics instance

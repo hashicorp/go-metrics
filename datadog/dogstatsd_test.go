@@ -1,4 +1,4 @@
-package metrics
+package datadog
 
 import (
 	"fmt"
@@ -59,12 +59,10 @@ var MetricSinkTests = []struct {
 }
 
 func MockNewDogStatsdSink(addr string, tags []string, tagWithHostname bool) *DogStatsdSink {
-	dog, _ := NewDogStatsdSink(addr)
-
-	dog.hostnameGetter = MockGetHostname
-	dog.setTags(tags)
+	dog, _ := NewDogStatsdSink(addr, MockGetHostname())
+	dog.SetTags(tags)
 	if tagWithHostname {
-		dog.enableHostnamePropagation()
+		dog.EnableHostNamePropagation()
 	}
 
 	return dog
