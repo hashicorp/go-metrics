@@ -58,7 +58,7 @@ var MetricSinkTests = []struct {
 	{"SetGauge", []string{"foo", "bar"}, float32(42), []string{"my_tag:my_value", "other_tag:other_value"}, HostnameEnabled, "foo.bar:42.000000|g|#my_tag:my_value,other_tag:other_value,host:test_hostname"},
 }
 
-func MockNewDogStatsdSink(addr string, tags []string, tagWithHostname bool) *DogStatsdSink {
+func mockNewDogStatsdSink(addr string, tags []string, tagWithHostname bool) *DogStatsdSink {
 	dog, _ := NewDogStatsdSink(addr, MockGetHostname())
 	dog.SetTags(tags)
 	if tagWithHostname {
@@ -68,9 +68,21 @@ func MockNewDogStatsdSink(addr string, tags []string, tagWithHostname bool) *Dog
 	return dog
 }
 
+func setupTestServerAndBuffer(t *testing.T) (*net.UDPConn, []byte) {
+	udpAddr, err := net.ResolveUDPAddr("udp", DogStatsdAddr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return server, make([]byte, 1024)
+}
+
 func TestParseKey(t *testing.T) {
 	for _, tt := range ParseKeyTests {
-		dog := MockNewDogStatsdSink(DogStatsdAddr, tt.Tags, tt.PropagateHostname)
+		dog := mockNewDogStatsdSink(DogStatsdAddr, tt.Tags, tt.PropagateHostname)
 		key, tags := dog.parseKey(tt.KeyToParse)
 
 		if !reflect.DeepEqual(key, tt.ExpectedKey) {
@@ -84,7 +96,7 @@ func TestParseKey(t *testing.T) {
 }
 
 func TestFlattenKey(t *testing.T) {
-	dog := MockNewDogStatsdSink(DogStatsdAddr, EmptyTags, HostnameDisabled)
+	dog := mockNewDogStatsdSink(DogStatsdAddr, EmptyTags, HostnameDisabled)
 	for _, tt := range FlattenKeyTests {
 		if !reflect.DeepEqual(dog.flattenKey(tt.KeyToFlatten), tt.Expected) {
 			t.Fatalf("Flattening %v failed", tt.KeyToFlatten)
@@ -93,29 +105,43 @@ func TestFlattenKey(t *testing.T) {
 }
 
 func TestMetricSink(t *testing.T) {
-	udpAddr, err := net.ResolveUDPAddr("udp", DogStatsdAddr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	server, err := net.ListenUDP("udp", udpAddr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	server, buf := setupTestServerAndBuffer(t)
 	defer server.Close()
 
-	buf := make([]byte, 1024)
-
 	for _, tt := range MetricSinkTests {
-		dog := MockNewDogStatsdSink(DogStatsdAddr, tt.Tags, tt.PropagateHostname)
+		dog := mockNewDogStatsdSink(DogStatsdAddr, tt.Tags, tt.PropagateHostname)
 		method := reflect.ValueOf(dog).MethodByName(tt.Method)
 		method.Call([]reflect.Value{
 			reflect.ValueOf(tt.Metric),
 			reflect.ValueOf(tt.Value)})
+		assertServerMatchesExpected(t, server, buf, tt.Expected)
+	}
+}
 
-		n, _ := server.Read(buf)
-		msg := buf[:n]
-		if string(msg) != tt.Expected {
-			t.Fatalf("Line %s does not match expected: %s", string(msg), tt.Expected)
-		}
+func TestTaggableMetrics(t *testing.T) {
+	server, buf := setupTestServerAndBuffer(t)
+	defer server.Close()
+
+	dog := mockNewDogStatsdSink(DogStatsdAddr, EmptyTags, HostnameDisabled)
+
+	dog.AddSampleWithTags([]string{"sample", "thing"}, float32(4), []string{"tagkey:tagvalue"})
+	assertServerMatchesExpected(t, server, buf, "sample.thing:4.000000|ms|#tagkey:tagvalue")
+
+	dog.SetGaugeWithTags([]string{"sample", "thing"}, float32(4), []string{"tagkey:tagvalue"})
+	assertServerMatchesExpected(t, server, buf, "sample.thing:4.000000|g|#tagkey:tagvalue")
+
+	dog.IncrCounterWithTags([]string{"sample", "thing"}, float32(4), []string{"tagkey:tagvalue"})
+	assertServerMatchesExpected(t, server, buf, "sample.thing:4|c|#tagkey:tagvalue")
+
+	dog = mockNewDogStatsdSink(DogStatsdAddr, []string{"global"}, HostnameEnabled) // with hostname, global tags
+	dog.IncrCounterWithTags([]string{"sample", "thing"}, float32(4), []string{"tagkey:tagvalue"})
+	assertServerMatchesExpected(t, server, buf, "sample.thing:4|c|#global,tagkey:tagvalue,host:test_hostname")
+}
+
+func assertServerMatchesExpected(t *testing.T, server *net.UDPConn, buf []byte, expected string) {
+	n, _ := server.Read(buf)
+	msg := buf[:n]
+	if string(msg) != expected {
+		t.Fatalf("Line %s does not match expected: %s", string(msg), expected)
 	}
 }
