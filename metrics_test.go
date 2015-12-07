@@ -240,7 +240,7 @@ func TestMetrics_EmitRuntimeStats(t *testing.T) {
 	if m.keys[7][0] != "runtime" || m.keys[7][1] != "total_gc_runs" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[7] <= 1 {
+	if m.vals[7] < 1 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
 
