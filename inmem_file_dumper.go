@@ -19,7 +19,7 @@ type AggregateSampleParamType int
 
 const (
 	Count AggregateSampleParamType = iota
-	Throughput
+	Rate
 	Mean
 	Min
 	Max
@@ -38,7 +38,7 @@ func CreateASParamWithFmt(type_ AggregateSampleParamType, fmtString string) Aggr
 	return res
 }
 
-var asParamNames []string = []string{"count", "throughput", "mean", "min", "max", "sum", "sumsq", "stddev", "lastupdt"}
+var asParamNames []string = []string{"count", "rate", "mean", "min", "max", "sum", "sumsq", "stddev", "lastupdt"}
 var asParamFmtStrings []string = []string{"%d", "%0.3f", "%0.3f", "%0.3f", "%0.3f", "%0.3f", "%0.3f", "%0.3f", "%s"}
 
 func (this *AggregateSampleParam) Name() string {
@@ -54,8 +54,8 @@ func (this *AggregateSampleParam) value(a *AggregateSample) interface{} {
 	switch this.type_ {
 	case Count:
 		return a.Count
-	case Throughput:
-		return a.Throughput
+	case Rate:
+		return a.Rate
 	case Mean:
 		return a.Mean()
 	case Min:
@@ -116,6 +116,7 @@ func NewInmemFileDumper(inmem *InmemSink, dumpInterval time.Duration, outputFile
 	return i
 }
 
+// TODO: InmemSink.AddSample accepts []string as key. But here we use string key (joined with dots)... should unify this...
 func (i *InmemFileDumper) SetAggregateSampleFormatter(key string, paramsTypesToShow ...AggregateSampleParamType) {
 	var sps []AggregateSampleParam = make([]AggregateSampleParam, len(paramsTypesToShow), len(paramsTypesToShow))
 	for i := 0; i < len(paramsTypesToShow); i++ {
