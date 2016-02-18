@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"fmt"
 	"bytes"
-	log "github.com/Sirupsen/logrus"
+	"log"
 	"sort"
 	"errors"
 )
@@ -192,7 +192,7 @@ func (i *InmemFileDumper) dumpStats() {
 
 	err := ioutil.WriteFile(i.outputFile, buf.Bytes(), 0666)
 	if err != nil {
-		log.Errorf("Cannot dumpStats to file %s, reason %v", i.outputFile, err)
+		log.Printf("Cannot dumpStats to file %s, reason %v", i.outputFile, err)
 	}
 }
 
