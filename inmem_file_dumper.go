@@ -104,7 +104,7 @@ type InmemFileDumper struct {
 }
 
 
-func NewMetricsFileDumper(inmem *InmemSink, dumpInterval time.Duration, outputFile string) *InmemFileDumper {
+func NewInmemFileDumper(inmem *InmemSink, dumpInterval time.Duration, outputFile string) *InmemFileDumper {
 	i := &InmemFileDumper{
 		ticker: time.NewTicker(dumpInterval),
 		inm:    inmem,
