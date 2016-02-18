@@ -220,7 +220,3 @@ func dumpAggregateSampleToBuf(buf *bytes.Buffer, name string, formatter *Aggrega
 		fmt.Fprintf(buf, "%v.%v = %s\n", name, subParam.Name(), subParam.FormatValue(a))
 	}
 }
-
-func TimeNowUnixMillis() int64 {
-	return time.Now().UnixNano() / 1000000
-}
