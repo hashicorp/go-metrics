@@ -44,6 +44,9 @@ func TestInmemSink(t *testing.T) {
 	if agg.Count != 2 {
 		t.Fatalf("bad val: %v", agg)
 	}
+	if agg.Rate != 200 {
+		t.Fatalf("bad val: %v", agg.Rate)
+	}
 	if agg.Sum != 42 {
 		t.Fatalf("bad val: %v", agg)
 	}
