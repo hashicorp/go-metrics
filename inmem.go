@@ -36,7 +36,7 @@ type IntervalMetrics struct {
 
 	// The start time of the interval
 	Interval time.Time
-r
+
 	// Gauges maps the key to the last set value
 	Gauges map[string]float32
 
