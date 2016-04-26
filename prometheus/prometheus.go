@@ -29,6 +29,7 @@ func (p *PrometheusSink) flattenKey(parts []string) string {
 	joined = strings.Replace(joined, " ", "_", -1)
 	joined = strings.Replace(joined, ".", "_", -1)
 	joined = strings.Replace(joined, "-", "_", -1)
+	joined = strings.Replace(joined, "=", "_", -1)
 	return joined
 }
 
