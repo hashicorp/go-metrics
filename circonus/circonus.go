@@ -18,16 +18,17 @@ type CirconusSink struct {
 //   - If no ApiToken, CheckSubmissionUrl, or CheckId are supplied an error will be returned.
 //   - If no ApiToken is supplied check management is disabled.
 type Config struct {
-	APIToken           string // optional (eliding turns off auto-create check and check management)
-	APIApp             string // optional "circonus-gometrics"
-	APIURL             string // optional "https://api.circonus.com/v2"
-	SubmitInterval     string // optional (default "10s", 10 seconds)
-	CheckSubmissionURL string // optional
-	CheckID            string // optional
-	CheckInstanceID    string // optional "hostname:app_name /cgm"
-	CheckSearchTag     string // optional "service:app_name"
-	BrokerID           string // optional (used for auto-create check if token supplied)
-	BrokerSelectTag    string // optional tag to use to select broker (if auto-create check)
+	APIToken                   string // optional (eliding turns off auto-create check and check management)
+	APIApp                     string // optional "circonus-gometrics"
+	APIURL                     string // optional "https://api.circonus.com/v2"
+	SubmitInterval             string // optional (default "10s", 10 seconds)
+	CheckSubmissionURL         string // optional
+	CheckID                    string // optional
+	CheckInstanceID            string // optional "hostname:app_name /cgm"
+	CheckSearchTag             string // optional "service:app_name"
+	CheckForceMetricActivation string // optional "false"
+	BrokerID                   string // optional (used for auto-create check if token supplied)
+	BrokerSelectTag            string // optional tag to use to select broker (if auto-create check)
 }
 
 // NewCirconusSink - create new metric sink for circonus
@@ -53,6 +54,7 @@ func NewCirconusSink(cc *Config) (*CirconusSink, error) {
 		cfg.CheckManager.Check.SearchTag = cc.CheckSearchTag
 		cfg.CheckManager.Check.SubmissionURL = cc.CheckSubmissionURL
 		cfg.CheckManager.Check.ID = cc.CheckID
+		cfg.CheckManager.Check.ForceMetricActivation = cc.CheckForceMetricActivation
 		cfg.CheckManager.Broker.ID = cc.BrokerID
 		cfg.CheckManager.Broker.SelectTag = cc.BrokerSelectTag
 		cfg.Interval = cc.SubmitInterval
