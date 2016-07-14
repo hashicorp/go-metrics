@@ -15,52 +15,27 @@ type CirconusSink struct {
 }
 
 // Config options for CirconusSink
-//   - If no ApiToken, CheckSubmissionUrl, or CheckId are supplied an error will be returned.
-//   - If no ApiToken is supplied check management is disabled.
-type Config struct {
-	APIToken                   string // optional (eliding turns off auto-create check and check management)
-	APIApp                     string // optional "circonus-gometrics"
-	APIURL                     string // optional "https://api.circonus.com/v2"
-	SubmitInterval             string // optional (default "10s", 10 seconds)
-	CheckSubmissionURL         string // optional
-	CheckID                    string // optional
-	CheckInstanceID            string // optional "hostname:app_name /cgm"
-	CheckSearchTag             string // optional "service:app_name"
-	CheckForceMetricActivation string // optional "false"
-	BrokerID                   string // optional (used for auto-create check if token supplied)
-	BrokerSelectTag            string // optional tag to use to select broker (if auto-create check)
-}
+// See https://github.com/circonus-labs/circonus-gometrics for configuration options
+type Config cgm.Config
 
 // NewCirconusSink - create new metric sink for circonus
 //
 // one of the following must be supplied:
-//    - ApiToken - search for an existing check or create a new check
-//    - ApiToken + CheckId - the check identified by check id will be used
-//    - ApiToken + CheckSubmissionUrl - the check identified by the submission url will be used
-//    - CheckSubmissionUrl - the check identified by the submission url will be used
+//    - API Token - search for an existing check or create a new check
+//    - API Token + Check Id - the check identified by check id will be used
+//    - API Token + Check Submission URL - the check identified by the submission url will be used
+//    - Check Submission URL - the check identified by the submission url will be used
 //      metric management will be *disabled*
 //
 // Note: If submission url is supplied w/o an api token, the public circonus ca cert will be used
 // to verify the broker for metrics submission.
 func NewCirconusSink(cc *Config) (*CirconusSink, error) {
-
-	cfg := &cgm.Config{}
-
+	cfg := cgm.Config{}
 	if cc != nil {
-		cfg.CheckManager.API.TokenKey = cc.APIToken
-		cfg.CheckManager.API.TokenApp = cc.APIApp
-		cfg.CheckManager.API.URL = cc.APIURL
-		cfg.CheckManager.Check.InstanceID = cc.CheckInstanceID
-		cfg.CheckManager.Check.SearchTag = cc.CheckSearchTag
-		cfg.CheckManager.Check.SubmissionURL = cc.CheckSubmissionURL
-		cfg.CheckManager.Check.ID = cc.CheckID
-		cfg.CheckManager.Check.ForceMetricActivation = cc.CheckForceMetricActivation
-		cfg.CheckManager.Broker.ID = cc.BrokerID
-		cfg.CheckManager.Broker.SelectTag = cc.BrokerSelectTag
-		cfg.Interval = cc.SubmitInterval
+		cfg = cgm.Config(*cc)
 	}
 
-	metrics, err := cgm.NewCirconusMetrics(cfg)
+	metrics, err := cgm.NewCirconusMetrics(&cfg)
 	if err != nil {
 		return nil, err
 	}
