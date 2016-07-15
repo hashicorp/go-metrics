@@ -20,7 +20,7 @@ func TestNewCirconusSink(t *testing.T) {
 
 	// test w/submission url and w/o token
 	cfg := &Config{}
-	cfg.Check.SubmissionURL = "http://127.0.0.1:43191/"
+	cfg.CheckManager.Check.SubmissionURL = "http://127.0.0.1:43191/"
 	_, err = NewCirconusSink(cfg)
 	if err != nil {
 		t.Errorf("Expected no error, got '%v'", err)
@@ -75,7 +75,7 @@ func TestSetGauge(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{}
-	cfg.Check.SubmissionURL = server.URL
+	cfg.CheckManager.Check.SubmissionURL = server.URL
 
 	cs, err := NewCirconusSink(cfg)
 	if err != nil {
@@ -103,7 +103,7 @@ func TestIncrCounter(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{}
-	cfg.Check.SubmissionURL = server.URL
+	cfg.CheckManager.Check.SubmissionURL = server.URL
 
 	cs, err := NewCirconusSink(cfg)
 	if err != nil {
@@ -131,7 +131,7 @@ func TestAddSample(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{}
-	cfg.Check.SubmissionURL = server.URL
+	cfg.CheckManager.Check.SubmissionURL = server.URL
 
 	cs, err := NewCirconusSink(cfg)
 	if err != nil {
