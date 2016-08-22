@@ -2,7 +2,6 @@
 package prometheus
 
 import (
-	"strings"
 	"sync"
 	"time"
 
@@ -11,59 +10,77 @@ import (
 
 type PrometheusSink struct {
 	mu        sync.Mutex
-	gauges    map[string]prometheus.Gauge
-	summaries map[string]prometheus.Summary
-	counters  map[string]prometheus.Counter
+	gauges    map[string]*prometheus.GaugeVec
+	summaries map[string]*prometheus.SummaryVec
+	counters  map[string]*prometheus.CounterVec
+	mapper    PrometheusMapper
 }
 
-func NewPrometheusSink() (*PrometheusSink, error) {
+func NewPrometheusSink() (*PrometheusSink, *error) {
 	return &PrometheusSink{
-		gauges:    make(map[string]prometheus.Gauge),
-		summaries: make(map[string]prometheus.Summary),
-		counters:  make(map[string]prometheus.Counter),
+		gauges:    make(map[string]*prometheus.GaugeVec),
+		summaries: make(map[string]*prometheus.SummaryVec),
+		counters:  make(map[string]*prometheus.CounterVec),
+		mapper:    &simpleMapper{},
 	}, nil
 }
 
-func (p *PrometheusSink) flattenKey(parts []string) string {
-	joined := strings.Join(parts, "_")
-	joined = strings.Replace(joined, " ", "_", -1)
-	joined = strings.Replace(joined, ".", "_", -1)
-	joined = strings.Replace(joined, "-", "_", -1)
-	joined = strings.Replace(joined, "=", "_", -1)
-	return joined
+func NewPrometheusSinkWithMapper(mapper PrometheusMapper) (*PrometheusSink, *error) {
+	return &PrometheusSink{
+		gauges:    make(map[string]*prometheus.GaugeVec),
+		summaries: make(map[string]*prometheus.SummaryVec),
+		counters:  make(map[string]*prometheus.CounterVec),
+		mapper:    mapper,
+	}, nil
+}
+
+func labelNames(labels prometheus.Labels) []string {
+	names := make([]string, len(labels))
+	i := 0
+	for labelName, _ := range labels {
+		names[i] = labelName
+		i++
+	}
+	return names
 }
 
 func (p *PrometheusSink) SetGauge(parts []string, val float32) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	key := p.flattenKey(parts)
+	key, labels, present := p.mapper.MapMetric(parts)
+	if !present {
+		return
+	}
 	g, ok := p.gauges[key]
 	if !ok {
-		g = prometheus.NewGauge(prometheus.GaugeOpts{
+		g = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: key,
 			Help: key,
-		})
+		}, labelNames(labels))
 		prometheus.MustRegister(g)
 		p.gauges[key] = g
 	}
-	g.Set(float64(val))
+	g.With(labels).Set(float64(val))
 }
 
 func (p *PrometheusSink) AddSample(parts []string, val float32) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	key := p.flattenKey(parts)
+	key, labels, present := p.mapper.MapMetric(parts)
+	if !present {
+		return
+	}
 	g, ok := p.summaries[key]
 	if !ok {
-		g = prometheus.NewSummary(prometheus.SummaryOpts{
+		g = prometheus.NewSummaryVec(prometheus.SummaryOpts{
 			Name:   key,
 			Help:   key,
 			MaxAge: 10 * time.Second,
-		})
+		}, labelNames(labels))
 		prometheus.MustRegister(g)
 		p.summaries[key] = g
 	}
-	g.Observe(float64(val))
+	g.With(labels).Observe(float64(val))
 }
 
 // EmitKey is not implemented. Prometheus doesn’t offer a type for which an
@@ -75,15 +92,18 @@ func (p *PrometheusSink) EmitKey(key []string, val float32) {
 func (p *PrometheusSink) IncrCounter(parts []string, val float32) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	key := p.flattenKey(parts)
+	key, labels, present := p.mapper.MapMetric(parts)
+	if !present {
+		return
+	}
 	g, ok := p.counters[key]
 	if !ok {
-		g = prometheus.NewCounter(prometheus.CounterOpts{
+		g = prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: key,
 			Help: key,
-		})
+		}, labelNames(labels))
 		prometheus.MustRegister(g)
 		p.counters[key] = g
 	}
-	g.Add(float64(val))
+	g.With(labels).Add(float64(val))
 }
