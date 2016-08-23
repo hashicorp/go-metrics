@@ -1,7 +1,6 @@
 package prometheus
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -28,28 +27,17 @@ func NewRegexpMapper(rules []RegexpMappingRule) *RegexpMapper {
 	return m
 }
 
-func replace(input string, matches []string) string {
-	replacementPairs := make([]string, len(matches)*2)
-	i := 0
-	for j, match := range matches[1:] {
-		replacementPairs[i] = fmt.Sprintf("$%d", j+1)
-		replacementPairs[i+1] = match
-		i += 2
-	}
-	return strings.NewReplacer(replacementPairs...).Replace(input)
-}
-
 func (m *RegexpMapper) MapMetric(parts []string) (string, prometheus.Labels, bool) {
 
 	joined := strings.Join(parts, "_")
 
 	for _, rule := range m.RegexpMappingRules {
-		if matches := m.regexps[rule.Pattern].FindStringSubmatch(joined); matches != nil {
-			name := replace(rule.NameReplacement, matches)
+		if matches := m.regexps[rule.Pattern].FindStringSubmatchIndex(joined); matches != nil {
+			name := string(m.regexps[rule.Pattern].ExpandString(nil, rule.NameReplacement, joined, matches))
 			labels := make(map[string]string)
 			for label, labelReplacement := range rule.LabelReplacements {
-				labelReplaced := replace(label, matches)
-				labels[labelReplaced] = replace(labelReplacement, matches)
+				labelReplaced := string(m.regexps[rule.Pattern].ExpandString(nil, label, joined, matches))
+				labels[labelReplaced] = string(m.regexps[rule.Pattern].ExpandString(nil, labelReplacement, joined, matches))
 			}
 			return name, labels, true
 		}
