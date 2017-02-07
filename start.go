@@ -93,3 +93,15 @@ func AddSample(key []string, val float32) {
 func MeasureSince(key []string, start time.Time) {
 	globalMetrics.MeasureSince(key, start)
 }
+
+func SetGaugeWithTags(key []string, val float32, tags []string) {
+	globalMetrics.SetGaugeWithTags(key, val, tags)
+}
+
+func IncrCounterWithTags(key []string, val float32, tags []string) {
+	globalMetrics.IncrCounterWithTags(key, val, tags)
+}
+
+func AddSampleWithTags(key []string, val float32, tags []string) {
+	globalMetrics.AddSampleWithTags(key, val, tags)
+}

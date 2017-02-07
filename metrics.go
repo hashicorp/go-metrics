@@ -61,6 +61,39 @@ func (m *Metrics) MeasureSince(key []string, start time.Time) {
 	m.sink.AddSample(key, msec)
 }
 
+func (m *Metrics) SetGaugeWithTags(key []string, val float32, tags []string) {
+	if m.HostName != "" && m.EnableHostname {
+		key = insert(0, m.HostName, key)
+	}
+	if m.EnableTypePrefix {
+		key = insert(0, "gauge", key)
+	}
+	if m.ServiceName != "" {
+		key = insert(0, m.ServiceName, key)
+	}
+	m.sink.SetGaugeWithTags(key, val, tags)
+}
+
+func (m *Metrics) IncrCounterWithTags(key []string, val float32, tags []string) {
+	if m.EnableTypePrefix {
+		key = insert(0, "counter", key)
+	}
+	if m.ServiceName != "" {
+		key = insert(0, m.ServiceName, key)
+	}
+	m.sink.IncrCounterWithTags(key, val, tags)
+}
+
+func (m *Metrics) AddSampleWithTags(key []string, val float32, tags []string) {
+	if m.EnableTypePrefix {
+		key = insert(0, "sample", key)
+	}
+	if m.ServiceName != "" {
+		key = insert(0, m.ServiceName, key)
+	}
+	m.sink.AddSampleWithTags(key, val, tags)
+}
+
 // Periodically collects runtime stats to publish
 func (m *Metrics) collectStats() {
 	for {
