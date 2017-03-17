@@ -24,6 +24,16 @@ type Metrics struct {
 	sink      MetricSink
 }
 
+// Interface defines a simple metrics interface that can be implemented
+// by something like a mock for other packages
+type Interface interface {
+	SetGauge(key []string, val float32)
+	EmitKey(key []string, val float32)
+	IncrCounter(key []string, val float32)
+	AddSample(key []string, val float32)
+	MeasureSince(key []string, start time.Time)
+}
+
 // Shared global metrics instance
 var globalMetrics *Metrics
 
@@ -73,23 +83,27 @@ func NewGlobal(conf *Config, sink MetricSink) (*Metrics, error) {
 	return metrics, err
 }
 
-// Proxy all the methods to the globalMetrics instance
+// SetGauge delegates to the globalMetrics instance
 func SetGauge(key []string, val float32) {
 	globalMetrics.SetGauge(key, val)
 }
 
+// EmitKey delegates to the globalMetrics instance
 func EmitKey(key []string, val float32) {
 	globalMetrics.EmitKey(key, val)
 }
 
+// IncrCounter delegates to the globalMetrics instance
 func IncrCounter(key []string, val float32) {
 	globalMetrics.IncrCounter(key, val)
 }
 
+// AddSample delegates to the globalMetrics instance
 func AddSample(key []string, val float32) {
 	globalMetrics.AddSample(key, val)
 }
 
+// MeasureSince delegates to the globalMetrics instance
 func MeasureSince(key []string, start time.Time) {
 	globalMetrics.MeasureSince(key, start)
 }
