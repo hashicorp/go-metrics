@@ -72,3 +72,13 @@ When a signal comes in, output like the following will be dumped to stderr:
     [2014-01-28 14:57:33.04 -0800 PST][C] 'baz': Count: 3 Min: 1.000 Mean: 41.000 Max: 80.000 Stddev: 39.509
     [2014-01-28 14:57:33.04 -0800 PST][S] 'method.wow': Count: 3 Min: 22.000 Mean: 54.667 Max: 100.000 Stddev: 40.513
 
+Behavior on GAE
+===============
+
+In the GAE of GCP's PaaS, the following files are ignored.  
+The reason is that the `syscall` package is not allowed in GAE.
+
+- const_unix.go 
+- const_windows.go 
+- inmem_signal.go 
+- inmem_signal_test.go 
