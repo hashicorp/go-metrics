@@ -125,21 +125,18 @@ func (a *AggregateSample) String() string {
 // (and tested) from NewMetricSinkFromURL.
 func NewInmemSinkFromURL(u *url.URL) (MetricSink, error) {
 	params := u.Query()
-	if len(params["interval"]) < 1 {
-		return nil, fmt.Errorf("missing interval query param")
-	}
-	interval, err := time.ParseDuration(params["interval"][0])
+
+	interval, err := time.ParseDuration(params.Get("interval"))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Bad 'interval' param: %s", err)
 	}
-	if len(params["duration"]) < 1 {
-		return nil, fmt.Errorf("missing duration query param")
-	}
-	duration, err := time.ParseDuration(params["duration"][0])
+
+	retain, err := time.ParseDuration(params.Get("retain"))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Bad 'retain' param: %s", err)
 	}
-	return NewInmemSink(interval, duration), nil
+
+	return NewInmemSink(interval, retain), nil
 }
 
 // NewInmemSink is used to construct a new in-memory sink.

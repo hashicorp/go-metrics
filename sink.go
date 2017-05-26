@@ -3,7 +3,6 @@ package metrics
 import (
 	"fmt"
 	"net/url"
-	"strings"
 )
 
 // The MetricSink interface is used to transmit metrics information
@@ -88,11 +87,10 @@ func NewMetricSinkFromURL(urlStr string) (MetricSink, error) {
 		return nil, err
 	}
 
-	sinkName := strings.ToLower(u.Scheme)
-	sinkURLFactoryFunc := sinkRegistry[sinkName]
+	sinkURLFactoryFunc := sinkRegistry[u.Scheme]
 	if sinkURLFactoryFunc == nil {
 		return nil, fmt.Errorf(
-			"cannot create metric sink, unrecognized sink name: %q", sinkName)
+			"cannot create metric sink, unrecognized sink name: %q", u.Scheme)
 	}
 
 	return sinkURLFactoryFunc(u)
