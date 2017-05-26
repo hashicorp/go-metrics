@@ -1,7 +1,9 @@
 package metrics
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -116,5 +118,79 @@ func TestFanoutSink_Sample(t *testing.T) {
 	}
 	if !reflect.DeepEqual(m2.vals[0], v) {
 		t.Fatalf("val not equal")
+	}
+}
+
+func TestNewMetricSinkFromURL(t *testing.T) {
+	cases := map[string]struct {
+		Input string
+		Check func(MetricSink, error) error
+	}{
+		"statsd": {
+			Input: "statsd://someserver:123",
+			Check: func(ms MetricSink, err error) error {
+				if err != nil {
+					return fmt.Errorf("unexpected err: %s", err)
+				}
+				ss, ok := ms.(*StatsdSink)
+				if !ok {
+					return fmt.Errorf("Response is not a *StatsdSink: %#v", ms)
+				}
+				expectAddr := "someserver:123"
+				if ss.addr != expectAddr {
+					return fmt.Errorf("Expected addr %q, got: %q", expectAddr, ss.addr)
+				}
+				return nil
+			},
+		},
+		"statsite": {
+			Input: "statsite://someserver:123",
+			Check: func(ms MetricSink, err error) error {
+				if err != nil {
+					return fmt.Errorf("unexpected err: %s", err)
+				}
+				ss, ok := ms.(*StatsiteSink)
+				if !ok {
+					return fmt.Errorf("Response is not a *StatsiteSink: %#v", ms)
+				}
+				expectAddr := "someserver:123"
+				if ss.addr != expectAddr {
+					return fmt.Errorf("Expected addr %q, got: %q", expectAddr, ss.addr)
+				}
+				return nil
+			},
+		},
+		"inmem": {
+			Input: "inmem://?interval=30s&duration=30s",
+			Check: func(ms MetricSink, err error) error {
+				if err != nil {
+					return fmt.Errorf("unexpected err: %s", err)
+				}
+				if _, ok := ms.(*InmemSink); !ok {
+					return fmt.Errorf("Response is not a *InmemSink: %#v", ms)
+				}
+				return nil
+			},
+		},
+		"unknown": {
+			Input: "notasink://someserver:123",
+			Check: func(ms MetricSink, err error) error {
+				if err == nil {
+					return fmt.Errorf("expected err, got none")
+				}
+				if !strings.Contains(err.Error(), "unrecognized sink name: \"notasink\"") {
+					return fmt.Errorf("unexpected kind of err: %s", err)
+				}
+				return nil
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		output, err := NewMetricSinkFromURL(tc.Input)
+		resultErr := tc.Check(output, err)
+		if resultErr != nil {
+			t.Errorf("%s: %s", name, resultErr)
+		}
 	}
 }
