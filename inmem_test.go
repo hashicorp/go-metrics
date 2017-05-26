@@ -121,7 +121,7 @@ func TestNewInmemSinkFromURL(t *testing.T) {
 			expectErr: "Bad 'interval' param",
 		},
 		{
-			desc:      "interval must be a duratgion",
+			desc:      "interval must be a duration",
 			input:     "inmem://?retain=30s&interval=HIYA",
 			expectErr: "Bad 'interval' param",
 		},
