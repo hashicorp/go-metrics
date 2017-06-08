@@ -80,11 +80,11 @@ func (m *Metrics) emitRuntimeStats() {
 	runtime.ReadMemStats(&stats)
 	m.SetGauge([]string{"runtime", "alloc_bytes"}, float32(stats.Alloc))
 	m.SetGauge([]string{"runtime", "sys_bytes"}, float32(stats.Sys))
-	m.SetGauge([]string{"runtime", "malloc_count"}, float32(stats.Mallocs))
-	m.SetGauge([]string{"runtime", "free_count"}, float32(stats.Frees))
+	m.SetCounter([]string{"runtime", "malloc_count"}, float32(stats.Mallocs))
+	m.SetCounter([]string{"runtime", "free_count"}, float32(stats.Frees))
 	m.SetGauge([]string{"runtime", "heap_objects"}, float32(stats.HeapObjects))
-	m.SetGauge([]string{"runtime", "total_gc_pause_ns"}, float32(stats.PauseTotalNs))
-	m.SetGauge([]string{"runtime", "total_gc_runs"}, float32(stats.NumGC))
+	m.SetCounter([]string{"runtime", "total_gc_pause_ns"}, float32(stats.PauseTotalNs))
+	m.SetCounter([]string{"runtime", "total_gc_runs"}, float32(stats.NumGC))
 
 	// Export info about the last few GC runs
 	num := stats.NumGC
