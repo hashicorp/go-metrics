@@ -19,6 +19,9 @@ func (m *Metrics) SetGauge(key []string, val float32) {
 }
 
 func (m *Metrics) EmitKey(key []string, val float32) {
+	if m.HostName != "" && m.EnableHostname {
+		key = insert(0, m.HostName, key)
+	}
 	if m.EnableTypePrefix {
 		key = insert(0, "kv", key)
 	}
@@ -29,6 +32,9 @@ func (m *Metrics) EmitKey(key []string, val float32) {
 }
 
 func (m *Metrics) IncrCounter(key []string, val float32) {
+	if m.HostName != "" && m.EnableHostname {
+		key = insert(0, m.HostName, key)
+	}
 	if m.EnableTypePrefix {
 		key = insert(0, "counter", key)
 	}
@@ -39,6 +45,9 @@ func (m *Metrics) IncrCounter(key []string, val float32) {
 }
 
 func (m *Metrics) AddSample(key []string, val float32) {
+	if m.HostName != "" && m.EnableHostname {
+		key = insert(0, m.HostName, key)
+	}
 	if m.EnableTypePrefix {
 		key = insert(0, "sample", key)
 	}
@@ -49,6 +58,9 @@ func (m *Metrics) AddSample(key []string, val float32) {
 }
 
 func (m *Metrics) MeasureSince(key []string, start time.Time) {
+	if m.HostName != "" && m.EnableHostname {
+		key = insert(0, m.HostName, key)
+	}
 	if m.EnableTypePrefix {
 		key = insert(0, "timer", key)
 	}
