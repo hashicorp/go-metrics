@@ -21,6 +21,7 @@ const (
 // only UDP packets, while StatsiteSink uses TCP.
 type StatsdSink struct {
 	addr        string
+	prefix      string
 	metricQueue chan string
 }
 
@@ -34,6 +35,23 @@ func NewStatsdSinkFromURL(u *url.URL) (MetricSink, error) {
 func NewStatsdSink(addr string) (*StatsdSink, error) {
 	s := &StatsdSink{
 		addr:        addr,
+		prefix:      "",
+		metricQueue: make(chan string, 4096),
+	}
+	go s.flushMetrics()
+	return s, nil
+}
+
+// NewStatsdSinkWithPrefix is used to create a new StatsdSink with a prefix
+// used with every metric.
+func NewStatsdSinkWithPrefix(addr, prefix string) (*StatsdSink, error) {
+	if len(prefix) > 0 && !strings.HasSuffix(prefix, ".") {
+		prefix = fmt.Sprintf("%s.", prefix)
+	}
+
+	s := &StatsdSink{
+		addr:        addr,
+		prefix:      prefix,
 		metricQueue: make(chan string, 4096),
 	}
 	go s.flushMetrics()
@@ -47,22 +65,22 @@ func (s *StatsdSink) Shutdown() {
 
 func (s *StatsdSink) SetGauge(key []string, val float32) {
 	flatKey := s.flattenKey(key)
-	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
+	s.pushMetric(fmt.Sprintf("%s%s:%f|g\n", s.prefix, flatKey, val))
 }
 
 func (s *StatsdSink) EmitKey(key []string, val float32) {
 	flatKey := s.flattenKey(key)
-	s.pushMetric(fmt.Sprintf("%s:%f|kv\n", flatKey, val))
+	s.pushMetric(fmt.Sprintf("%s%s:%f|kv\n", s.prefix, flatKey, val))
 }
 
 func (s *StatsdSink) IncrCounter(key []string, val float32) {
 	flatKey := s.flattenKey(key)
-	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
+	s.pushMetric(fmt.Sprintf("%s%s:%f|c\n", s.prefix, flatKey, val))
 }
 
 func (s *StatsdSink) AddSample(key []string, val float32) {
 	flatKey := s.flattenKey(key)
-	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
+	s.pushMetric(fmt.Sprintf("%s%s:%f|ms\n", s.prefix, flatKey, val))
 }
 
 // Flattens the key for formatting, removes spaces
