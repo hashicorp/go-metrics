@@ -87,7 +87,7 @@ func TestSetGauge(t *testing.T) {
 		cs.Flush()
 	}()
 
-	expect := "{\"foo`bar\":{\"_type\":\"n\",\"_value\":1}}"
+	expect := "{\"foo`bar\":{\"_type\":\"n\",\"_value\":\"1\"}}"
 	actual := <-q
 
 	if actual != expect {
