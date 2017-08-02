@@ -30,6 +30,7 @@ func TestDefaultConfig(t *testing.T) {
 		t.Fatalf("bad interval")
 	}
 }
+
 func Test_GlobalMetrics(t *testing.T) {
 	var tests = []struct {
 		desc string
@@ -52,6 +53,38 @@ func Test_GlobalMetrics(t *testing.T) {
 				t.Fatalf("got key %s want %s", got, want)
 			}
 			if got, want := s.vals[0], tt.val; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got val %s want %s", got, want)
+			}
+		})
+	}
+}
+
+func Test_GlobalMetrics_Labels(t *testing.T) {
+	labels := []Label{{"a", "b"}}
+	var tests = []struct {
+		desc   string
+		key    []string
+		val    float32
+		fn     func([]string, float32, []Label)
+		labels []Label
+	}{
+		{"SetGaugeWithLabels", []string{"test"}, 42, SetGaugeWithLabels, labels},
+		{"IncrCounterWithLabels", []string{"test"}, 42, IncrCounterWithLabels, labels},
+		{"AddSampleWithLabels", []string{"test"}, 42, AddSampleWithLabels, labels},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			s := &MockSink{}
+			globalMetrics.Store(&Metrics{sink: s})
+			tt.fn(tt.key, tt.val, tt.labels)
+			if got, want := s.keys[0], tt.key; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got key %s want %s", got, want)
+			}
+			if got, want := s.vals[0], tt.val; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got val %s want %s", got, want)
+			}
+			if got, want := s.labels[0], tt.labels; !reflect.DeepEqual(got, want) {
 				t.Fatalf("got val %s want %s", got, want)
 			}
 		})

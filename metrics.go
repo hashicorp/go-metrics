@@ -5,7 +5,16 @@ import (
 	"time"
 )
 
+type Label struct {
+	Name  string
+	Value string
+}
+
 func (m *Metrics) SetGauge(key []string, val float32) {
+	m.SetGaugeWithLabels(key, val, nil)
+}
+
+func (m *Metrics) SetGaugeWithLabels(key []string, val float32, labels []Label) {
 	if m.HostName != "" && m.EnableHostname {
 		key = insert(0, m.HostName, key)
 	}
@@ -15,7 +24,7 @@ func (m *Metrics) SetGauge(key []string, val float32) {
 	if m.ServiceName != "" {
 		key = insert(0, m.ServiceName, key)
 	}
-	m.sink.SetGauge(key, val)
+	m.sink.SetGaugeWithLabels(key, val, labels)
 }
 
 func (m *Metrics) EmitKey(key []string, val float32) {
@@ -29,26 +38,38 @@ func (m *Metrics) EmitKey(key []string, val float32) {
 }
 
 func (m *Metrics) IncrCounter(key []string, val float32) {
+	m.IncrCounterWithLabels(key, val, nil)
+}
+
+func (m *Metrics) IncrCounterWithLabels(key []string, val float32, labels []Label) {
 	if m.EnableTypePrefix {
 		key = insert(0, "counter", key)
 	}
 	if m.ServiceName != "" {
 		key = insert(0, m.ServiceName, key)
 	}
-	m.sink.IncrCounter(key, val)
+	m.sink.IncrCounterWithLabels(key, val, labels)
 }
 
 func (m *Metrics) AddSample(key []string, val float32) {
+	m.AddSampleWithLabels(key, val, nil)
+}
+
+func (m *Metrics) AddSampleWithLabels(key []string, val float32, labels []Label) {
 	if m.EnableTypePrefix {
 		key = insert(0, "sample", key)
 	}
 	if m.ServiceName != "" {
 		key = insert(0, m.ServiceName, key)
 	}
-	m.sink.AddSample(key, val)
+	m.sink.AddSampleWithLabels(key, val, labels)
 }
 
 func (m *Metrics) MeasureSince(key []string, start time.Time) {
+	m.MeasureSinceWithLabels(key, start, nil)
+}
+
+func (m *Metrics) MeasureSinceWithLabels(key []string, start time.Time, labels []Label) {
 	if m.EnableTypePrefix {
 		key = insert(0, "timer", key)
 	}
@@ -58,7 +79,7 @@ func (m *Metrics) MeasureSince(key []string, start time.Time) {
 	now := time.Now()
 	elapsed := now.Sub(start)
 	msec := float32(elapsed.Nanoseconds()) / float32(m.TimerGranularity)
-	m.sink.AddSample(key, msec)
+	m.sink.AddSampleWithLabels(key, msec, labels)
 }
 
 // Periodically collects runtime stats to publish

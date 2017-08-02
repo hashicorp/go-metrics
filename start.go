@@ -79,6 +79,10 @@ func SetGauge(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).SetGauge(key, val)
 }
 
+func SetGaugeWithLabels(key []string, val float32, labels []Label) {
+	globalMetrics.Load().(*Metrics).SetGaugeWithLabels(key, val, labels)
+}
+
 func EmitKey(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).EmitKey(key, val)
 }
@@ -87,8 +91,16 @@ func IncrCounter(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).IncrCounter(key, val)
 }
 
+func IncrCounterWithLabels(key []string, val float32, labels []Label) {
+	globalMetrics.Load().(*Metrics).IncrCounterWithLabels(key, val, labels)
+}
+
 func AddSample(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).AddSample(key, val)
+}
+
+func AddSampleWithLabels(key []string, val float32, labels []Label) {
+	globalMetrics.Load().(*Metrics).AddSampleWithLabels(key, val, labels)
 }
 
 func MeasureSince(key []string, start time.Time) {

@@ -24,6 +24,19 @@ func TestMetrics_SetGauge(t *testing.T) {
 	}
 
 	m, met = mockMetric()
+	labels := []Label{{"a", "b"}}
+	met.SetGaugeWithLabels([]string{"key"}, float32(1), labels)
+	if m.keys[0][0] != "key" {
+		t.Fatalf("")
+	}
+	if m.vals[0] != 1 {
+		t.Fatalf("")
+	}
+	if !reflect.DeepEqual(m.labels[0], labels) {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
 	met.HostName = "test"
 	met.EnableHostname = true
 	met.SetGauge([]string{"key"}, float32(1))
@@ -97,6 +110,19 @@ func TestMetrics_IncrCounter(t *testing.T) {
 	}
 
 	m, met = mockMetric()
+	labels := []Label{{"a", "b"}}
+	met.IncrCounterWithLabels([]string{"key"}, float32(1), labels)
+	if m.keys[0][0] != "key" {
+		t.Fatalf("")
+	}
+	if m.vals[0] != 1 {
+		t.Fatalf("")
+	}
+	if !reflect.DeepEqual(m.labels[0], labels) {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
 	met.EnableTypePrefix = true
 	met.IncrCounter([]string{"key"}, float32(1))
 	if m.keys[0][0] != "counter" || m.keys[0][1] != "key" {
@@ -124,6 +150,19 @@ func TestMetrics_AddSample(t *testing.T) {
 		t.Fatalf("")
 	}
 	if m.vals[0] != 1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
+	labels := []Label{{"a", "b"}}
+	met.AddSampleWithLabels([]string{"key"}, float32(1), labels)
+	if m.keys[0][0] != "key" {
+		t.Fatalf("")
+	}
+	if m.vals[0] != 1 {
+		t.Fatalf("")
+	}
+	if !reflect.DeepEqual(m.labels[0], labels) {
 		t.Fatalf("")
 	}
 
@@ -157,6 +196,20 @@ func TestMetrics_MeasureSince(t *testing.T) {
 		t.Fatalf("")
 	}
 	if m.vals[0] > 0.1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
+	met.TimerGranularity = time.Millisecond
+	labels := []Label{{"a", "b"}}
+	met.MeasureSinceWithLabels([]string{"key"}, n, labels)
+	if m.keys[0][0] != "key" {
+		t.Fatalf("")
+	}
+	if m.vals[0] > 0.1 {
+		t.Fatalf("")
+	}
+	if !reflect.DeepEqual(m.labels[0], labels) {
 		t.Fatalf("")
 	}
 

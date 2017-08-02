@@ -3,6 +3,7 @@ package metrics
 import (
 	"fmt"
 	"math"
+	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -69,12 +70,12 @@ func NewIntervalMetrics(intv time.Time) *IntervalMetrics {
 // about a sample
 type AggregateSample struct {
 	Count       int       // The count of emitted pairs
-	Rate        float64   // The count of emitted pairs per time unit (usually 1 second)
+	Rate        float64   `json:"-"` // The count of emitted pairs per time unit (usually 1 second)
 	Sum         float64   // The sum of values
-	SumSq       float64   // The sum of squared values
+	SumSq       float64   `json:"-"` // The sum of squared values
 	Min         float64   // Minimum value
 	Max         float64   // Maximum value
-	LastUpdated time.Time // When value was last updated
+	LastUpdated time.Time `json:"-"` // When value was last updated
 }
 
 // Computes a Stddev of the values
@@ -154,7 +155,11 @@ func NewInmemSink(interval, retain time.Duration) *InmemSink {
 }
 
 func (i *InmemSink) SetGauge(key []string, val float32) {
-	k := i.flattenKey(key)
+	i.SetGaugeWithLabels(key, val, nil)
+}
+
+func (i *InmemSink) SetGaugeWithLabels(key []string, val float32, labels []Label) {
+	k := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
 	intv.Lock()
@@ -173,7 +178,11 @@ func (i *InmemSink) EmitKey(key []string, val float32) {
 }
 
 func (i *InmemSink) IncrCounter(key []string, val float32) {
-	k := i.flattenKey(key)
+	i.IncrCounterWithLabels(key, val, nil)
+}
+
+func (i *InmemSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {
+	k := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
 	intv.Lock()
@@ -188,7 +197,11 @@ func (i *InmemSink) IncrCounter(key []string, val float32) {
 }
 
 func (i *InmemSink) AddSample(key []string, val float32) {
-	k := i.flattenKey(key)
+	i.AddSampleWithLabels(key, val, nil)
+}
+
+func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []Label) {
+	k := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
 	intv.Lock()
@@ -263,4 +276,89 @@ func (i *InmemSink) getInterval() *IntervalMetrics {
 func (i *InmemSink) flattenKey(parts []string) string {
 	joined := strings.Join(parts, ".")
 	return strings.Replace(joined, " ", "_", -1)
+}
+
+// Flattens the key for formatting along with its tags, removes spaces
+func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) string {
+	joined := strings.Join(parts, ".")
+	var labelString string
+	for _, label := range labels {
+		labelString += fmt.Sprintf(";%s=%s", label.Name, label.Value)
+	}
+
+	return strings.Replace(joined, " ", "_", -1) + labelString
+}
+
+type MetricsSummary struct {
+	Timestamp string
+	Gauges    map[string]GaugeValue
+	Points    map[string][]float32
+	Counters  map[string]SampledValue
+	Samples   map[string]SampledValue
+}
+
+type GaugeValue struct {
+	Value  float32
+	Labels map[string]string
+}
+
+type SampledValue struct {
+	*AggregateSample
+	Labels map[string]string
+}
+
+func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error) {
+	i.intervalLock.Lock()
+	defer i.intervalLock.Unlock()
+
+	var interval *IntervalMetrics
+	n := len(i.intervals)
+	switch {
+	case n == 0:
+		return nil, fmt.Errorf("no metric intervals have been initialized yet")
+	case n == 1:
+		interval = i.intervals[0]
+	default:
+		interval = i.intervals[n-2]
+	}
+
+	summary := MetricsSummary{
+		Timestamp: interval.Interval.String(),
+		Gauges:    make(map[string]GaugeValue),
+		Points:    interval.Points,
+		Counters:  make(map[string]SampledValue),
+		Samples:   make(map[string]SampledValue),
+	}
+
+	for name, value := range interval.Gauges {
+		key, labels := extractLabels(name)
+		summary.Gauges[key] = GaugeValue{value, labels}
+	}
+
+	for name, aggregate := range interval.Counters {
+		key, labels := extractLabels(name)
+		summary.Counters[key] = SampledValue{aggregate, labels}
+	}
+
+	for name, aggregate := range interval.Samples {
+		key, labels := extractLabels(name)
+		summary.Samples[key] = SampledValue{aggregate, labels}
+	}
+
+	return summary, nil
+}
+
+func extractLabels(key string) (string, map[string]string) {
+	split := strings.Split(key, ";")
+	if len(split) < 2 {
+		return key, nil
+	}
+
+	labels := make(map[string]string)
+	for _, raw := range split[1:] {
+		s := strings.SplitN(raw, "=", 2)
+		labels[s[0]] = s[1]
+	}
+
+	return split[0], labels
 }
