@@ -2,11 +2,10 @@
 package prometheus
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"time"
-
-	"fmt"
 
 	"github.com/armon/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"

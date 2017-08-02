@@ -1,9 +1,8 @@
 package datadog
 
 import (
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/armon/go-metrics"

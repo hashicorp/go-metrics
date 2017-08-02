@@ -3,7 +3,6 @@ package metrics
 import (
 	"fmt"
 	"math"
-	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -287,78 +286,4 @@ func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) string {
 	}
 
 	return strings.Replace(joined, " ", "_", -1) + labelString
-}
-
-type MetricsSummary struct {
-	Timestamp string
-	Gauges    map[string]GaugeValue
-	Points    map[string][]float32
-	Counters  map[string]SampledValue
-	Samples   map[string]SampledValue
-}
-
-type GaugeValue struct {
-	Value  float32
-	Labels map[string]string
-}
-
-type SampledValue struct {
-	*AggregateSample
-	Labels map[string]string
-}
-
-func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error) {
-	i.intervalLock.Lock()
-	defer i.intervalLock.Unlock()
-
-	var interval *IntervalMetrics
-	n := len(i.intervals)
-	switch {
-	case n == 0:
-		return nil, fmt.Errorf("no metric intervals have been initialized yet")
-	case n == 1:
-		interval = i.intervals[0]
-	default:
-		interval = i.intervals[n-2]
-	}
-
-	summary := MetricsSummary{
-		Timestamp: interval.Interval.String(),
-		Gauges:    make(map[string]GaugeValue),
-		Points:    interval.Points,
-		Counters:  make(map[string]SampledValue),
-		Samples:   make(map[string]SampledValue),
-	}
-
-	for name, value := range interval.Gauges {
-		key, labels := extractLabels(name)
-		summary.Gauges[key] = GaugeValue{value, labels}
-	}
-
-	for name, aggregate := range interval.Counters {
-		key, labels := extractLabels(name)
-		summary.Counters[key] = SampledValue{aggregate, labels}
-	}
-
-	for name, aggregate := range interval.Samples {
-		key, labels := extractLabels(name)
-		summary.Samples[key] = SampledValue{aggregate, labels}
-	}
-
-	return summary, nil
-}
-
-func extractLabels(key string) (string, map[string]string) {
-	split := strings.Split(key, ";")
-	if len(split) < 2 {
-		return key, nil
-	}
-
-	labels := make(map[string]string)
-	for _, raw := range split[1:] {
-		s := strings.SplitN(raw, "=", 2)
-		labels[s[0]] = s[1]
-	}
-
-	return split[0], labels
 }

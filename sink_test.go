@@ -88,10 +88,10 @@ func TestFanoutSink_Gauge_Labels(t *testing.T) {
 		t.Fatalf("val not equal")
 	}
 	if !reflect.DeepEqual(m1.labels[0], l) {
-		t.Fatalf("val not equal")
+		t.Fatalf("labels not equal")
 	}
 	if !reflect.DeepEqual(m2.labels[0], l) {
-		t.Fatalf("val not equal")
+		t.Fatalf("labels not equal")
 	}
 }
 
@@ -164,10 +164,10 @@ func TestFanoutSink_Counter_Labels(t *testing.T) {
 		t.Fatalf("val not equal")
 	}
 	if !reflect.DeepEqual(m1.labels[0], l) {
-		t.Fatalf("val not equal")
+		t.Fatalf("labels not equal")
 	}
 	if !reflect.DeepEqual(m2.labels[0], l) {
-		t.Fatalf("val not equal")
+		t.Fatalf("labels not equal")
 	}
 }
 
@@ -217,10 +217,10 @@ func TestFanoutSink_Sample_Labels(t *testing.T) {
 		t.Fatalf("val not equal")
 	}
 	if !reflect.DeepEqual(m1.labels[0], l) {
-		t.Fatalf("val not equal")
+		t.Fatalf("labels not equal")
 	}
 	if !reflect.DeepEqual(m2.labels[0], l) {
-		t.Fatalf("val not equal")
+		t.Fatalf("labels not equal")
 	}
 }
 
