@@ -39,17 +39,17 @@ func TestInmemSink(t *testing.T) {
 	if time.Now().Sub(intvM.Interval) > 10*time.Millisecond {
 		t.Fatalf("interval too old")
 	}
-	if intvM.Gauges["foo.bar"] != 42 {
+	if intvM.Gauges["foo.bar"].Value != 42 {
 		t.Fatalf("bad val: %v", intvM.Gauges)
 	}
-	if intvM.Gauges["foo.bar;a=b"] != 23 {
+	if intvM.Gauges["foo.bar;a=b"].Value != 23 {
 		t.Fatalf("bad val: %v", intvM.Gauges)
 	}
 	if intvM.Points["foo.bar"][0] != 42 {
 		t.Fatalf("bad val: %v", intvM.Points)
 	}
 
-	for _, agg := range []*AggregateSample{intvM.Counters["foo.bar"], intvM.Counters["foo.bar;a=b"]} {
+	for _, agg := range []SampledValue{intvM.Counters["foo.bar"], intvM.Counters["foo.bar;a=b"]} {
 		if agg.Count != 2 {
 			t.Fatalf("bad val: %v", agg)
 		}
@@ -68,10 +68,10 @@ func TestInmemSink(t *testing.T) {
 		if agg.Max != 22 {
 			t.Fatalf("bad val: %v", agg)
 		}
-		if agg.Mean() != 21 {
+		if agg.AggregateSample.Mean() != 21 {
 			t.Fatalf("bad val: %v", agg)
 		}
-		if agg.Stddev() != math.Sqrt(2) {
+		if agg.AggregateSample.Stddev() != math.Sqrt(2) {
 			t.Fatalf("bad val: %v", agg)
 		}
 
@@ -85,11 +85,11 @@ func TestInmemSink(t *testing.T) {
 		}
 	}
 
-	if agg := intvM.Samples["foo.bar"]; agg == nil {
+	if _, ok := intvM.Samples["foo.bar"]; !ok {
 		t.Fatalf("missing sample")
 	}
 
-	if agg := intvM.Samples["foo.bar;a=b"]; agg == nil {
+	if _, ok := intvM.Samples["foo.bar;a=b"]; !ok {
 		t.Fatalf("missing sample")
 	}
 

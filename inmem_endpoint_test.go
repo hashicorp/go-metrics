@@ -34,13 +34,15 @@ func TestDisplayMetrics(t *testing.T) {
 		Gauges: []GaugeValue{
 			{
 				Name:   "foo.bar",
+				Hash:   "foo.bar",
 				Value:  float32(42),
-				Labels: map[string]string{},
+				Labels: []Label{},
 			},
 			{
 				Name:   "foo.bar",
+				Hash:   "foo.bar;a=b",
 				Value:  float32(23),
-				Labels: map[string]string{"a": "b"},
+				Labels: []Label{{"a", "b"}},
 			},
 		},
 		Points: []PointValue{
@@ -52,6 +54,7 @@ func TestDisplayMetrics(t *testing.T) {
 		Counters: []SampledValue{
 			{
 				Name: "foo.bar",
+				Hash: "foo.bar",
 				AggregateSample: &AggregateSample{
 					Count: 2,
 					Min:   20,
@@ -65,6 +68,7 @@ func TestDisplayMetrics(t *testing.T) {
 			},
 			{
 				Name: "foo.bar",
+				Hash: "foo.bar;a=b",
 				AggregateSample: &AggregateSample{
 					Count: 2,
 					Min:   20,
@@ -75,12 +79,13 @@ func TestDisplayMetrics(t *testing.T) {
 				},
 				Mean:   30,
 				Stddev: 14.142135623730951,
-				Labels: map[string]string{"a": "b"},
+				Labels: []Label{{"a", "b"}},
 			},
 		},
 		Samples: []SampledValue{
 			{
 				Name: "foo.bar",
+				Hash: "foo.bar",
 				AggregateSample: &AggregateSample{
 					Count: 2,
 					Min:   20,
@@ -94,6 +99,7 @@ func TestDisplayMetrics(t *testing.T) {
 			},
 			{
 				Name: "foo.bar",
+				Hash: "foo.bar;a=b",
 				AggregateSample: &AggregateSample{
 					Count: 2,
 					Min:   23,
@@ -104,7 +110,7 @@ func TestDisplayMetrics(t *testing.T) {
 				},
 				Mean:   28,
 				Stddev: 7.0710678118654755,
-				Labels: map[string]string{"a": "b"},
+				Labels: []Label{{"a", "b"}},
 			},
 		},
 	}

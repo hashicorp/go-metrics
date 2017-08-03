@@ -39,7 +39,7 @@ type IntervalMetrics struct {
 	Interval time.Time
 
 	// Gauges maps the key to the last set value
-	Gauges map[string]float32
+	Gauges map[string]GaugeValue
 
 	// Points maps the string to the list of emitted values
 	// from EmitKey
@@ -47,21 +47,21 @@ type IntervalMetrics struct {
 
 	// Counters maps the string key to a sum of the counter
 	// values
-	Counters map[string]*AggregateSample
+	Counters map[string]SampledValue
 
 	// Samples maps the key to an AggregateSample,
 	// which has the rolled up view of a sample
-	Samples map[string]*AggregateSample
+	Samples map[string]SampledValue
 }
 
 // NewIntervalMetrics creates a new IntervalMetrics for a given interval
 func NewIntervalMetrics(intv time.Time) *IntervalMetrics {
 	return &IntervalMetrics{
 		Interval: intv,
-		Gauges:   make(map[string]float32),
+		Gauges:   make(map[string]GaugeValue),
 		Points:   make(map[string][]float32),
-		Counters: make(map[string]*AggregateSample),
-		Samples:  make(map[string]*AggregateSample),
+		Counters: make(map[string]SampledValue),
+		Samples:  make(map[string]SampledValue),
 	}
 }
 
@@ -163,7 +163,7 @@ func (i *InmemSink) SetGaugeWithLabels(key []string, val float32, labels []Label
 
 	intv.Lock()
 	defer intv.Unlock()
-	intv.Gauges[k] = val
+	intv.Gauges[k] = GaugeValue{Name: i.flattenKey(key), Value: val, Labels: labels}
 }
 
 func (i *InmemSink) EmitKey(key []string, val float32) {
@@ -187,9 +187,13 @@ func (i *InmemSink) IncrCounterWithLabels(key []string, val float32, labels []La
 	intv.Lock()
 	defer intv.Unlock()
 
-	agg := intv.Counters[k]
-	if agg == nil {
-		agg = &AggregateSample{}
+	agg, ok := intv.Counters[k]
+	if !ok {
+		agg = SampledValue{
+			Name:            i.flattenKey(key),
+			AggregateSample: &AggregateSample{},
+			Labels:          labels,
+		}
 		intv.Counters[k] = agg
 	}
 	agg.Ingest(float64(val), i.rateDenom)
@@ -206,9 +210,13 @@ func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []Labe
 	intv.Lock()
 	defer intv.Unlock()
 
-	agg := intv.Samples[k]
-	if agg == nil {
-		agg = &AggregateSample{}
+	agg, ok := intv.Samples[k]
+	if !ok {
+		agg = SampledValue{
+			Name:            i.flattenKey(key),
+			AggregateSample: &AggregateSample{},
+			Labels:          labels,
+		}
 		intv.Samples[k] = agg
 	}
 	agg.Ingest(float64(val), i.rateDenom)
@@ -277,7 +285,7 @@ func (i *InmemSink) flattenKey(parts []string) string {
 	return strings.Replace(joined, " ", "_", -1)
 }
 
-// Flattens the key for formatting along with its tags, removes spaces
+// Flattens the key for formatting along with its labels, removes spaces
 func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) string {
 	joined := strings.Join(parts, ".")
 	var labelString string

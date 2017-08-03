@@ -97,9 +97,8 @@ func (s *DogStatsdSink) AddSample(key []string, val float32) {
 	s.AddSampleWithLabels(key, val, nil)
 }
 
-// The following ...WithTags methods correspond to Datadog's Tag extension to Statsd.
+// The following ...WithLabels methods correspond to Datadog's Tag extension to Statsd.
 // http://docs.datadoghq.com/guides/dogstatsd/#tags
-
 func (s *DogStatsdSink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
 	rate := 1.0
