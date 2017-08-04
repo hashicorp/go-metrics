@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"regexp"
+
 	"github.com/armon/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -26,12 +28,11 @@ func NewPrometheusSink() (*PrometheusSink, error) {
 	}, nil
 }
 
+var forbiddenChars = regexp.MustCompile("[ .=\\-]")
+
 func (p *PrometheusSink) flattenKey(parts []string, labels []metrics.Label) (string, string) {
 	key := strings.Join(parts, "_")
-	key = strings.Replace(key, " ", "_", -1)
-	key = strings.Replace(key, ".", "_", -1)
-	key = strings.Replace(key, "-", "_", -1)
-	key = strings.Replace(key, "=", "_", -1)
+	key = forbiddenChars.ReplaceAllString(key, "_")
 
 	hash := key
 	for _, label := range labels {
@@ -78,7 +79,7 @@ func (p *PrometheusSink) AddSampleWithLabels(parts []string, val float32, labels
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	key, hash := p.flattenKey(parts, labels)
-	g, ok := p.summaries[key]
+	g, ok := p.summaries[hash]
 	if !ok {
 		g = prometheus.NewSummary(prometheus.SummaryOpts{
 			Name:        key,

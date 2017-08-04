@@ -30,7 +30,7 @@ func TestDisplayMetrics(t *testing.T) {
 	}
 
 	expected := MetricsSummary{
-		Timestamp: data[0].Interval.String(),
+		Timestamp: data[0].Interval.Round(time.Second).UTC().String(),
 		Gauges: []GaugeValue{
 			{
 				Name:   "foo.bar",

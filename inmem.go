@@ -158,12 +158,12 @@ func (i *InmemSink) SetGauge(key []string, val float32) {
 }
 
 func (i *InmemSink) SetGaugeWithLabels(key []string, val float32, labels []Label) {
-	k := i.flattenKeyLabels(key, labels)
+	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
 	intv.Lock()
 	defer intv.Unlock()
-	intv.Gauges[k] = GaugeValue{Name: i.flattenKey(key), Value: val, Labels: labels}
+	intv.Gauges[k] = GaugeValue{Name: name, Value: val, Labels: labels}
 }
 
 func (i *InmemSink) EmitKey(key []string, val float32) {
@@ -181,7 +181,7 @@ func (i *InmemSink) IncrCounter(key []string, val float32) {
 }
 
 func (i *InmemSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {
-	k := i.flattenKeyLabels(key, labels)
+	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
 	intv.Lock()
@@ -190,7 +190,7 @@ func (i *InmemSink) IncrCounterWithLabels(key []string, val float32, labels []La
 	agg, ok := intv.Counters[k]
 	if !ok {
 		agg = SampledValue{
-			Name:            i.flattenKey(key),
+			Name:            name,
 			AggregateSample: &AggregateSample{},
 			Labels:          labels,
 		}
@@ -204,7 +204,7 @@ func (i *InmemSink) AddSample(key []string, val float32) {
 }
 
 func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []Label) {
-	k := i.flattenKeyLabels(key, labels)
+	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
 	intv.Lock()
@@ -213,7 +213,7 @@ func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []Labe
 	agg, ok := intv.Samples[k]
 	if !ok {
 		agg = SampledValue{
-			Name:            i.flattenKey(key),
+			Name:            name,
 			AggregateSample: &AggregateSample{},
 			Labels:          labels,
 		}
@@ -286,12 +286,12 @@ func (i *InmemSink) flattenKey(parts []string) string {
 }
 
 // Flattens the key for formatting along with its labels, removes spaces
-func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) string {
-	joined := strings.Join(parts, ".")
+func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) (string, string) {
+	key := strings.Replace(strings.Join(parts, "."), " ", "_", -1)
 	var labelString string
 	for _, label := range labels {
 		labelString += fmt.Sprintf(";%s=%s", label.Name, label.Value)
 	}
 
-	return strings.Replace(joined, " ", "_", -1) + labelString
+	return key + labelString, key
 }

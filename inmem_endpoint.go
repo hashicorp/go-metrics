@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"time"
 )
 
 // MetricsSummary holds a roll-up of metrics info for a given interval
@@ -52,7 +53,7 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 	}
 
 	summary := MetricsSummary{
-		Timestamp: interval.Interval.String(),
+		Timestamp: interval.Interval.Round(time.Second).UTC().String(),
 		Gauges:    []GaugeValue{},
 		Points:    []PointValue{},
 	}
