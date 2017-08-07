@@ -130,7 +130,7 @@ func (m *Metrics) MeasureSinceWithLabels(key []string, start time.Time, labels [
 // Returns whether the metric should be allowed based on configured prefix filters
 func (m *Metrics) allowMetric(key []string) bool {
 	if m.filter == nil || m.filter.Len() == 0 {
-		return true
+		return m.Config.FilterDefault
 	}
 
 	_, allowed, ok := m.filter.Root().LongestPrefix([]byte(strings.Join(key, ".")))
