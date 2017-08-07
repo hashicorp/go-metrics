@@ -46,16 +46,18 @@ func (s *DogStatsdSink) EnableHostNamePropagation() {
 
 func (s *DogStatsdSink) flattenKey(parts []string) string {
 	joined := strings.Join(parts, ".")
-	return strings.Map(func(r rune) rune {
-		switch r {
-		case ':':
-			fallthrough
-		case ' ':
-			return '_'
-		default:
-			return r
-		}
-	}, joined)
+	return strings.Map(sanitize, joined)
+}
+
+func sanitize(r rune) rune {
+	switch r {
+	case ':':
+		fallthrough
+	case ' ':
+		return '_'
+	default:
+		return r
+	}
 }
 
 func (s *DogStatsdSink) parseKey(key []string) ([]string, []metrics.Label) {
@@ -125,6 +127,8 @@ func (s *DogStatsdSink) getFlatkeyAndCombinedLabels(key []string, labels []metri
 
 	var tags []string
 	for _, label := range labels {
+		label.Name = strings.Map(sanitize, label.Name)
+		label.Value = strings.Map(sanitize, label.Value)
 		if label.Value != "" {
 			tags = append(tags, fmt.Sprintf("%s:%s", label.Name, label.Value))
 		} else {

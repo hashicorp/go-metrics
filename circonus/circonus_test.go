@@ -12,7 +12,7 @@ import (
 func TestNewCirconusSink(t *testing.T) {
 
 	// test with invalid config (nil)
-	expectedError := errors.New("Invalid check manager configuration (no API token AND no submission url).")
+	expectedError := errors.New("invalid check manager configuration (no API token AND no submission url)")
 	_, err := NewCirconusSink(nil)
 	if err == nil || err.Error() != expectedError.Error() {
 		t.Errorf("Expected an '%#v' error, got '%#v'", expectedError, err)
