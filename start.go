@@ -4,6 +4,8 @@ import (
 	"os"
 	"sync/atomic"
 	"time"
+
+	"github.com/hashicorp/go-immutable-radix"
 )
 
 // Config is used to configure metrics settings
@@ -15,6 +17,9 @@ type Config struct {
 	EnableTypePrefix     bool          // Prefixes key with a type ("counter", "gauge", "timer")
 	TimerGranularity     time.Duration // Granularity of timers.
 	ProfileInterval      time.Duration // Interval to profile runtime metrics
+	AllowedPrefixes      []string      // A list of metric prefixes to allow, with '.' as the separator
+	BlockedPrefixes      []string      // A list of metric prefixes to block, with '.' as the separator
+	FilterDefault        bool          // Whether to allow metrics by default
 }
 
 // Metrics represents an instance of a metrics sink that can
@@ -23,6 +28,7 @@ type Metrics struct {
 	Config
 	lastNumGC uint32
 	sink      MetricSink
+	filter    *iradix.Tree
 }
 
 // Shared global metrics instance
@@ -43,6 +49,7 @@ func DefaultConfig(serviceName string) *Config {
 		EnableTypePrefix:     false,            // Disable type prefix
 		TimerGranularity:     time.Millisecond, // Timers are in milliseconds
 		ProfileInterval:      time.Second,      // Poll runtime every second
+		FilterDefault:        true,             // Don't filter metrics by default
 	}
 
 	// Try to get the hostname
@@ -56,6 +63,14 @@ func New(conf *Config, sink MetricSink) (*Metrics, error) {
 	met := &Metrics{}
 	met.Config = *conf
 	met.sink = sink
+	met.filter = iradix.New()
+
+	for _, prefix := range conf.AllowedPrefixes {
+		met.filter, _, _ = met.filter.Insert([]byte(prefix), true)
+	}
+	for _, prefix := range conf.BlockedPrefixes {
+		met.filter, _, _ = met.filter.Insert([]byte(prefix), false)
+	}
 
 	// Start the runtime collector
 	if conf.EnableRuntimeMetrics {

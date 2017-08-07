@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -24,6 +25,9 @@ func (m *Metrics) SetGaugeWithLabels(key []string, val float32, labels []Label) 
 	if m.ServiceName != "" {
 		key = insert(0, m.ServiceName, key)
 	}
+	if !m.allowMetric(key) {
+		return
+	}
 	m.sink.SetGaugeWithLabels(key, val, labels)
 }
 
@@ -33,6 +37,9 @@ func (m *Metrics) EmitKey(key []string, val float32) {
 	}
 	if m.ServiceName != "" {
 		key = insert(0, m.ServiceName, key)
+	}
+	if !m.allowMetric(key) {
+		return
 	}
 	m.sink.EmitKey(key, val)
 }
@@ -48,6 +55,9 @@ func (m *Metrics) IncrCounterWithLabels(key []string, val float32, labels []Labe
 	if m.ServiceName != "" {
 		key = insert(0, m.ServiceName, key)
 	}
+	if !m.allowMetric(key) {
+		return
+	}
 	m.sink.IncrCounterWithLabels(key, val, labels)
 }
 
@@ -61,6 +71,9 @@ func (m *Metrics) AddSampleWithLabels(key []string, val float32, labels []Label)
 	}
 	if m.ServiceName != "" {
 		key = insert(0, m.ServiceName, key)
+	}
+	if !m.allowMetric(key) {
+		return
 	}
 	m.sink.AddSampleWithLabels(key, val, labels)
 }
@@ -76,10 +89,26 @@ func (m *Metrics) MeasureSinceWithLabels(key []string, start time.Time, labels [
 	if m.ServiceName != "" {
 		key = insert(0, m.ServiceName, key)
 	}
+	if !m.allowMetric(key) {
+		return
+	}
 	now := time.Now()
 	elapsed := now.Sub(start)
 	msec := float32(elapsed.Nanoseconds()) / float32(m.TimerGranularity)
 	m.sink.AddSampleWithLabels(key, msec, labels)
+}
+
+// Returns whether the metric should be allowed based on configured prefix filters
+func (m *Metrics) allowMetric(key []string) bool {
+	if m.filter == nil || m.filter.Len() == 0 {
+		return true
+	}
+
+	_, allowed, ok := m.filter.Root().LongestPrefix([]byte(strings.Join(key, ".")))
+	if !ok {
+		return m.Config.FilterDefault
+	}
+	return allowed.(bool)
 }
 
 // Periodically collects runtime stats to publish

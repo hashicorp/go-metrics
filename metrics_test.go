@@ -313,3 +313,99 @@ func TestInsert(t *testing.T) {
 		t.Fatalf("bad insert %v %v", exp, out)
 	}
 }
+
+func TestMetrics_Filter_Blacklist(t *testing.T) {
+	m := &MockSink{}
+	conf := DefaultConfig("")
+	conf.AllowedPrefixes = []string{"service", "debug.thing"}
+	conf.BlockedPrefixes = []string{"debug"}
+	conf.EnableHostname = false
+	met, err := New(conf, m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Allowed by default
+	key := []string{"thing"}
+	met.SetGauge(key, 1)
+	if !reflect.DeepEqual(m.keys[0], key) {
+		t.Fatalf("key doesn't exist %v, %v", m.keys[0], key)
+	}
+	if m.vals[0] != 1 {
+		t.Fatalf("bad val: %v", m.vals[0])
+	}
+
+	// Allowed by filter
+	key = []string{"service", "thing"}
+	met.SetGauge(key, 2)
+	if !reflect.DeepEqual(m.keys[1], key) {
+		t.Fatalf("key doesn't exist")
+	}
+	if m.vals[1] != 2 {
+		t.Fatalf("bad val: %v", m.vals[1])
+	}
+
+	// Allowed by filter, subtree of a blocked entry
+	key = []string{"debug", "thing"}
+	met.SetGauge(key, 3)
+	if !reflect.DeepEqual(m.keys[2], key) {
+		t.Fatalf("key doesn't exist")
+	}
+	if m.vals[2] != 3 {
+		t.Fatalf("bad val: %v", m.vals[2])
+	}
+
+	// Blocked by filter
+	key = []string{"debug", "other-thing"}
+	met.SetGauge(key, 4)
+	if len(m.keys) != 3 {
+		t.Fatalf("key shouldn't exist")
+	}
+}
+
+func TestMetrics_Filter_Whitelist(t *testing.T) {
+	m := &MockSink{}
+	conf := DefaultConfig("")
+	conf.AllowedPrefixes = []string{"service", "debug.thing"}
+	conf.BlockedPrefixes = []string{"debug"}
+	conf.FilterDefault = false
+	conf.EnableHostname = false
+	met, err := New(conf, m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Blocked by default
+	key := []string{"thing"}
+	met.SetGauge(key, 1)
+	if len(m.keys) != 0 {
+		t.Fatalf("key should not exist")
+	}
+
+	// Allowed by filter
+	key = []string{"service", "thing"}
+	met.SetGauge(key, 2)
+	if !reflect.DeepEqual(m.keys[0], key) {
+		t.Fatalf("key doesn't exist")
+	}
+	if m.vals[0] != 2 {
+		t.Fatalf("bad val: %v", m.vals[0])
+	}
+
+	// Allowed by filter, subtree of a blocked entry
+	key = []string{"debug", "thing"}
+	met.SetGauge(key, 3)
+	if !reflect.DeepEqual(m.keys[1], key) {
+		t.Fatalf("key doesn't exist")
+	}
+	if m.vals[1] != 3 {
+		t.Fatalf("bad val: %v", m.vals[1])
+	}
+
+	// Blocked by filter
+	key = []string{"debug", "other-thing"}
+	met.SetGauge(key, 4)
+	if len(m.keys) != 2 {
+		t.Fatalf("key shouldn't exist")
+	}
+}
