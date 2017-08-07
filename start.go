@@ -13,6 +13,8 @@ type Config struct {
 	ServiceName          string        // Prefixed with keys to seperate services
 	HostName             string        // Hostname to use. If not provided and EnableHostname, it will be os.Hostname
 	EnableHostname       bool          // Enable prefixing gauge values with hostname
+	EnableHostnameLabel  bool          // Enable adding hostname to labels
+	EnableServiceLabel   bool          // Enable adding service to labels
 	EnableRuntimeMetrics bool          // Enables profiling of runtime metrics (GC, Goroutines, Memory)
 	EnableTypePrefix     bool          // Prefixes key with a type ("counter", "gauge", "timer")
 	TimerGranularity     time.Duration // Granularity of timers.

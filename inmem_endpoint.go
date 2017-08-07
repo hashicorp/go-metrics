@@ -47,15 +47,17 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 	case n == 0:
 		return nil, fmt.Errorf("no metric intervals have been initialized yet")
 	case n == 1:
+		// Show the current interval if it's all we have
 		interval = i.intervals[0]
 	default:
+		// Show the most recent finished interval if we have one
 		interval = i.intervals[n-2]
 	}
 
 	summary := MetricsSummary{
 		Timestamp: interval.Interval.Round(time.Second).UTC().String(),
-		Gauges:    []GaugeValue{},
-		Points:    []PointValue{},
+		Gauges:    make([]GaugeValue, 0, len(interval.Gauges)),
+		Points:    make([]PointValue, 0, len(interval.Points)),
 	}
 
 	// Format and sort the output of each metric type, so it gets displayed in a
@@ -82,7 +84,7 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 }
 
 func formatSamples(source map[string]SampledValue) []SampledValue {
-	output := []SampledValue{}
+	output := make([]SampledValue, 0, len(source))
 	for hash, sample := range source {
 		output = append(output, SampledValue{
 			Name:            sample.Name,

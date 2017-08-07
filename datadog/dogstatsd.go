@@ -65,7 +65,7 @@ func (s *DogStatsdSink) parseKey(key []string) ([]string, []metrics.Label) {
 	var labels []metrics.Label
 	hostName := s.hostName
 
-	//Splice the hostname out of the key
+	// Splice the hostname out of the key
 	for i, el := range key {
 		if el == hostName {
 			key = append(key[:i], key[i+1:]...)

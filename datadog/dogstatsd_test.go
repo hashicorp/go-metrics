@@ -54,7 +54,8 @@ var MetricSinkTests = []struct {
 	{"AddSample", []string{"sample", "thing"}, float32(4), EmptyTags, HostnameDisabled, "sample.thing:4.000000|ms"},
 	{"IncrCounter", []string{"count", "me"}, float32(3), EmptyTags, HostnameDisabled, "count.me:3|c"},
 
-	{"SetGauge", []string{"foo", "baz"}, float32(42), []metrics.Label{{"my_tag", "my_value"}}, HostnameDisabled, "foo.baz:42.000000|g|#my_tag:my_value"},
+	{"SetGauge", []string{"foo", "baz"}, float32(42), []metrics.Label{{"my_tag", ""}}, HostnameDisabled, "foo.baz:42.000000|g|#my_tag"},
+	{"SetGauge", []string{"foo", "baz"}, float32(42), []metrics.Label{{"my tag", "my_value"}}, HostnameDisabled, "foo.baz:42.000000|g|#my_tag:my_value"},
 	{"SetGauge", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}, {"other_tag", "other_value"}}, HostnameDisabled, "foo.bar:42.000000|g|#my_tag:my_value,other_tag:other_value"},
 	{"SetGauge", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}, {"other_tag", "other_value"}}, HostnameEnabled, "foo.bar:42.000000|g|#my_tag:my_value,other_tag:other_value,host:test_hostname"},
 }

@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 	"net/url"
@@ -287,11 +288,22 @@ func (i *InmemSink) flattenKey(parts []string) string {
 
 // Flattens the key for formatting along with its labels, removes spaces
 func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) (string, string) {
-	key := strings.Replace(strings.Join(parts, "."), " ", "_", -1)
-	var labelString string
-	for _, label := range labels {
-		labelString += fmt.Sprintf(";%s=%s", label.Name, label.Value)
+	buf := &bytes.Buffer{}
+	replacer := strings.NewReplacer(" ", "_")
+
+	if len(parts) > 0 {
+		replacer.WriteString(buf, parts[0])
+	}
+	for _, part := range parts[1:] {
+		replacer.WriteString(buf, ".")
+		replacer.WriteString(buf, part)
 	}
 
-	return key + labelString, key
+	key := buf.String()
+
+	for _, label := range labels {
+		replacer.WriteString(buf, fmt.Sprintf(";%s=%s", label.Name, label.Value))
+	}
+
+	return buf.String(), key
 }
