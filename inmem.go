@@ -282,8 +282,18 @@ func (i *InmemSink) getInterval() *IntervalMetrics {
 
 // Flattens the key for formatting, removes spaces
 func (i *InmemSink) flattenKey(parts []string) string {
-	joined := strings.Join(parts, ".")
-	return strings.Replace(joined, " ", "_", -1)
+	buf := &bytes.Buffer{}
+	replacer := strings.NewReplacer(" ", "_")
+
+	if len(parts) > 0 {
+		replacer.WriteString(buf, parts[0])
+	}
+	for _, part := range parts[1:] {
+		replacer.WriteString(buf, ".")
+		replacer.WriteString(buf, part)
+	}
+
+	return buf.String()
 }
 
 // Flattens the key for formatting along with its labels, removes spaces
