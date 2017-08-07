@@ -9,7 +9,7 @@ import (
 
 func mockMetric() (*MockSink, *Metrics) {
 	m := &MockSink{}
-	met := &Metrics{sink: m}
+	met := &Metrics{Config: Config{FilterDefault: true}, sink: m}
 	return m, met
 }
 

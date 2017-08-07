@@ -47,7 +47,7 @@ func Test_GlobalMetrics(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			s := &MockSink{}
-			globalMetrics.Store(&Metrics{sink: s})
+			globalMetrics.Store(&Metrics{Config: Config{FilterDefault: true}, sink: s})
 			tt.fn(tt.key, tt.val)
 			if got, want := s.keys[0], tt.key; !reflect.DeepEqual(got, want) {
 				t.Fatalf("got key %s want %s", got, want)
@@ -76,7 +76,7 @@ func Test_GlobalMetrics_Labels(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			s := &MockSink{}
-			globalMetrics.Store(&Metrics{sink: s})
+			globalMetrics.Store(&Metrics{Config: Config{FilterDefault: true}, sink: s})
 			tt.fn(tt.key, tt.val, tt.labels)
 			if got, want := s.keys[0], tt.key; !reflect.DeepEqual(got, want) {
 				t.Fatalf("got key %s want %s", got, want)
@@ -97,6 +97,7 @@ func Test_GlobalMetrics_DefaultLabels(t *testing.T) {
 		ServiceName:         "redis",
 		EnableHostnameLabel: true,
 		EnableServiceLabel:  true,
+		FilterDefault:       true,
 	}
 	labels := []Label{
 		{"host", config.HostName},
@@ -134,7 +135,7 @@ func Test_GlobalMetrics_DefaultLabels(t *testing.T) {
 
 func Test_GlobalMetrics_MeasureSince(t *testing.T) {
 	s := &MockSink{}
-	m := &Metrics{sink: s, Config: Config{TimerGranularity: time.Millisecond}}
+	m := &Metrics{sink: s, Config: Config{TimerGranularity: time.Millisecond, FilterDefault: true}}
 	globalMetrics.Store(m)
 
 	k := []string{"test"}
