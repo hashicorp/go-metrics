@@ -17,10 +17,12 @@ type MetricsSummary struct {
 }
 
 type GaugeValue struct {
-	Name   string
-	Hash   string `json:"-"`
-	Value  float32
-	Labels []Label
+	Name  string
+	Hash  string `json:"-"`
+	Value float32
+
+	Labels        []Label           `json:"-"`
+	DisplayLabels map[string]string `json:"Labels"`
 }
 
 type PointValue struct {
@@ -34,7 +36,9 @@ type SampledValue struct {
 	*AggregateSample
 	Mean   float64
 	Stddev float64
-	Labels []Label
+
+	Labels        []Label           `json:"-"`
+	DisplayLabels map[string]string `json:"Labels"`
 }
 
 // DisplayMetrics returns a summary of the metrics from the most recent finished interval.
@@ -71,6 +75,12 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 
 	for hash, value := range interval.Gauges {
 		value.Hash = hash
+		value.DisplayLabels = make(map[string]string)
+		for _, label := range value.Labels {
+			value.DisplayLabels[label.Name] = label.Value
+		}
+		value.Labels = nil
+
 		summary.Gauges = append(summary.Gauges, value)
 	}
 	sort.Slice(summary.Gauges, func(i, j int) bool {
@@ -86,13 +96,18 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 func formatSamples(source map[string]SampledValue) []SampledValue {
 	output := make([]SampledValue, 0, len(source))
 	for hash, sample := range source {
+		displayLabels := make(map[string]string)
+		for _, label := range sample.Labels {
+			displayLabels[label.Name] = label.Value
+		}
+
 		output = append(output, SampledValue{
 			Name:            sample.Name,
 			Hash:            hash,
 			AggregateSample: sample.AggregateSample,
 			Mean:            sample.AggregateSample.Mean(),
 			Stddev:          sample.AggregateSample.Stddev(),
-			Labels:          sample.Labels,
+			DisplayLabels:   displayLabels,
 		})
 	}
 	sort.Slice(output, func(i, j int) bool {
