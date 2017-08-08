@@ -148,6 +148,18 @@ func Test_GlobalMetrics_MeasureSince(t *testing.T) {
 	if s.vals[0] > 0.1 {
 		t.Fatalf("val too large %v", s.vals[0])
 	}
+
+	labels := []Label{{"a", "b"}}
+	MeasureSinceWithLabels(k, now, labels)
+	if got, want := s.keys[1], k; !reflect.DeepEqual(got, want) {
+		t.Fatalf("got key %s want %s", got, want)
+	}
+	if s.vals[1] > 0.1 {
+		t.Fatalf("val too large %v", s.vals[0])
+	}
+	if got, want := s.labels[1], labels; !reflect.DeepEqual(got, want) {
+		t.Fatalf("got val %s want %s", got, want)
+	}
 }
 
 // Benchmark_GlobalMetrics_Direct/direct-8         	 5000000	       278 ns/op

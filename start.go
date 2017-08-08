@@ -123,3 +123,7 @@ func AddSampleWithLabels(key []string, val float32, labels []Label) {
 func MeasureSince(key []string, start time.Time) {
 	globalMetrics.Load().(*Metrics).MeasureSince(key, start)
 }
+
+func MeasureSinceWithLabels(key []string, start time.Time, labels []Label) {
+	globalMetrics.Load().(*Metrics).MeasureSinceWithLabels(key, start, labels)
+}
