@@ -162,6 +162,22 @@ func Test_GlobalMetrics_MeasureSince(t *testing.T) {
 	}
 }
 
+func Test_GlobalMetrics_UpdateFilter(t *testing.T) {
+	globalMetrics.Store(&Metrics{Config: Config{
+		AllowedPrefixes: []string{"a"},
+		BlockedPrefixes: []string{"b"},
+	}})
+	UpdateFilter([]string{"c"}, []string{"d"})
+
+	m := globalMetrics.Load().(*Metrics)
+	if m.AllowedPrefixes[0] != "c" {
+		t.Fatalf("bad: %v", m.AllowedPrefixes)
+	}
+	if m.BlockedPrefixes[0] != "d" {
+		t.Fatalf("bad: %v", m.BlockedPrefixes)
+	}
+}
+
 // Benchmark_GlobalMetrics_Direct/direct-8         	 5000000	       278 ns/op
 // Benchmark_GlobalMetrics_Direct/atomic.Value-8   	 5000000	       235 ns/op
 func Benchmark_GlobalMetrics_Direct(b *testing.B) {
