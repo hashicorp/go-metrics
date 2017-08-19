@@ -3,7 +3,6 @@ package metrics
 import (
 	"fmt"
 	"net/http"
-	"sort"
 	"time"
 )
 
@@ -69,9 +68,7 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 	for name, points := range interval.Points {
 		summary.Points = append(summary.Points, PointValue{name, points})
 	}
-	sort.Slice(summary.Points, func(i, j int) bool {
-		return summary.Points[i].Name < summary.Points[j].Name
-	})
+	sortPoints(summary.Points)
 
 	for hash, value := range interval.Gauges {
 		value.Hash = hash
@@ -83,9 +80,7 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 
 		summary.Gauges = append(summary.Gauges, value)
 	}
-	sort.Slice(summary.Gauges, func(i, j int) bool {
-		return summary.Gauges[i].Hash < summary.Gauges[j].Hash
-	})
+	sortGauges(summary.Gauges)
 
 	summary.Counters = formatSamples(interval.Counters)
 	summary.Samples = formatSamples(interval.Samples)
@@ -110,9 +105,7 @@ func formatSamples(source map[string]SampledValue) []SampledValue {
 			DisplayLabels:   displayLabels,
 		})
 	}
-	sort.Slice(output, func(i, j int) bool {
-		return output[i].Hash < output[j].Hash
-	})
+	sortSampled(output)
 
 	return output
 }
