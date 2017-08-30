@@ -9,7 +9,7 @@ import (
 
 	"regexp"
 
-	"github.com/lockTP/go-metrics"
+	"github.com/armon/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
