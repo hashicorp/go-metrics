@@ -1,7 +1,14 @@
+// This package implements a go-metrics sink that that can be used
+// with a dogstatsd server
+//
+// It also registers a factory that can be invoked by using
+// `metrics.NewMetricSinkFromURL` addressed by a URL like:
+//   dogstatsds://<dogstatsd-host>:<dogstatsd-port>[?hostname=<hostname-to-report>]`.
 package datadog
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -28,6 +35,13 @@ func NewDogStatsdSink(addr string, hostName string) (*DogStatsdSink, error) {
 		propagateHostname: false,
 	}
 	return sink, nil
+}
+
+func init() {
+	metrics.RegisterSinkURLFactory("dogstatsd",
+		func(u *url.URL) (metrics.MetricSink, error) {
+			return NewDogStatsdSink(u.Host, u.Query().Get("hostname"))
+		})
 }
 
 // SetTags sets common tags on the Dogstatsd Client that will be sent

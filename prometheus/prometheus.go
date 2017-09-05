@@ -1,4 +1,10 @@
 // +build go1.3
+
+// This package implements a go-metrics sink that Prometheus can scrape.
+//
+// It also registers a factory that can be invoked by using
+// `metrics.NewMetricSinkFromURL` addressed by a URL scheme of `prometheus://`.
+// The rest of the URL is ignored.
 package prometheus
 
 import (
@@ -18,6 +24,10 @@ type PrometheusSink struct {
 	gauges    map[string]prometheus.Gauge
 	summaries map[string]prometheus.Summary
 	counters  map[string]prometheus.Counter
+}
+
+func init() {
+	metrics.RegisterSinkURLFactory("prometheus", NewPrometheusSink)
 }
 
 func NewPrometheusSink() (*PrometheusSink, error) {

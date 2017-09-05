@@ -148,3 +148,19 @@ func assertServerMatchesExpected(t *testing.T, server *net.UDPConn, buf []byte, 
 		t.Fatalf("Line %s does not match expected: %s", string(msg), expected)
 	}
 }
+
+func TestFactory(t *testing.T) {
+	sink, err := metrics.NewMetricSinkFromURL("dogstatsd://example.com:8888?hostname=foo")
+	if err != nil {
+		t.Fatalf("Factory failed: %s", err)
+	}
+	dogStatsDSink, ok := sink.(*DogStatsdSink)
+	if !ok {
+		t.Fatalf("Factory returned wrong sink type: %s", reflect.TypeOf(sink))
+	}
+	if dogStatsDSink.hostName != "foo" {
+		t.Fatalf("Factory set hostName = '%s', want 'foo'", dogStatsDSink.hostName)
+	}
+	// No real way to peak inside the statsd client to assert it got the right hostname/port...
+	// I sanity checked it at least
+}

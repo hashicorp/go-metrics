@@ -1,8 +1,12 @@
-// Circonus Metrics Sink
-
+// Circonus Metrics Sink provides an interface to forward metrics to Circonus.
+//
+// It also registers a factory that can be invoked by using
+// `metrics.NewMetricSinkFromURL` addressed by a URL with scheme `circonus://`.
+// The rest of the URL is ignored.
 package circonus
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/armon/go-metrics"
@@ -44,6 +48,13 @@ func NewCirconusSink(cc *Config) (*CirconusSink, error) {
 	return &CirconusSink{
 		metrics: metrics,
 	}, nil
+}
+
+func init() {
+	metrics.RegisterSinkURLFactory("circonus",
+		func(u *url.URL) (metrics.MetricSink, error) {
+			return NewCirconusSink(nil)
+		})
 }
 
 // Start submitting metrics to Circonus (flush every SubmitInterval)
