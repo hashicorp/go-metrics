@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/armon/go-metrics"
 )
 
@@ -81,6 +82,20 @@ func setupTestServerAndBuffer(t *testing.T) (*net.UDPConn, []byte) {
 		t.Fatal(err)
 	}
 	return server, make([]byte, 1024)
+}
+
+func TestFromClient(t *testing.T) {
+	client := &statsd.Client{}
+	hostname := "fake-hostname"
+	sink := NewDogStatsdSinkFromClient(client, hostname)
+
+	if !reflect.DeepEqual(sink.client, client) {
+		t.Fatalf("Client assigned to sink did not match what was passed in")
+	}
+
+	if sink.hostName != hostname {
+		t.Fatalf("Sink hostname did not match what was passed in, %v != %v", sink.hostName, hostname)
+	}
 }
 
 func TestParseKey(t *testing.T) {

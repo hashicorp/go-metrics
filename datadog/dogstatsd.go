@@ -30,6 +30,15 @@ func NewDogStatsdSink(addr string, hostName string) (*DogStatsdSink, error) {
 	return sink, nil
 }
 
+// NewDogStatsdSinkFromClient returns a DogStatsdSink that uses a pre-existing datadog client
+func NewDogStatsdSinkFromClient(client *statsd.Client, hostName string) *DogStatsdSink {
+	return &DogStatsdSink{
+		client:            client,
+		hostName:          hostName,
+		propagateHostname: false,
+	}
+}
+
 // SetTags sets common tags on the Dogstatsd Client that will be sent
 // along with all dogstatsd packets.
 // Ref: http://docs.datadoghq.com/guides/dogstatsd/#tags
