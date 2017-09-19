@@ -70,7 +70,7 @@ func NewIntervalMetrics(intv time.Time) *IntervalMetrics {
 // about a sample
 type AggregateSample struct {
 	Count       int       // The count of emitted pairs
-	Rate        float64   `json:"-"` // The count of emitted pairs per time unit (usually 1 second)
+	Rate        float64   // The count of emitted pairs per time unit (usually 1 second)
 	Sum         float64   // The sum of values
 	SumSq       float64   `json:"-"` // The sum of squared values
 	Min         float64   // Minimum value
