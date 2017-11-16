@@ -72,7 +72,7 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 	now := time.Now()
 	for k, v := range p.gauges {
 		last := p.updates[k]
-		if !last.Add(p.expiration).After(now) {
+		if p.expiration != 0 && !last.Add(p.expiration).After(now) {
 			delete(p.updates, k)
 			delete(p.gauges, k)
 		} else {
@@ -81,7 +81,7 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 	}
 	for k, v := range p.summaries {
 		last := p.updates[k]
-		if !last.Add(p.expiration).After(now) {
+		if p.expiration != 0 && !last.Add(p.expiration).After(now) {
 			delete(p.updates, k)
 			delete(p.gauges, k)
 		} else {
@@ -90,7 +90,7 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 	}
 	for k, v := range p.counters {
 		last := p.updates[k]
-		if !last.Add(p.expiration).After(now) {
+		if p.expiration != 0 && !last.Add(p.expiration).After(now) {
 			delete(p.updates, k)
 			delete(p.gauges, k)
 		} else {
