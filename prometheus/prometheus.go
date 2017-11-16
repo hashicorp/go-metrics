@@ -62,17 +62,18 @@ func (p *PrometheusSink) Describe(c chan<- *prometheus.Desc) {
 	prometheus.NewGauge(prometheus.GaugeOpts{Name: "Dummy", Help: "Dummy"}).Describe(c)
 }
 
-// Collect meet the collection interface and allows us to enforce our expiration
+// Collect meets the collection interface and allows us to enforce our expiration
 // logic to clean up ephemeral metrics if their value haven't been set for a
 // duration exceeding our allowed expiration time.
 func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
+	expire := p.expiration != 0
 	now := time.Now()
 	for k, v := range p.gauges {
 		last := p.updates[k]
-		if p.expiration != 0 && !last.Add(p.expiration).After(now) {
+		if expire && last.Add(p.expiration).Before(now) {
 			delete(p.updates, k)
 			delete(p.gauges, k)
 		} else {
@@ -81,18 +82,18 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 	}
 	for k, v := range p.summaries {
 		last := p.updates[k]
-		if p.expiration != 0 && !last.Add(p.expiration).After(now) {
+		if expire && last.Add(p.expiration).Before(now) {
 			delete(p.updates, k)
-			delete(p.gauges, k)
+			delete(p.summaries, k)
 		} else {
 			v.Collect(c)
 		}
 	}
 	for k, v := range p.counters {
 		last := p.updates[k]
-		if p.expiration != 0 && !last.Add(p.expiration).After(now) {
+		if expire && last.Add(p.expiration).Before(now) {
 			delete(p.updates, k)
-			delete(p.gauges, k)
+			delete(p.counters, k)
 		} else {
 			v.Collect(c)
 		}
