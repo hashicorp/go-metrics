@@ -232,8 +232,34 @@ func (i *InmemSink) Data() []*IntervalMetrics {
 	i.intervalLock.RLock()
 	defer i.intervalLock.RUnlock()
 
-	intervals := make([]*IntervalMetrics, len(i.intervals))
-	copy(intervals, i.intervals)
+	n := len(i.intervals)
+	intervals := make([]*IntervalMetrics, n)
+
+	copy(intervals[:n-1], i.intervals[:n-1])
+	current := i.intervals[n-1]
+	intervals[n-1] = &IntervalMetrics{}
+	copyCurrent := intervals[n-1]
+	current.RLock()
+	*copyCurrent = *current
+
+	copyCurrent.Gauges = make(map[string]GaugeValue)
+	for k, v := range current.Gauges {
+		copyCurrent.Gauges[k] = v
+	}
+	// saved values will be not change, just copy its link
+	copyCurrent.Points = make(map[string][]float32)
+	for k, v := range current.Points {
+		copyCurrent.Points[k] = v
+	}
+	copyCurrent.Counters = make(map[string]SampledValue)
+	for k, v := range current.Counters {
+		copyCurrent.Counters[k] = v
+	}
+	copyCurrent.Samples = make(map[string]SampledValue)
+	for k, v := range current.Samples {
+		copyCurrent.Samples[k] = v
+	}
+	current.RUnlock()
 	return intervals
 }
 
