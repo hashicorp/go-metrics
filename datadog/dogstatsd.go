@@ -51,6 +51,8 @@ func (s *DogStatsdSink) flattenKey(parts []string) string {
 
 func sanitize(r rune) rune {
 	switch r {
+	case ',':
+		fallthrough
 	case ':':
 		fallthrough
 	case ' ':

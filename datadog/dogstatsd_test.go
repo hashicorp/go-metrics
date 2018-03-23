@@ -39,6 +39,7 @@ var FlattenKeyTests = []struct {
 }{
 	{[]string{"a", "b", "c"}, "a.b.c"},
 	{[]string{"spaces must", "flatten", "to", "underscores"}, "spaces_must.flatten.to.underscores"},
+	{[]string{"commas,must", "flatten", "to", "underscores"}, "commas_must.flatten.to.underscores"},
 }
 
 var MetricSinkTests = []struct {
