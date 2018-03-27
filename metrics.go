@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"math"
 
 	"github.com/hashicorp/go-immutable-radix"
 )
