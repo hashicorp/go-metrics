@@ -123,10 +123,14 @@ func (m *Metrics) MeasureSinceWithLabels(key []string, start time.Time, labels [
 	if !m.allowMetric(key) {
 		return
 	}
-	now := time.Now()
-	elapsed := now.Sub(start)
-	msec := float32(elapsed.Nanoseconds()) / float32(m.TimerGranularity)
-	m.sink.AddSampleWithLabels(key, msec, labels)
+	if m.TimerGranularity == 0 {
+		m.sink.AddSampleWithLabels(key, math.MaxFloat32, labels)
+	} else {	
+		now := time.Now()
+		elapsed := now.Sub(start)
+		msec := float32(elapsed.Nanoseconds()) / float32(m.TimerGranularity)
+		m.sink.AddSampleWithLabels(key, msec, labels)
+	}
 }
 
 // UpdateFilter overwrites the existing filter with the given rules.
