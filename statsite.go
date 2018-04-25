@@ -17,6 +17,9 @@ const (
 	flushInterval = 100 * time.Millisecond
 )
 
+// This ensures *StatsiteSink implements the MetricSink interface.
+var _ MetricSink = (*StatsiteSink)(nil)
+
 // NewStatsiteSinkFromURL creates an StatsiteSink from a URL. It is used
 // (and tested) from NewMetricSinkFromURL.
 func NewStatsiteSinkFromURL(u *url.URL) (MetricSink, error) {

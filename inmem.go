@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+// This ensures *InmemSink implements the MetricSink interface.
+var _ MetricSink = (*InmemSink)(nil)
+
 // InmemSink provides a MetricSink that does in-memory aggregation
 // without sending metrics over a network. It can be embedded within
 // an application to provide profiling information.
