@@ -23,6 +23,8 @@ type Config struct {
 
 	AllowedPrefixes []string // A list of metric prefixes to allow, with '.' as the separator
 	BlockedPrefixes []string // A list of metric prefixes to block, with '.' as the separator
+	AllowedLabels   []string // A list of metric labels to allow, with '.' as the separator
+	BlockedLabels   []string // A list of metric prefixes to block, with '.' as the separator
 	FilterDefault   bool     // Whether to allow metrics by default
 }
 
@@ -30,10 +32,12 @@ type Config struct {
 // be used to emit
 type Metrics struct {
 	Config
-	lastNumGC  uint32
-	sink       MetricSink
-	filter     *iradix.Tree
-	filterLock sync.RWMutex
+	lastNumGC     uint32
+	sink          MetricSink
+	filter        *iradix.Tree
+	allowedLabels map[string]int
+	blockedLabels map[string]int
+	filterLock    sync.RWMutex
 }
 
 // Shared global metrics instance
