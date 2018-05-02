@@ -72,7 +72,7 @@ func New(conf *Config, sink MetricSink) (*Metrics, error) {
 	met := &Metrics{}
 	met.Config = *conf
 	met.sink = sink
-	met.UpdateFilter(conf.AllowedPrefixes, conf.BlockedPrefixes)
+	met.UpdateFilterAndLabels(conf.AllowedPrefixes, conf.BlockedPrefixes, conf.AllowedLabels, conf.BlockedLabels)
 
 	// Start the runtime collector
 	if conf.EnableRuntimeMetrics {
@@ -130,4 +130,8 @@ func MeasureSinceWithLabels(key []string, start time.Time, labels []Label) {
 
 func UpdateFilter(allow, block []string) {
 	globalMetrics.Load().(*Metrics).UpdateFilter(allow, block)
+}
+
+func UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels []string) {
+	globalMetrics.Load().(*Metrics).UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels)
 }

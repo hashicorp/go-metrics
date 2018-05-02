@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"reflect"
 	"runtime"
 	"strings"
 	"time"
@@ -141,20 +140,28 @@ func (m *Metrics) UpdateFilter(allow, block []string) {
 }
 
 // UpdateFilterAndLabels overwrites the existing filter with the given rules.
-func (m *Metrics) UpdateFilterAndLabels(allow, block []string, allowedLabels []string, blockedLabels []string) {
+func (m *Metrics) UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels []string) {
 	m.filterLock.Lock()
 	defer m.filterLock.Unlock()
 
 	m.AllowedPrefixes = allow
 	m.BlockedPrefixes = block
 
-	if !reflect.DeepEqual(m.AllowedLabels, allowedLabels) {
+	if allowedLabels == nil {
+		// Having a white list means we take only elements from it
+		m.allowedLabels = nil
+	} else {
 		m.allowedLabels = make(map[string]int)
+		for _, v := range allowedLabels {
+			m.allowedLabels[v] = 1
+		}
 	}
-
-	if !reflect.DeepEqual(m.BlockedLabels, blockedLabels) {
-		m.blockedLabels = make(map[string]int)
+	m.blockedLabels = make(map[string]int)
+	for _, v := range blockedLabels {
+		m.blockedLabels[v] = 1
 	}
+	m.AllowedLabels = allowedLabels
+	m.BlockedLabels = blockedLabels
 
 	m.filter = iradix.New()
 	for _, prefix := range m.AllowedPrefixes {
@@ -185,13 +192,13 @@ func (m *Metrics) labelIsAllowed(label *Label) bool {
 
 // filterLabels return only allowed labels
 func (m *Metrics) filterLabels(labels []Label) []Label {
-	toReturn := labels
-	if labels != nil {
-		toReturn := labels[:0]
-		for _, label := range labels {
-			if m.labelIsAllowed(&label) {
-				toReturn = append(toReturn, label)
-			}
+	if labels == nil {
+		return nil
+	}
+	toReturn := labels[:0]
+	for _, label := range labels {
+		if m.labelIsAllowed(&label) {
+			toReturn = append(toReturn, label)
 		}
 	}
 	return toReturn
