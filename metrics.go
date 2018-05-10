@@ -172,7 +172,8 @@ func (m *Metrics) UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabe
 	}
 }
 
-// labelIsAllowed return true if a label has to be included
+// labelIsAllowed return true if a should be included in metric
+// the caller should lock m.filterLock while calling this method
 func (m *Metrics) labelIsAllowed(label *Label) bool {
 	labelName := (*label).Name
 	if m.blockedLabels != nil {
@@ -191,6 +192,7 @@ func (m *Metrics) labelIsAllowed(label *Label) bool {
 }
 
 // filterLabels return only allowed labels
+// the caller should lock m.filterLock while calling this method
 func (m *Metrics) filterLabels(labels []Label) []Label {
 	if labels == nil {
 		return nil

@@ -37,7 +37,7 @@ type Metrics struct {
 	filter        *iradix.Tree
 	allowedLabels map[string]int
 	blockedLabels map[string]int
-	filterLock    sync.RWMutex
+	filterLock    sync.RWMutex // Lock filters and allowedLabels/blockedLabels access
 }
 
 // Shared global metrics instance
