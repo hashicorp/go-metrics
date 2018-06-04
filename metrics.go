@@ -151,14 +151,14 @@ func (m *Metrics) UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabe
 		// Having a white list means we take only elements from it
 		m.allowedLabels = nil
 	} else {
-		m.allowedLabels = make(map[string]int)
+		m.allowedLabels = make(map[string]bool)
 		for _, v := range allowedLabels {
-			m.allowedLabels[v] = 1
+			m.allowedLabels[v] = true
 		}
 	}
-	m.blockedLabels = make(map[string]int)
+	m.blockedLabels = make(map[string]bool)
 	for _, v := range blockedLabels {
-		m.blockedLabels[v] = 1
+		m.blockedLabels[v] = true
 	}
 	m.AllowedLabels = allowedLabels
 	m.BlockedLabels = blockedLabels
