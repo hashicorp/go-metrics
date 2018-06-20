@@ -132,6 +132,10 @@ func UpdateFilter(allow, block []string) {
 	globalMetrics.Load().(*Metrics).UpdateFilter(allow, block)
 }
 
+// UpdateFilterAndLabels set allow/block prefixes of metrics while allowedLabels
+// and blockedLabels - when not nil - allow filtering of labels in order to
+// block/allow globally labels (especially useful when having large number of
+// values for a given label). See README.md for more information about usage.
 func UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels []string) {
 	globalMetrics.Load().(*Metrics).UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels)
 }
