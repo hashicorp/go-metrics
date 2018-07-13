@@ -1,4 +1,5 @@
 // +build go1.3
+
 package prometheus
 
 import (
