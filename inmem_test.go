@@ -29,7 +29,7 @@ func TestInmemSink(t *testing.T) {
 	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
 
 	data = inm.Data()
-	if len(data) != 1 {
+	if len(data) < 1 {
 		t.Fatalf("bad: %v", data)
 	}
 
