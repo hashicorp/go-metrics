@@ -3,6 +3,7 @@ package metrics
 import (
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 )
@@ -375,6 +376,75 @@ func HasElem(s interface{}, elem interface{}) bool {
 	}
 
 	return false
+}
+func TestMetrics_HostnameBothProvided(t *testing.T) {
+	m := &MockSink{}
+	conf := DefaultConfig("")
+	conf.EnableHostnameLabel = true
+	conf.EnableHostname = true
+	if _, err := New(conf, m); err != nil && !strings.HasPrefix(err.Error(), "both EnableHostname") {
+		t.Fatalf("New should throw when given both EnableHostname and EnableHostnameLabel as true")
+	}
+}
+
+func TestMetrics_HostNameLabel(t *testing.T) {
+	m := &MockSink{}
+	conf := DefaultConfig("")
+	hostname := "testhostname"
+	conf.HostName = hostname
+	conf.EnableHostname = false
+	conf.EnableHostnameLabel = true
+	met, err := New(conf, m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := []string{"test"}
+	met.SetGauge(append(key, "gauge"), 1)
+	met.IncrCounter(append(key, "counter"), 1)
+	met.AddSample(append(key, "summary"), 1)
+
+	hostnameLabel := Label{Name: "host", Value: hostname}
+
+	if len(m.keys) != 3 {
+		t.Fatalf("only 3 keys should be present")
+	}
+
+	for i, metric := range m.labels {
+		if !HasElem(metric, hostnameLabel) {
+			t.Fatalf("label hostname should be present and valid in %s. Labels: %+v", strings.Join(m.keys[i], "_"), metric)
+		}
+	}
+
+}
+
+func TestMetrics_HostName(t *testing.T) {
+	m := &MockSink{}
+	conf := DefaultConfig("")
+	hostname := "testhostname"
+	conf.HostName = hostname
+	conf.EnableHostname = true
+	conf.EnableHostnameLabel = false
+	met, err := New(conf, m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := []string{"test"}
+	met.SetGauge(append(key, "gauge"), 1)
+	met.IncrCounter(append(key, "counter"), 1)
+	met.AddSample(append(key, "summary"), 1)
+
+	if len(m.keys) != 3 {
+		t.Fatalf("only 3 keys should be present")
+	}
+
+	for i, metric := range m.keys {
+		if !HasElem(metric, hostname) {
+			t.Fatalf("%s should be present in metric keys and valid in %s. Keys: %+v", hostname, strings.Join(m.keys[i], "_"), metric)
+		}
+	}
+
 }
 
 func TestMetrics_Filter_Whitelist(t *testing.T) {
