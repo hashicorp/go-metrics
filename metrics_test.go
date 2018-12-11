@@ -363,6 +363,20 @@ func TestMetrics_Filter_Blacklist(t *testing.T) {
 	}
 }
 
+func HasElem(s interface{}, elem interface{}) bool {
+	arrV := reflect.ValueOf(s)
+
+	if arrV.Kind() == reflect.Slice {
+		for i := 0; i < arrV.Len(); i++ {
+			if arrV.Index(i).Interface() == elem {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func TestMetrics_Filter_Whitelist(t *testing.T) {
 	m := &MockSink{}
 	conf := DefaultConfig("")
@@ -370,6 +384,7 @@ func TestMetrics_Filter_Whitelist(t *testing.T) {
 	conf.BlockedPrefixes = []string{"debug"}
 	conf.FilterDefault = false
 	conf.EnableHostname = false
+	conf.BlockedLabels = []string{"bad_label"}
 	met, err := New(conf, m)
 	if err != nil {
 		t.Fatal(err)
@@ -407,5 +422,72 @@ func TestMetrics_Filter_Whitelist(t *testing.T) {
 	met.SetGauge(key, 4)
 	if len(m.keys) != 2 {
 		t.Fatalf("key shouldn't exist")
+	}
+	// Test blacklisting of labels
+	key = []string{"debug", "thing"}
+	goodLabel := Label{Name: "good", Value: "should be present"}
+	badLabel := Label{Name: "bad_label", Value: "should not be there"}
+	labels := []Label{badLabel, goodLabel}
+	met.SetGaugeWithLabels(key, 3, labels)
+	if !reflect.DeepEqual(m.keys[1], key) {
+		t.Fatalf("key doesn't exist")
+	}
+	if m.vals[2] != 3 {
+		t.Fatalf("bad val: %v", m.vals[1])
+	}
+	if HasElem(m.labels[2], badLabel) {
+		t.Fatalf("bad_label should not be present in %v", m.labels[2])
+	}
+	if !HasElem(m.labels[2], goodLabel) {
+		t.Fatalf("good label is not present in %v", m.labels[2])
+	}
+}
+
+func TestMetrics_Filter_Labels_Whitelist(t *testing.T) {
+	m := &MockSink{}
+	conf := DefaultConfig("")
+	conf.AllowedPrefixes = []string{"service", "debug.thing"}
+	conf.BlockedPrefixes = []string{"debug"}
+	conf.FilterDefault = false
+	conf.EnableHostname = false
+	conf.AllowedLabels = []string{"good_label"}
+	conf.BlockedLabels = []string{"bad_label"}
+	met, err := New(conf, m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Blocked by default
+	key := []string{"thing"}
+	key = []string{"debug", "thing"}
+	goodLabel := Label{Name: "good_label", Value: "should be present"}
+	notReallyGoodLabel := Label{Name: "not_really_good_label", Value: "not whitelisted, but not blacklisted"}
+	badLabel := Label{Name: "bad_label", Value: "should not be there"}
+	labels := []Label{badLabel, notReallyGoodLabel, goodLabel}
+	met.SetGaugeWithLabels(key, 1, labels)
+
+	if HasElem(m.labels[0], badLabel) {
+		t.Fatalf("bad_label should not be present in %v", m.labels[0])
+	}
+	if HasElem(m.labels[0], notReallyGoodLabel) {
+		t.Fatalf("not_really_good_label should not be present in %v", m.labels[0])
+	}
+	if !HasElem(m.labels[0], goodLabel) {
+		t.Fatalf("good label is not present in %v", m.labels[0])
+	}
+
+	conf.AllowedLabels = nil
+	met.UpdateFilterAndLabels(conf.AllowedPrefixes, conf.BlockedLabels, conf.AllowedLabels, conf.BlockedLabels)
+	met.SetGaugeWithLabels(key, 1, labels)
+
+	if HasElem(m.labels[1], badLabel) {
+		t.Fatalf("bad_label should not be present in %v", m.labels[1])
+	}
+	// Since no whitelist, not_really_good_label should be there
+	if !HasElem(m.labels[1], notReallyGoodLabel) {
+		t.Fatalf("not_really_good_label is not present in %v", m.labels[1])
+	}
+	if !HasElem(m.labels[1], goodLabel) {
+		t.Fatalf("good label is not present in %v", m.labels[1])
 	}
 }
