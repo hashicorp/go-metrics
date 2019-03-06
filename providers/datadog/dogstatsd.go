@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/armon/go-metrics"
+	"github.com/hugoluchessi/go-metrics"
 )
 
 // Sink provides a MetricSink that can be used

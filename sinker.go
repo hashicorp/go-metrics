@@ -68,3 +68,4 @@ func (fh FanoutSink) AddSampleWithLabels(key []string, val float32, labels []Lab
 		s.AddSampleWithLabels(key, val, labels)
 	}
 }
+

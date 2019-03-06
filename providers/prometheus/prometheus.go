@@ -1,5 +1,3 @@
-// +build go1.3
-
 package prometheus
 
 import (
@@ -10,7 +8,7 @@ import (
 
 	"regexp"
 
-	"github.com/armon/go-metrics"
+	"github.com/hugoluchessi/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
