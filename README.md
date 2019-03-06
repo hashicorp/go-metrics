@@ -1,10 +1,9 @@
 go-metrics
 ==========
 
-This library provides a `metrics` package which can be used to instrument code,
-expose application metrics, and profile runtime performance in a flexible manner.
+This library provides a `metrics` package which can be used to instrument code, expose application metrics, and profile runtime performance in a flexible manner.
 
-Current API: [![GoDoc](https://godoc.org/github.com/armon/go-metrics?status.svg)](https://godoc.org/github.com/armon/go-metrics)
+Current API: [![CircleCI](https://circleci.com/gh/hugoluchessi/go-metrics.svg?style=svg)](https://circleci.com/gh/hugoluchessi/go-metrics) [![GoDoc](https://godoc.org/github.com/armon/go-metrics?status.svg)](https://godoc.org/github.com/armon/go-metrics)
 
 Sinks
 -----
