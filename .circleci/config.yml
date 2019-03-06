@@ -1,0 +1,13 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      - image: hugo1987br/go-build:1.12
+    working_directory: /go/src/github.com/hugoluchessi/go-metrics
+    steps:
+      - checkout
+      - run: go mod download
+      - run: go test -v ./...

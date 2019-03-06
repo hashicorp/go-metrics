@@ -18,9 +18,9 @@ type sinkURLFactoryFunc func(*url.URL) (metrics.Sinker, error)
 // sinkRegistry supports the generic NewSink function by mapping URL
 // schemes to metric sink factory functions
 var sinkRegistry = map[string]sinkURLFactoryFunc{
-	"statsd":   NewStatsdSinkFromURL,
-	"statsite": NewStatsiteSinkFromURL,
-	"inmem":    NewInmemSinkFromURL,
+	"statsd":   newStatsdSinkFromURL,
+	"statsite": newStatsiteSinkFromURL,
+	"inmem":    newInmemSinkFromURL,
 }
 
 // NewSinkFromURL allows a generic URL input to configure any of the
@@ -53,7 +53,7 @@ func NewSinkFromURL(urlStr string) (metrics.Sinker, error) {
 
 // NewInmemSinkFromURL creates an InmemSink from a URL. It is used
 // (and tested) from NewSinkFromURL.
-func NewInmemSinkFromURL(u *url.URL) (metrics.Sinker, error) {
+func newInmemSinkFromURL(u *url.URL) (metrics.Sinker, error) {
 	params := u.Query()
 
 	interval, err := time.ParseDuration(params.Get("interval"))
@@ -71,12 +71,12 @@ func NewInmemSinkFromURL(u *url.URL) (metrics.Sinker, error) {
 
 // NewStatsiteSinkFromURL creates an StatsiteSink from a URL. It is used
 // (and tested) from NewSinkFromURL.
-func NewStatsiteSinkFromURL(u *url.URL) (metrics.Sinker, error) {
+func newStatsiteSinkFromURL(u *url.URL) (metrics.Sinker, error) {
 	return statsite.NewSink(u.Host)
 }
 
 // NewStatsdSinkFromURL creates an StatsdSink from a URL. It is used
 // (and tested) from NewSinkFromURL.
-func NewStatsdSinkFromURL(u *url.URL) (metrics.Sinker, error) {
+func newStatsdSinkFromURL(u *url.URL) (metrics.Sinker, error) {
 	return statsd.NewSink(u.Host)
 }

@@ -82,7 +82,7 @@ func TestNewStatsiteSinkFromURL(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error parsing URL: %s", err)
 			}
-			ms, err := NewStatsiteSinkFromURL(u)
+			ms, err := newStatsiteSinkFromURL(u)
 			if tc.expectErr != "" {
 				if !strings.Contains(err.Error(), tc.expectErr) {
 					t.Fatalf("expected err: %q, to contain: %q", err, tc.expectErr)
@@ -138,7 +138,7 @@ func TestNewInmemSinkFromURL(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error parsing URL: %s", err)
 			}
-			ms, err := NewInmemSinkFromURL(u)
+			ms, err := newInmemSinkFromURL(u)
 			if tc.expectErr != "" {
 				if !strings.Contains(err.Error(), tc.expectErr) {
 					t.Fatalf("expected err: %q, to contain: %q", err, tc.expectErr)
@@ -179,7 +179,7 @@ func TestNewStatsdSinkFromURL(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error parsing URL: %s", err)
 			}
-			ms, err := NewStatsdSinkFromURL(u)
+			ms, err := newStatsdSinkFromURL(u)
 			if tc.expectErr != "" {
 				if !strings.Contains(err.Error(), tc.expectErr) {
 					t.Fatalf("expected err: %q, to contain: %q", err, tc.expectErr)
