@@ -1,4 +1,4 @@
-package metrics
+package inmem
 
 import (
 	"bytes"
@@ -9,13 +9,15 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+
+	"github.com/hugoluchessi/go-metrics"
 )
 
-// InmemSignal is used to listen for a given signal, and when received,
-// to dump the current metrics from the InmemSink to an io.Writer
-type InmemSignal struct {
+// Signal is used to listen for a given signal, and when received,
+// to dump the current metrics from the Sink to an io.Writer
+type Signal struct {
 	signal syscall.Signal
-	inm    *InmemSink
+	inm    *Sink
 	w      io.Writer
 	sigCh  chan os.Signal
 
@@ -24,10 +26,10 @@ type InmemSignal struct {
 	stopLock sync.Mutex
 }
 
-// NewInmemSignal creates a new InmemSignal which listens for a given signal,
+// NewSignal creates a new Signal which listens for a given signal,
 // and dumps the current metrics out to a writer
-func NewInmemSignal(inmem *InmemSink, sig syscall.Signal, w io.Writer) *InmemSignal {
-	i := &InmemSignal{
+func NewSignal(inmem *Sink, sig syscall.Signal, w io.Writer) *Signal {
+	i := &Signal{
 		signal: sig,
 		inm:    inmem,
 		w:      w,
@@ -39,14 +41,14 @@ func NewInmemSignal(inmem *InmemSink, sig syscall.Signal, w io.Writer) *InmemSig
 	return i
 }
 
-// DefaultInmemSignal returns a new InmemSignal that responds to SIGUSR1
+// DefaultSignal returns a new Signal that responds to SIGUSR1
 // and writes output to stderr. Windows uses SIGBREAK
-func DefaultInmemSignal(inmem *InmemSink) *InmemSignal {
-	return NewInmemSignal(inmem, DefaultSignal, os.Stderr)
+func DefaultSignal(inmem *Sink) *Signal {
+	return NewSignal(inmem, metrics.DefaultSignal, os.Stderr)
 }
 
-// Stop is used to stop the InmemSignal from listening
-func (i *InmemSignal) Stop() {
+// Stop is used to stop the Signal from listening
+func (i *Signal) Stop() {
 	i.stopLock.Lock()
 	defer i.stopLock.Unlock()
 
@@ -59,7 +61,7 @@ func (i *InmemSignal) Stop() {
 }
 
 // run is a long running routine that handles signals
-func (i *InmemSignal) run() {
+func (i *Signal) run() {
 	for {
 		select {
 		case <-i.sigCh:
@@ -71,7 +73,7 @@ func (i *InmemSignal) run() {
 }
 
 // dumpStats is used to dump the data to output writer
-func (i *InmemSignal) dumpStats() {
+func (i *Signal) dumpStats() {
 	buf := bytes.NewBuffer(nil)
 
 	data := i.inm.Data()
@@ -104,7 +106,7 @@ func (i *InmemSignal) dumpStats() {
 }
 
 // Flattens the key for formatting along with its labels, removes spaces
-func (i *InmemSignal) flattenLabels(name string, labels []Label) string {
+func (i *Signal) flattenLabels(name string, labels []metrics.Label) string {
 	buf := bytes.NewBufferString(name)
 	replacer := strings.NewReplacer(" ", "_", ":", "_")
 

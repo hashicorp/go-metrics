@@ -1,28 +1,29 @@
-package metrics
+package inmem
 
 import (
 	"testing"
 	"time"
 
+	"github.com/hugoluchessi/go-metrics"
 	"github.com/pascaldekloe/goe/verify"
 )
 
 func TestDisplayMetrics(t *testing.T) {
 	interval := 10 * time.Millisecond
-	inm := NewInmemSink(interval, 50*time.Millisecond)
+	inm := NewSink(interval, 50*time.Millisecond)
 
 	// Add data points
 	inm.SetGauge([]string{"foo", "bar"}, 42)
-	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
+	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 23, []metrics.Label{{"a", "b"}})
 	inm.EmitKey([]string{"foo", "bar"}, 42)
 	inm.IncrCounter([]string{"foo", "bar"}, 20)
 	inm.IncrCounter([]string{"foo", "bar"}, 22)
-	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, []Label{{"a", "b"}})
-	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 40, []Label{{"a", "b"}})
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, []metrics.Label{{"a", "b"}})
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 40, []metrics.Label{{"a", "b"}})
 	inm.AddSample([]string{"foo", "bar"}, 20)
 	inm.AddSample([]string{"foo", "bar"}, 24)
-	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
-	inm.AddSampleWithLabels([]string{"foo", "bar"}, 33, []Label{{"a", "b"}})
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []metrics.Label{{"a", "b"}})
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 33, []metrics.Label{{"a", "b"}})
 
 	data := inm.Data()
 	if len(data) != 1 {

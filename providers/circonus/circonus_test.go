@@ -9,11 +9,11 @@ import (
 	"testing"
 )
 
-func TestNewCirconusSink(t *testing.T) {
+func TestNewSink(t *testing.T) {
 
 	// test with invalid config (nil)
-	expectedError := errors.New("invalid check manager configuration (no API token AND no submission url)")
-	_, err := NewCirconusSink(nil)
+	expectedError := errors.New("creating new check manager: invalid check manager configuration (no API token AND no submission url)")
+	_, err := NewSink(nil)
 	if err == nil || err.Error() != expectedError.Error() {
 		t.Errorf("Expected an '%#v' error, got '%#v'", expectedError, err)
 	}
@@ -21,7 +21,7 @@ func TestNewCirconusSink(t *testing.T) {
 	// test w/submission url and w/o token
 	cfg := &Config{}
 	cfg.CheckManager.Check.SubmissionURL = "http://127.0.0.1:43191/"
-	_, err = NewCirconusSink(cfg)
+	_, err = NewSink(cfg)
 	if err != nil {
 		t.Errorf("Expected no error, got '%v'", err)
 	}
@@ -41,7 +41,7 @@ func TestFlattenKey(t *testing.T) {
 		{[]string{"spaces must", "flatten", "to", "underscores"}, "spaces_must`flatten`to`underscores"},
 	}
 
-	c := &CirconusSink{}
+	c := &Sink{}
 
 	for _, test := range testKeys {
 		if actual := c.flattenKey(test.input); actual != test.expected {
@@ -77,7 +77,7 @@ func TestSetGauge(t *testing.T) {
 	cfg := &Config{}
 	cfg.CheckManager.Check.SubmissionURL = server.URL
 
-	cs, err := NewCirconusSink(cfg)
+	cs, err := NewSink(cfg)
 	if err != nil {
 		t.Errorf("Expected no error, got '%v'", err)
 	}
@@ -87,7 +87,7 @@ func TestSetGauge(t *testing.T) {
 		cs.Flush()
 	}()
 
-	expect := "{\"foo`bar\":{\"_type\":\"n\",\"_value\":\"1\"}}"
+	expect := "{\"foo`bar\":{\"_type\":\"l\",\"_value\":1}}"
 	actual := <-q
 
 	if actual != expect {
@@ -105,7 +105,7 @@ func TestIncrCounter(t *testing.T) {
 	cfg := &Config{}
 	cfg.CheckManager.Check.SubmissionURL = server.URL
 
-	cs, err := NewCirconusSink(cfg)
+	cs, err := NewSink(cfg)
 	if err != nil {
 		t.Errorf("Expected no error, got '%v'", err)
 	}
@@ -115,7 +115,7 @@ func TestIncrCounter(t *testing.T) {
 		cs.Flush()
 	}()
 
-	expect := "{\"foo`bar\":{\"_type\":\"n\",\"_value\":1}}"
+	expect := "{\"foo`bar\":{\"_type\":\"L\",\"_value\":1}}"
 	actual := <-q
 
 	if actual != expect {
@@ -133,7 +133,7 @@ func TestAddSample(t *testing.T) {
 	cfg := &Config{}
 	cfg.CheckManager.Check.SubmissionURL = server.URL
 
-	cs, err := NewCirconusSink(cfg)
+	cs, err := NewSink(cfg)
 	if err != nil {
 		t.Errorf("Expected no error, got '%v'", err)
 	}

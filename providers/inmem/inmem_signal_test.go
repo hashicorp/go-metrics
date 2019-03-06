@@ -1,4 +1,4 @@
-package metrics
+package inmem
 
 import (
 	"bytes"
@@ -7,21 +7,23 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/hugoluchessi/go-metrics"
 )
 
 func TestInmemSignal(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
-	inm := NewInmemSink(10*time.Millisecond, 50*time.Millisecond)
-	sig := NewInmemSignal(inm, syscall.SIGUSR1, buf)
+	inm := NewSink(10*time.Millisecond, 50*time.Millisecond)
+	sig := NewSignal(inm, syscall.SIGUSR1, buf)
 	defer sig.Stop()
 
 	inm.SetGauge([]string{"foo"}, 42)
 	inm.EmitKey([]string{"bar"}, 42)
 	inm.IncrCounter([]string{"baz"}, 42)
 	inm.AddSample([]string{"wow"}, 42)
-	inm.SetGaugeWithLabels([]string{"asdf"}, 42, []Label{{"a", "b"}})
-	inm.IncrCounterWithLabels([]string{"qwer"}, 42, []Label{{"a", "b"}})
-	inm.AddSampleWithLabels([]string{"zxcv"}, 42, []Label{{"a", "b"}})
+	inm.SetGaugeWithLabels([]string{"asdf"}, 42, []metrics.Label{{"a", "b"}})
+	inm.IncrCounterWithLabels([]string{"qwer"}, 42, []metrics.Label{{"a", "b"}})
+	inm.AddSampleWithLabels([]string{"zxcv"}, 42, []metrics.Label{{"a", "b"}})
 
 	// Wait for period to end
 	time.Sleep(15 * time.Millisecond)
