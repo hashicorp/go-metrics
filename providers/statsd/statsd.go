@@ -1,19 +1,25 @@
-package metrics
+package statsd
 
 import (
 	"bytes"
 	"fmt"
 	"log"
 	"net"
-	"net/url"
 	"strings"
 	"time"
+
+	"github.com/hugoluchessi/go-metrics"
 )
 
 const (
 	// statsdMaxLen is the maximum size of a packet
 	// to send to statsd
 	statsdMaxLen = 1400
+
+	// We force flush the statsite metrics after this period of
+	// inactivity. Prevents stats from getting stuck in a buffer
+	// forever.
+	flushInterval = 100 * time.Millisecond
 )
 
 // StatsdSink provides a MetricSink that can be used
@@ -22,12 +28,6 @@ const (
 type StatsdSink struct {
 	addr        string
 	metricQueue chan string
-}
-
-// NewStatsdSinkFromURL creates an StatsdSink from a URL. It is used
-// (and tested) from NewMetricSinkFromURL.
-func NewStatsdSinkFromURL(u *url.URL) (MetricSink, error) {
-	return NewStatsdSink(u.Host)
 }
 
 // NewStatsdSink is used to create a new StatsdSink
@@ -50,7 +50,7 @@ func (s *StatsdSink) SetGauge(key []string, val float32) {
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
 
-func (s *StatsdSink) SetGaugeWithLabels(key []string, val float32, labels []Label) {
+func (s *StatsdSink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
@@ -65,7 +65,7 @@ func (s *StatsdSink) IncrCounter(key []string, val float32) {
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
 }
 
-func (s *StatsdSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {
+func (s *StatsdSink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
 }
@@ -75,7 +75,7 @@ func (s *StatsdSink) AddSample(key []string, val float32) {
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
 
-func (s *StatsdSink) AddSampleWithLabels(key []string, val float32, labels []Label) {
+func (s *StatsdSink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
@@ -96,7 +96,7 @@ func (s *StatsdSink) flattenKey(parts []string) string {
 }
 
 // Flattens the key along with labels for formatting, removes spaces
-func (s *StatsdSink) flattenKeyLabels(parts []string, labels []Label) string {
+func (s *StatsdSink) flattenKeyLabels(parts []string, labels []metrics.Label) string {
 	for _, label := range labels {
 		parts = append(parts, label.Value)
 	}

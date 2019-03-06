@@ -1,4 +1,4 @@
-package metrics
+package inmem
 
 import (
 	"bytes"
@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+
+	"github.com/hugoluchessi/go-metrics"
 )
 
 // InmemSignal is used to listen for a given signal, and when received,
@@ -42,7 +44,7 @@ func NewInmemSignal(inmem *InmemSink, sig syscall.Signal, w io.Writer) *InmemSig
 // DefaultInmemSignal returns a new InmemSignal that responds to SIGUSR1
 // and writes output to stderr. Windows uses SIGBREAK
 func DefaultInmemSignal(inmem *InmemSink) *InmemSignal {
-	return NewInmemSignal(inmem, DefaultSignal, os.Stderr)
+	return NewInmemSignal(inmem, metrics.DefaultSignal, os.Stderr)
 }
 
 // Stop is used to stop the InmemSignal from listening
@@ -104,7 +106,7 @@ func (i *InmemSignal) dumpStats() {
 }
 
 // Flattens the key for formatting along with its labels, removes spaces
-func (i *InmemSignal) flattenLabels(name string, labels []Label) string {
+func (i *InmemSignal) flattenLabels(name string, labels []metrics.Label) string {
 	buf := bytes.NewBufferString(name)
 	replacer := strings.NewReplacer(" ", "_", ":", "_")
 

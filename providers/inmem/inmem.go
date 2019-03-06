@@ -1,13 +1,14 @@
-package metrics
+package inmem
 
 import (
 	"bytes"
 	"fmt"
 	"math"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/hugoluchessi/go-metrics"
 )
 
 // InmemSink provides a MetricSink that does in-memory aggregation
@@ -122,24 +123,6 @@ func (a *AggregateSample) String() string {
 	}
 }
 
-// NewInmemSinkFromURL creates an InmemSink from a URL. It is used
-// (and tested) from NewMetricSinkFromURL.
-func NewInmemSinkFromURL(u *url.URL) (MetricSink, error) {
-	params := u.Query()
-
-	interval, err := time.ParseDuration(params.Get("interval"))
-	if err != nil {
-		return nil, fmt.Errorf("Bad 'interval' param: %s", err)
-	}
-
-	retain, err := time.ParseDuration(params.Get("retain"))
-	if err != nil {
-		return nil, fmt.Errorf("Bad 'retain' param: %s", err)
-	}
-
-	return NewInmemSink(interval, retain), nil
-}
-
 // NewInmemSink is used to construct a new in-memory sink.
 // Uses an aggregation interval and maximum retention period.
 func NewInmemSink(interval, retain time.Duration) *InmemSink {
@@ -158,7 +141,7 @@ func (i *InmemSink) SetGauge(key []string, val float32) {
 	i.SetGaugeWithLabels(key, val, nil)
 }
 
-func (i *InmemSink) SetGaugeWithLabels(key []string, val float32, labels []Label) {
+func (i *InmemSink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
@@ -181,7 +164,7 @@ func (i *InmemSink) IncrCounter(key []string, val float32) {
 	i.IncrCounterWithLabels(key, val, nil)
 }
 
-func (i *InmemSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {
+func (i *InmemSink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
@@ -204,7 +187,7 @@ func (i *InmemSink) AddSample(key []string, val float32) {
 	i.AddSampleWithLabels(key, val, nil)
 }
 
-func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []Label) {
+func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
 	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
 
@@ -326,7 +309,7 @@ func (i *InmemSink) flattenKey(parts []string) string {
 }
 
 // Flattens the key for formatting along with its labels, removes spaces
-func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) (string, string) {
+func (i *InmemSink) flattenKeyLabels(parts []string, labels []metrics.Label) (string, string) {
 	buf := &bytes.Buffer{}
 	replacer := strings.NewReplacer(" ", "_")
 

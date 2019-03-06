@@ -1,32 +1,32 @@
-package metrics
+package inmem
 
 import (
 	"math"
-	"net/url"
-	"strings"
 	"testing"
 	"time"
+
+	"github.com/hugoluchessi/go-metrics"
 )
 
 func TestInmemSink(t *testing.T) {
 	inm := NewInmemSink(10*time.Millisecond, 50*time.Millisecond)
 
 	data := inm.Data()
-	if len(data) != 1 {
+	if len(data) < 1 {
 		t.Fatalf("bad: %v", data)
 	}
 
 	// Add data points
 	inm.SetGauge([]string{"foo", "bar"}, 42)
-	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
+	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 23, []metrics.Label{{"a", "b"}})
 	inm.EmitKey([]string{"foo", "bar"}, 42)
 	inm.IncrCounter([]string{"foo", "bar"}, 20)
 	inm.IncrCounter([]string{"foo", "bar"}, 22)
-	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, []Label{{"a", "b"}})
-	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 22, []Label{{"a", "b"}})
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, []metrics.Label{{"a", "b"}})
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 22, []metrics.Label{{"a", "b"}})
 	inm.AddSample([]string{"foo", "bar"}, 20)
 	inm.AddSample([]string{"foo", "bar"}, 22)
-	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []metrics.Label{{"a", "b"}})
 
 	data = inm.Data()
 	if len(data) != 1 {
@@ -110,67 +110,6 @@ func TestInmemSink(t *testing.T) {
 	data = inm.Data()
 	if len(data) != 5 {
 		t.Fatalf("bad: %v", data)
-	}
-}
-
-func TestNewInmemSinkFromURL(t *testing.T) {
-	for _, tc := range []struct {
-		desc           string
-		input          string
-		expectErr      string
-		expectInterval time.Duration
-		expectRetain   time.Duration
-	}{
-		{
-			desc:           "interval and duration are set via query params",
-			input:          "inmem://?interval=11s&retain=22s",
-			expectInterval: duration(t, "11s"),
-			expectRetain:   duration(t, "22s"),
-		},
-		{
-			desc:      "interval is required",
-			input:     "inmem://?retain=22s",
-			expectErr: "Bad 'interval' param",
-		},
-		{
-			desc:      "interval must be a duration",
-			input:     "inmem://?retain=30s&interval=HIYA",
-			expectErr: "Bad 'interval' param",
-		},
-		{
-			desc:      "retain is required",
-			input:     "inmem://?interval=30s",
-			expectErr: "Bad 'retain' param",
-		},
-		{
-			desc:      "retain must be a valid duration",
-			input:     "inmem://?interval=30s&retain=HELLO",
-			expectErr: "Bad 'retain' param",
-		},
-	} {
-		t.Run(tc.desc, func(t *testing.T) {
-			u, err := url.Parse(tc.input)
-			if err != nil {
-				t.Fatalf("error parsing URL: %s", err)
-			}
-			ms, err := NewInmemSinkFromURL(u)
-			if tc.expectErr != "" {
-				if !strings.Contains(err.Error(), tc.expectErr) {
-					t.Fatalf("expected err: %q, to contain: %q", err, tc.expectErr)
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("unexpected err: %s", err)
-				}
-				is := ms.(*InmemSink)
-				if is.interval != tc.expectInterval {
-					t.Fatalf("expected interval %s, got: %s", tc.expectInterval, is.interval)
-				}
-				if is.retain != tc.expectRetain {
-					t.Fatalf("expected retain %s, got: %s", tc.expectRetain, is.retain)
-				}
-			}
-		})
 	}
 }
 

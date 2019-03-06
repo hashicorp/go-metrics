@@ -1,13 +1,14 @@
-package metrics
+package statsite
 
 import (
 	"bufio"
 	"fmt"
 	"log"
 	"net"
-	"net/url"
 	"strings"
 	"time"
+
+	"github.com/hugoluchessi/go-metrics"
 )
 
 const (
@@ -16,12 +17,6 @@ const (
 	// forever.
 	flushInterval = 100 * time.Millisecond
 )
-
-// NewStatsiteSinkFromURL creates an StatsiteSink from a URL. It is used
-// (and tested) from NewMetricSinkFromURL.
-func NewStatsiteSinkFromURL(u *url.URL) (MetricSink, error) {
-	return NewStatsiteSink(u.Host)
-}
 
 // StatsiteSink provides a MetricSink that can be used with a
 // statsite metrics server
@@ -40,7 +35,7 @@ func NewStatsiteSink(addr string) (*StatsiteSink, error) {
 	return s, nil
 }
 
-// Close is used to stop flushing to statsite
+// Shutdown is used to stop flushing to statsite
 func (s *StatsiteSink) Shutdown() {
 	close(s.metricQueue)
 }
@@ -50,7 +45,7 @@ func (s *StatsiteSink) SetGauge(key []string, val float32) {
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
 
-func (s *StatsiteSink) SetGaugeWithLabels(key []string, val float32, labels []Label) {
+func (s *StatsiteSink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
@@ -65,7 +60,7 @@ func (s *StatsiteSink) IncrCounter(key []string, val float32) {
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
 }
 
-func (s *StatsiteSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {
+func (s *StatsiteSink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
 }
@@ -75,7 +70,7 @@ func (s *StatsiteSink) AddSample(key []string, val float32) {
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
 
-func (s *StatsiteSink) AddSampleWithLabels(key []string, val float32, labels []Label) {
+func (s *StatsiteSink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
@@ -96,7 +91,7 @@ func (s *StatsiteSink) flattenKey(parts []string) string {
 }
 
 // Flattens the key along with labels for formatting, removes spaces
-func (s *StatsiteSink) flattenKeyLabels(parts []string, labels []Label) string {
+func (s *StatsiteSink) flattenKeyLabels(parts []string, labels []metrics.Label) string {
 	for _, label := range labels {
 		parts = append(parts, label.Value)
 	}

@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/hashicorp/go-immutable-radix"
+	iradix "github.com/hashicorp/go-immutable-radix"
 )
 
 // Config is used to configure metrics settings
@@ -33,7 +33,7 @@ type Config struct {
 type Metrics struct {
 	Config
 	lastNumGC     uint32
-	sink          MetricSink
+	sink          Sink
 	filter        *iradix.Tree
 	allowedLabels map[string]bool
 	blockedLabels map[string]bool
@@ -68,7 +68,7 @@ func DefaultConfig(serviceName string) *Config {
 }
 
 // New is used to create a new instance of Metrics
-func New(conf *Config, sink MetricSink) (*Metrics, error) {
+func New(conf *Config, sink Sink) (*Metrics, error) {
 	met := &Metrics{}
 	met.Config = *conf
 	met.sink = sink
@@ -83,7 +83,7 @@ func New(conf *Config, sink MetricSink) (*Metrics, error) {
 
 // NewGlobal is the same as New, but it assigns the metrics object to be
 // used globally as well as returning it.
-func NewGlobal(conf *Config, sink MetricSink) (*Metrics, error) {
+func NewGlobal(conf *Config, sink Sink) (*Metrics, error) {
 	metrics, err := New(conf, sink)
 	if err == nil {
 		globalMetrics.Store(metrics)

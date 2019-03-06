@@ -1,10 +1,12 @@
-package metrics
+package inmem
 
 import (
 	"fmt"
 	"net/http"
 	"sort"
 	"time"
+
+	"github.com/hugoluchessi/go-metrics"
 )
 
 // MetricsSummary holds a roll-up of metrics info for a given interval
@@ -21,7 +23,7 @@ type GaugeValue struct {
 	Hash  string `json:"-"`
 	Value float32
 
-	Labels        []Label           `json:"-"`
+	Labels        []metrics.Label   `json:"-"`
 	DisplayLabels map[string]string `json:"Labels"`
 }
 
@@ -37,7 +39,7 @@ type SampledValue struct {
 	Mean   float64
 	Stddev float64
 
-	Labels        []Label           `json:"-"`
+	Labels        []metrics.Label   `json:"-"`
 	DisplayLabels map[string]string `json:"Labels"`
 }
 
