@@ -31,7 +31,7 @@ var sinkRegistry = map[string]sinkURLFactoryFunc{
 // as the "addr" of the sink
 //
 // "statsite://" - Initializes a StatsiteSink. The host and port become the
-// "addr" of the sink
+// "addr" of  the sink
 //
 // "inmem://" - Initializes an InmemSink. The host and port are ignored. The
 // "interval" and "duration" query parameters must be specified with valid
