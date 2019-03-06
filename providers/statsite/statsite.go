@@ -18,16 +18,16 @@ const (
 	flushInterval = 100 * time.Millisecond
 )
 
-// StatsiteSink provides a MetricSink that can be used with a
+// Sink provides a MetricSink that can be used with a
 // statsite metrics server
-type StatsiteSink struct {
+type Sink struct {
 	addr        string
 	metricQueue chan string
 }
 
-// NewStatsiteSink is used to create a new StatsiteSink
-func NewStatsiteSink(addr string) (*StatsiteSink, error) {
-	s := &StatsiteSink{
+// New is used to create a new Sink
+func NewSink(addr string) (*Sink, error) {
+	s := &Sink{
 		addr:        addr,
 		metricQueue: make(chan string, 4096),
 	}
@@ -36,47 +36,47 @@ func NewStatsiteSink(addr string) (*StatsiteSink, error) {
 }
 
 // Shutdown is used to stop flushing to statsite
-func (s *StatsiteSink) Shutdown() {
+func (s *Sink) Shutdown() {
 	close(s.metricQueue)
 }
 
-func (s *StatsiteSink) SetGauge(key []string, val float32) {
+func (s *Sink) SetGauge(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
 
-func (s *StatsiteSink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
+func (s *Sink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
 
-func (s *StatsiteSink) EmitKey(key []string, val float32) {
+func (s *Sink) EmitKey(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|kv\n", flatKey, val))
 }
 
-func (s *StatsiteSink) IncrCounter(key []string, val float32) {
+func (s *Sink) IncrCounter(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
 }
 
-func (s *StatsiteSink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
+func (s *Sink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
 }
 
-func (s *StatsiteSink) AddSample(key []string, val float32) {
+func (s *Sink) AddSample(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
 
-func (s *StatsiteSink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
+func (s *Sink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
 
 // Flattens the key for formatting, removes spaces
-func (s *StatsiteSink) flattenKey(parts []string) string {
+func (s *Sink) flattenKey(parts []string) string {
 	joined := strings.Join(parts, ".")
 	return strings.Map(func(r rune) rune {
 		switch r {
@@ -91,7 +91,7 @@ func (s *StatsiteSink) flattenKey(parts []string) string {
 }
 
 // Flattens the key along with labels for formatting, removes spaces
-func (s *StatsiteSink) flattenKeyLabels(parts []string, labels []metrics.Label) string {
+func (s *Sink) flattenKeyLabels(parts []string, labels []metrics.Label) string {
 	for _, label := range labels {
 		parts = append(parts, label.Value)
 	}
@@ -99,7 +99,7 @@ func (s *StatsiteSink) flattenKeyLabels(parts []string, labels []metrics.Label) 
 }
 
 // Does a non-blocking push to the metrics queue
-func (s *StatsiteSink) pushMetric(m string) {
+func (s *Sink) pushMetric(m string) {
 	select {
 	case s.metricQueue <- m:
 	default:
@@ -107,7 +107,7 @@ func (s *StatsiteSink) pushMetric(m string) {
 }
 
 // Flushes metrics
-func (s *StatsiteSink) flushMetrics() {
+func (s *Sink) flushMetrics() {
 	var sock net.Conn
 	var err error
 	var wait <-chan time.Time

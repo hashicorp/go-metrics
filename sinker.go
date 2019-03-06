@@ -2,7 +2,7 @@ package metrics
 
 // The Sink interface is used to transmit metrics information
 // to an external system
-type Sink interface {
+type Sinker interface {
 	// A Gauge should retain the last value it is set to
 	SetGauge(key []string, val float32)
 	SetGaugeWithLabels(key []string, val float32, labels []Label)
@@ -31,7 +31,7 @@ func (*BlackholeSink) AddSample(key []string, val float32)                      
 func (*BlackholeSink) AddSampleWithLabels(key []string, val float32, labels []Label)   {}
 
 // FanoutSink is used to sink to fanout values to multiple sinks
-type FanoutSink []Sink
+type FanoutSink []Sinker
 
 func (fh FanoutSink) SetGauge(key []string, val float32) {
 	fh.SetGaugeWithLabels(key, val, nil)

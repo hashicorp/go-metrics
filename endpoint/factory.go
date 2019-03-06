@@ -13,7 +13,7 @@ import (
 
 // sinkURLFactoryFunc is an generic interface around the *SinkFromURL() function provided
 // by each sink type
-type sinkURLFactoryFunc func(*url.URL) (metrics.Sink, error)
+type sinkURLFactoryFunc func(*url.URL) (metrics.Sinker, error)
 
 // sinkRegistry supports the generic NewSink function by mapping URL
 // schemes to metric sink factory functions
@@ -36,7 +36,7 @@ var sinkRegistry = map[string]sinkURLFactoryFunc{
 // "inmem://" - Initializes an InmemSink. The host and port are ignored. The
 // "interval" and "duration" query parameters must be specified with valid
 // durations, see NewInmemSink for details.
-func NewSinkFromURL(urlStr string) (metrics.Sink, error) {
+func NewSinkFromURL(urlStr string) (metrics.Sinker, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func NewSinkFromURL(urlStr string) (metrics.Sink, error) {
 
 // NewInmemSinkFromURL creates an InmemSink from a URL. It is used
 // (and tested) from NewSinkFromURL.
-func NewInmemSinkFromURL(u *url.URL) (metrics.Sink, error) {
+func NewInmemSinkFromURL(u *url.URL) (metrics.Sinker, error) {
 	params := u.Query()
 
 	interval, err := time.ParseDuration(params.Get("interval"))
@@ -66,17 +66,17 @@ func NewInmemSinkFromURL(u *url.URL) (metrics.Sink, error) {
 		return nil, fmt.Errorf("Bad 'retain' param: %s", err)
 	}
 
-	return inmem.NewInmemSink(interval, retain), nil
+	return inmem.NewSink(interval, retain), nil
 }
 
 // NewStatsiteSinkFromURL creates an StatsiteSink from a URL. It is used
 // (and tested) from NewSinkFromURL.
-func NewStatsiteSinkFromURL(u *url.URL) (metrics.Sink, error) {
-	return statsite.NewStatsiteSink(u.Host)
+func NewStatsiteSinkFromURL(u *url.URL) (metrics.Sinker, error) {
+	return statsite.NewSink(u.Host)
 }
 
 // NewStatsdSinkFromURL creates an StatsdSink from a URL. It is used
 // (and tested) from NewSinkFromURL.
-func NewStatsdSinkFromURL(u *url.URL) (metrics.Sink, error) {
-	return statsd.NewStatsdSink(u.Host)
+func NewStatsdSinkFromURL(u *url.URL) (metrics.Sinker, error) {
+	return statsd.NewSink(u.Host)
 }

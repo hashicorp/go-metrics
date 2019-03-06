@@ -9,7 +9,7 @@ import (
 )
 
 func TestInmemSink(t *testing.T) {
-	inm := NewInmemSink(10*time.Millisecond, 50*time.Millisecond)
+	inm := NewSink(10*time.Millisecond, 50*time.Millisecond)
 
 	data := inm.Data()
 	if len(data) < 1 {

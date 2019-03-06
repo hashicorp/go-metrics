@@ -16,7 +16,7 @@ func acceptConn(addr string) net.Conn {
 }
 
 func TestStatsite_Flatten(t *testing.T) {
-	s := &StatsiteSink{}
+	s := &Sink{}
 	flat := s.flattenKey([]string{"a", "b", "c", "d"})
 	if flat != "a.b.c.d" {
 		t.Fatalf("Bad flat")
@@ -27,7 +27,7 @@ func TestStatsite_PushFullQueue(t *testing.T) {
 	q := make(chan string, 1)
 	q <- "full"
 
-	s := &StatsiteSink{metricQueue: q}
+	s := &Sink{metricQueue: q}
 	s.pushMetric("omit")
 
 	out := <-q
@@ -111,7 +111,7 @@ func TestStatsite_Conn(t *testing.T) {
 
 	time.Sleep(1 * time.Millisecond)
 
-	s, err := NewStatsiteSink(addr)
+	s, err := NewSink(addr)
 	if err != nil {
 		t.Fatalf("bad error")
 	}

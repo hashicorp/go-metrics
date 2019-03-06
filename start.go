@@ -33,7 +33,7 @@ type Config struct {
 type Metrics struct {
 	Config
 	lastNumGC     uint32
-	sink          Sink
+	sink          Sinker
 	filter        *iradix.Tree
 	allowedLabels map[string]bool
 	blockedLabels map[string]bool
@@ -68,7 +68,7 @@ func DefaultConfig(serviceName string) *Config {
 }
 
 // New is used to create a new instance of Metrics
-func New(conf *Config, sink Sink) (*Metrics, error) {
+func New(conf *Config, sink Sinker) (*Metrics, error) {
 	met := &Metrics{}
 	met.Config = *conf
 	met.sink = sink
@@ -83,7 +83,7 @@ func New(conf *Config, sink Sink) (*Metrics, error) {
 
 // NewGlobal is the same as New, but it assigns the metrics object to be
 // used globally as well as returning it.
-func NewGlobal(conf *Config, sink Sink) (*Metrics, error) {
+func NewGlobal(conf *Config, sink Sinker) (*Metrics, error) {
 	metrics, err := New(conf, sink)
 	if err == nil {
 		globalMetrics.Store(metrics)

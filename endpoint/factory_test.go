@@ -22,17 +22,17 @@ func TestNewMetricSinkFromURL(t *testing.T) {
 		{
 			desc:   "statsd scheme yields a StatsdSink",
 			input:  "statsd://someserver:123",
-			expect: reflect.TypeOf(&statsd.StatsdSink{}),
+			expect: reflect.TypeOf(&statsd.Sink{}),
 		},
 		{
 			desc:   "statsite scheme yields a StatsiteSink",
 			input:  "statsite://someserver:123",
-			expect: reflect.TypeOf(&statsite.StatsiteSink{}),
+			expect: reflect.TypeOf(&statsite.Sink{}),
 		},
 		{
 			desc:   "inmem scheme yields an InmemSink",
 			input:  "inmem://?interval=30s&retain=30s",
-			expect: reflect.TypeOf(&inmem.InmemSink{}),
+			expect: reflect.TypeOf(&inmem.Sink{}),
 		},
 		{
 			desc:      "unknown scheme yields an error",
@@ -91,7 +91,7 @@ func TestNewStatsiteSinkFromURL(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected err: %s", err)
 				}
-				is := ms.(*statsite.StatsiteSink)
+				is := ms.(*statsite.Sink)
 				if is == nil {
 					t.Fatal("expected sink not to be nil")
 				}
@@ -147,7 +147,7 @@ func TestNewInmemSinkFromURL(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected err: %s", err)
 				}
-				is := ms.(*inmem.InmemSink)
+				is := ms.(*inmem.Sink)
 				if is == nil {
 					t.Fatal("expected sink not to be nil")
 				}
@@ -188,7 +188,7 @@ func TestNewStatsdSinkFromURL(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected err: %s", err)
 				}
-				is := ms.(*statsd.StatsdSink)
+				is := ms.(*statsd.Sink)
 				if is == nil {
 					t.Fatal("expected sink not to be nil")
 				}

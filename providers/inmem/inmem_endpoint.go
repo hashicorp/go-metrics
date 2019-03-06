@@ -44,7 +44,7 @@ type SampledValue struct {
 }
 
 // DisplayMetrics returns a summary of the metrics from the most recent finished interval.
-func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error) {
+func (i *Sink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error) {
 	data := i.Data()
 
 	var interval *IntervalMetrics

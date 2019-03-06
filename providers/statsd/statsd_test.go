@@ -11,7 +11,7 @@ import (
 )
 
 func TestStatsd_Flatten(t *testing.T) {
-	s := &StatsdSink{}
+	s := &Sink{}
 	flat := s.flattenKey([]string{"a", "b", "c", "d"})
 	if flat != "a.b.c.d" {
 		t.Fatalf("Bad flat")
@@ -22,7 +22,7 @@ func TestStatsd_PushFullQueue(t *testing.T) {
 	q := make(chan string, 1)
 	q <- "full"
 
-	s := &StatsdSink{metricQueue: q}
+	s := &Sink{metricQueue: q}
 	s.pushMetric("omit")
 
 	out := <-q
@@ -112,7 +112,7 @@ func TestStatsd_Conn(t *testing.T) {
 
 		done <- true
 	}()
-	s, err := NewStatsdSink(addr)
+	s, err := NewSink(addr)
 	if err != nil {
 		t.Fatalf("bad error")
 	}

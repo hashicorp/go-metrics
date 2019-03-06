@@ -10,7 +10,7 @@ import (
 
 func TestDisplayMetrics(t *testing.T) {
 	interval := 10 * time.Millisecond
-	inm := NewInmemSink(interval, 50*time.Millisecond)
+	inm := NewSink(interval, 50*time.Millisecond)
 
 	// Add data points
 	inm.SetGauge([]string{"foo", "bar"}, 42)

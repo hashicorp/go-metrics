@@ -13,8 +13,8 @@ import (
 
 func TestInmemSignal(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
-	inm := NewInmemSink(10*time.Millisecond, 50*time.Millisecond)
-	sig := NewInmemSignal(inm, syscall.SIGUSR1, buf)
+	inm := NewSink(10*time.Millisecond, 50*time.Millisecond)
+	sig := NewSignal(inm, syscall.SIGUSR1, buf)
 	defer sig.Stop()
 
 	inm.SetGauge([]string{"foo"}, 42)
