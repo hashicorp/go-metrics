@@ -1,6 +1,6 @@
 package metrics
 
-// The Sink interface is used to transmit metrics information
+// Sinker interface is used to transmit metrics information
 // to an external system
 type Sinker interface {
 	// A Gauge should retain the last value it is set to
@@ -68,4 +68,3 @@ func (fh FanoutSink) AddSampleWithLabels(key []string, val float32, labels []Lab
 		s.AddSampleWithLabels(key, val, labels)
 	}
 }
-

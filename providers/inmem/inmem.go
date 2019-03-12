@@ -79,7 +79,7 @@ type AggregateSample struct {
 	LastUpdated time.Time `json:"-"` // When value was last updated
 }
 
-// Computes a Stddev of the values
+// Stddev computes a Stddev of the values
 func (a *AggregateSample) Stddev() float64 {
 	num := (float64(a.Count) * a.SumSq) - math.Pow(a.Sum, 2)
 	div := float64(a.Count * (a.Count - 1))
@@ -89,7 +89,7 @@ func (a *AggregateSample) Stddev() float64 {
 	return math.Sqrt(num / div)
 }
 
-// Computes a mean of the values
+// Mean computes a mean of the values
 func (a *AggregateSample) Mean() float64 {
 	if a.Count == 0 {
 		return 0

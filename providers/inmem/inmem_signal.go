@@ -44,7 +44,7 @@ func NewSignal(inmem *Sink, sig syscall.Signal, w io.Writer) *Signal {
 // DefaultSignal returns a new Signal that responds to SIGUSR1
 // and writes output to stderr. Windows uses SIGBREAK
 func DefaultSignal(inmem *Sink) *Signal {
-	return NewSignal(inmem, metrics.DefaultSignal, os.Stderr)
+	return NewSignal(inmem, defaultSignal, os.Stderr)
 }
 
 // Stop is used to stop the Signal from listening

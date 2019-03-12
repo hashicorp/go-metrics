@@ -14,16 +14,16 @@ func TestDisplayMetrics(t *testing.T) {
 
 	// Add data points
 	inm.SetGauge([]string{"foo", "bar"}, 42)
-	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 23, []metrics.Label{{"a", "b"}})
+	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 23, []metrics.Label{{Name: "a", Value: "b"}})
 	inm.EmitKey([]string{"foo", "bar"}, 42)
 	inm.IncrCounter([]string{"foo", "bar"}, 20)
 	inm.IncrCounter([]string{"foo", "bar"}, 22)
-	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, []metrics.Label{{"a", "b"}})
-	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 40, []metrics.Label{{"a", "b"}})
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, []metrics.Label{{Name: "a", Value: "b"}})
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 40, []metrics.Label{{Name: "a", Value: "b"}})
 	inm.AddSample([]string{"foo", "bar"}, 20)
 	inm.AddSample([]string{"foo", "bar"}, 24)
-	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []metrics.Label{{"a", "b"}})
-	inm.AddSampleWithLabels([]string{"foo", "bar"}, 33, []metrics.Label{{"a", "b"}})
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []metrics.Label{{Name: "a", Value: "b"}})
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 33, []metrics.Label{{Name: "a", Value: "b"}})
 
 	data := inm.Data()
 	if len(data) != 1 {

@@ -1,6 +1,6 @@
 // +build !windows
 
-package metrics
+package inmem
 
 import (
 	"syscall"
@@ -8,5 +8,5 @@ import (
 
 const (
 	// DefaultSignal is used with DefaultInmemSignal
-	DefaultSignal = syscall.SIGUSR1
+	defaultSignal = syscall.SIGUSR1
 )

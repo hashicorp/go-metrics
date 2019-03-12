@@ -5,7 +5,10 @@
 
 # Folders
 _obj
-_test
+
+
+# Editor specific
+.vscode
 
 # Architecture specific extensions/prefixes
 *.[568vq]

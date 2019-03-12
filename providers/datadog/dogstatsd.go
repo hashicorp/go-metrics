@@ -76,7 +76,7 @@ func (s *Sink) parseKey(key []string) ([]string, []metrics.Label) {
 	}
 
 	if s.propagateHostname {
-		labels = append(labels, metrics.Label{"host", hostName})
+		labels = append(labels, metrics.Label{Name: "host", Value: hostName})
 	}
 	return key, labels
 }

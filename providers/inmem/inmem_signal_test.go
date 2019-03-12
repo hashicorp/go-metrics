@@ -21,9 +21,9 @@ func TestInmemSignal(t *testing.T) {
 	inm.EmitKey([]string{"bar"}, 42)
 	inm.IncrCounter([]string{"baz"}, 42)
 	inm.AddSample([]string{"wow"}, 42)
-	inm.SetGaugeWithLabels([]string{"asdf"}, 42, []metrics.Label{{"a", "b"}})
-	inm.IncrCounterWithLabels([]string{"qwer"}, 42, []metrics.Label{{"a", "b"}})
-	inm.AddSampleWithLabels([]string{"zxcv"}, 42, []metrics.Label{{"a", "b"}})
+	inm.SetGaugeWithLabels([]string{"asdf"}, 42, []metrics.Label{{Name: "a", Value: "b"}})
+	inm.IncrCounterWithLabels([]string{"qwer"}, 42, []metrics.Label{{Name: "a", Value: "b"}})
+	inm.AddSampleWithLabels([]string{"zxcv"}, 42, []metrics.Label{{Name: "a", Value: "b"}})
 
 	// Wait for period to end
 	time.Sleep(15 * time.Millisecond)
