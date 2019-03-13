@@ -10,7 +10,7 @@ import (
 type MetricService struct {
 	MetricServiceConfig
 	lastNumGC uint32
-	sink      Sinker
+	Sink      Sinker
 }
 
 const (
@@ -25,7 +25,7 @@ const (
 func NewMetricService(conf *MetricServiceConfig, sink Sinker) *MetricService {
 	met := &MetricService{}
 	met.MetricServiceConfig = *conf
-	met.sink = sink
+	met.Sink = sink
 
 	// Start the runtime collector
 	if conf.EnableRuntimeMetrics {
@@ -42,13 +42,13 @@ func (m *MetricService) SetGauge(key []string, val float32) {
 // SetGaugeWithLabels sets a value on a gauge with labels
 func (m *MetricService) SetGaugeWithLabels(key []string, val float32, labels []Label) {
 	k := m.getKey(key, gaugeType)
-	m.sink.SetGaugeWithLabels(k, val, labels)
+	m.Sink.SetGaugeWithLabels(k, val, labels)
 }
 
 // EmitKey emits a key value metric
 func (m *MetricService) EmitKey(key []string, val float32) {
 	k := m.getKey(key, keyType)
-	m.sink.EmitKey(k, val)
+	m.Sink.EmitKey(k, val)
 }
 
 // IncrCounter increases the value of a counter by a given value
@@ -59,7 +59,7 @@ func (m *MetricService) IncrCounter(key []string, val float32) {
 // IncrCounterWithLabels increases the value of a counter by a given value with labels
 func (m *MetricService) IncrCounterWithLabels(key []string, val float32, labels []Label) {
 	k := m.getKey(key, counterType)
-	m.sink.IncrCounterWithLabels(k, val, labels)
+	m.Sink.IncrCounterWithLabels(k, val, labels)
 }
 
 // AddSample adds a sample metrics
@@ -70,7 +70,7 @@ func (m *MetricService) AddSample(key []string, val float32) {
 // AddSampleWithLabels adds a sample metrics with labels
 func (m *MetricService) AddSampleWithLabels(key []string, val float32, labels []Label) {
 	k := m.getKey(key, sampleType)
-	m.sink.AddSampleWithLabels(k, val, labels)
+	m.Sink.AddSampleWithLabels(k, val, labels)
 }
 
 // MeasureSince measure time since the start time until now
@@ -84,7 +84,7 @@ func (m *MetricService) MeasureSinceWithLabels(key []string, start time.Time, la
 	now := time.Now()
 	elapsed := now.Sub(start)
 	msec := float32(elapsed.Nanoseconds()) / float32(m.TimerGranularity)
-	m.sink.AddSampleWithLabels(k, msec, labels)
+	m.Sink.AddSampleWithLabels(k, msec, labels)
 }
 
 func (m *MetricService) getKey(key []string, t string) []string {

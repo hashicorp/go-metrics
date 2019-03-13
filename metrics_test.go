@@ -10,7 +10,7 @@ import (
 
 func mockMetric() (*MockSink, *MetricService) {
 	m := &MockSink{}
-	met := &MetricService{MetricServiceConfig: MetricServiceConfig{}, sink: m}
+	met := &MetricService{MetricServiceConfig: MetricServiceConfig{}, Sink: m}
 	return m, met
 }
 
@@ -333,7 +333,7 @@ func TestMetricService_getKey(t *testing.T) {
 
 	t.Run("get key with hostname enabled", func(*testing.T) {
 		expectedMetricKey = []string{"some", "good", "key"}
-		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{EnableHostName: true}, sink: m}
+		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{EnableHostName: true}, Sink: m}
 		gotMetricKey = metric.getKey(testKey, "gauge")
 
 		if !reflect.DeepEqual(expectedMetricKey, gotMetricKey) {
@@ -341,7 +341,7 @@ func TestMetricService_getKey(t *testing.T) {
 		}
 
 		expectedMetricKey = []string{hostName, "some", "good", "key"}
-		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{HostName: hostName, EnableHostName: true}, sink: m}
+		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{HostName: hostName, EnableHostName: true}, Sink: m}
 		gotMetricKey = metric.getKey(testKey, "gauge")
 
 		if !reflect.DeepEqual(expectedMetricKey, gotMetricKey) {
@@ -351,7 +351,7 @@ func TestMetricService_getKey(t *testing.T) {
 
 	t.Run("get key with service name enabled", func(*testing.T) {
 		expectedMetricKey = []string{"some", "good", "key"}
-		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{EnableServiceName: true}, sink: m}
+		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{EnableServiceName: true}, Sink: m}
 		gotMetricKey = metric.getKey(testKey, "gauge")
 
 		if !reflect.DeepEqual(expectedMetricKey, gotMetricKey) {
@@ -359,7 +359,7 @@ func TestMetricService_getKey(t *testing.T) {
 		}
 
 		expectedMetricKey = []string{serviceName, "some", "good", "key"}
-		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{ServiceName: serviceName, EnableServiceName: true}, sink: m}
+		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{ServiceName: serviceName, EnableServiceName: true}, Sink: m}
 		gotMetricKey = metric.getKey(testKey, "gauge")
 
 		if !reflect.DeepEqual(expectedMetricKey, gotMetricKey) {
@@ -369,7 +369,7 @@ func TestMetricService_getKey(t *testing.T) {
 
 	t.Run("get key with service name enabled", func(*testing.T) {
 		expectedMetricKey = []string{"some", "good", "key", "gauge"}
-		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{EnableTypeSufix: true}, sink: m}
+		metric = &MetricService{MetricServiceConfig: MetricServiceConfig{EnableTypeSufix: true}, Sink: m}
 		gotMetricKey = metric.getKey(testKey, "gauge")
 
 		if !reflect.DeepEqual(expectedMetricKey, gotMetricKey) {
