@@ -3,14 +3,12 @@ package prometheus
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/hugoluchessi/go-metrics"
-	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 )
 
-func TestInmemSink(t *testing.T) {
+func TestPrometheusSink(t *testing.T) {
 	p, _ := NewSink()
 
 	// Add data points
@@ -21,41 +19,29 @@ func TestInmemSink(t *testing.T) {
 	p.AddSample([]string{"sum", "one"}, 22)
 	p.AddSampleWithLabels([]string{"sum", "two"}, 23, []metrics.Label{{Name: "a", Value: "b"}})
 
-	c := make(chan prometheus.Metric)
-	done := false
+	metrics, _ := p.registry.Gather()
 
-	go func() { p.Collect(c) }()
+	for _, m := range metrics {
+		descString := m.String()
+		dtoM := m.Metric[0]
 
-	for !done {
-		time.Sleep(1 * time.Millisecond)
-
-		dtoM := &dto.Metric{}
-
-		select {
-		case m := <-c:
-			m.Write(dtoM)
-			descString := m.Desc().String()
-
-			switch m.(type) {
-			case prometheus.Gauge:
-				AssertGaugeDTOMetric(t, descString, dtoM)
-				break
-			case prometheus.Counter:
-				AssertCounterDTOMetric(t, descString, dtoM)
-				break
-			case prometheus.Summary:
-				AssertSummaryDTOMetric(t, descString, dtoM)
-				break
-			}
-		default:
-			done = true
+		switch *m.Type {
+		case dto.MetricType_GAUGE:
+			AssertGaugeDTOMetric(t, descString, dtoM)
+			break
+		case dto.MetricType_COUNTER:
+			AssertCounterDTOMetric(t, descString, dtoM)
+			break
+		case dto.MetricType_SUMMARY:
+			AssertSummaryDTOMetric(t, descString, dtoM)
+			break
 		}
 	}
 }
 
-func AssertGaugeDTOMetric(t *testing.T, desc string, m *dto.Metric) {
-	lbs := m.GetLabel()
-	g := m.GetGauge()
+func AssertGaugeDTOMetric(t *testing.T, desc string, dtoM *dto.Metric) {
+	lbs := dtoM.GetLabel()
+	g := dtoM.GetGauge()
 
 	if strings.Contains(desc, "gauge_one") {
 		expectedValue := float64(42)

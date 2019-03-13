@@ -35,6 +35,7 @@ type Sink struct {
 	counters   map[string]prometheus.Counter
 	updates    map[string]time.Time
 	expiration time.Duration
+	registry   *prometheus.Registry
 }
 
 // NewSink creates a new Sink using the default options.
@@ -50,54 +51,12 @@ func NewSinkFrom(opts SinkOptions) (*Sink, error) {
 		counters:   make(map[string]prometheus.Counter),
 		updates:    make(map[string]time.Time),
 		expiration: opts.Expiration,
+		registry:   prometheus.NewRegistry(),
 	}
 
-	return sink, prometheus.Register(sink)
-}
+	c := &Collector{sink}
 
-// Describe is needed to meet the Collector interface.
-func (p *Sink) Describe(c chan<- *prometheus.Desc) {
-	// We must emit some description otherwise an error is returned. This
-	// description isn't shown to the user!
-	prometheus.NewGauge(prometheus.GaugeOpts{Name: "Dummy", Help: "Dummy"}).Describe(c)
-}
-
-// Collect meets the collection interface and allows us to enforce our expiration
-// logic to clean up ephemeral metrics if their value haven't been set for a
-// duration exceeding our allowed expiration time.
-func (p *Sink) Collect(c chan<- prometheus.Metric) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	expire := p.expiration != 0
-	now := time.Now()
-	for k, v := range p.gauges {
-		last := p.updates[k]
-		if expire && last.Add(p.expiration).Before(now) {
-			delete(p.updates, k)
-			delete(p.gauges, k)
-		} else {
-			v.Collect(c)
-		}
-	}
-	for k, v := range p.summaries {
-		last := p.updates[k]
-		if expire && last.Add(p.expiration).Before(now) {
-			delete(p.updates, k)
-			delete(p.summaries, k)
-		} else {
-			v.Collect(c)
-		}
-	}
-	for k, v := range p.counters {
-		last := p.updates[k]
-		if expire && last.Add(p.expiration).Before(now) {
-			delete(p.updates, k)
-			delete(p.counters, k)
-		} else {
-			v.Collect(c)
-		}
-	}
+	return sink, sink.registry.Register(c)
 }
 
 var forbiddenChars = regexp.MustCompile("[ .=\\-/]")
