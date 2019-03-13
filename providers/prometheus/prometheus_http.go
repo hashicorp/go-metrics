@@ -1,8 +1,12 @@
 package prometheus
 
-import "github.com/prometheus/client_golang/prometheus/promhttp"
+import (
+	"net/http"
 
-// HttpHandlerFor creates a collector handler for http
-func HttpHandlerFor(s *Sink) {
-	promhttp.HandlerFor(s.registry, promhttp.HandlerOpts{})
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+// HTTPHandlerFor creates a collector handler for http
+func HTTPHandlerFor(s *Sink) http.Handler {
+	return promhttp.HandlerFor(s.registry, promhttp.HandlerOpts{})
 }
