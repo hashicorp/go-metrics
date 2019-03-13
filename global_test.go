@@ -13,7 +13,7 @@ func TestGlobalMetrics_Init(t *testing.T) {
 	s := &MockSink{}
 	cfg := &MetricServiceConfig{}
 
-	m := Init(cfg, s)
+	m := InitGlobal(cfg, s)
 	loaded := globalMetrics.Load().(*MetricService)
 
 	if loaded != m {
@@ -23,7 +23,7 @@ func TestGlobalMetrics_Init(t *testing.T) {
 	s = &MockSink{}
 	cfg = &MetricServiceConfig{}
 
-	_ = Init(cfg, s)
+	_ = InitGlobal(cfg, s)
 	loaded = globalMetrics.Load().(*MetricService)
 
 	if loaded != m {

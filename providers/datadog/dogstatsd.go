@@ -37,7 +37,7 @@ func (s *Sink) SetTags(tags []string) {
 	s.client.Tags = tags
 }
 
-// EnableHostnamePropagation forces a Dogstatsd `host` tag with the value specified by `s.HostName`
+// EnableHostNamePropagation forces a Dogstatsd `host` tag with the value specified by `s.HostName`
 // Since the go-metrics package has its own mechanism for attaching a hostname to metrics,
 // setting the `propagateHostname` flag ensures that `s.HostName` overrides the host tag naively set by the DogStatsd server
 func (s *Sink) EnableHostNamePropagation() {
@@ -81,14 +81,16 @@ func (s *Sink) parseKey(key []string) ([]string, []metrics.Label) {
 	return key, labels
 }
 
-// Implementation of methods in the MetricSink interface
-
+// SetGauge sets a value on a gauge
 func (s *Sink) SetGauge(key []string, val float32) {
 	s.SetGaugeWithLabels(key, val, nil)
 }
 
-func (s *Sink) IncrCounter(key []string, val float32) {
-	s.IncrCounterWithLabels(key, val, nil)
+// SetGaugeWithLabels sets a value on a gauge with labels
+func (s *Sink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
+	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
+	rate := 1.0
+	s.client.Gauge(flatKey, float64(val), tags, rate)
 }
 
 // EmitKey is not implemented since DogStatsd does not provide a metric type that holds an
@@ -96,24 +98,24 @@ func (s *Sink) IncrCounter(key []string, val float32) {
 func (s *Sink) EmitKey(key []string, val float32) {
 }
 
-func (s *Sink) AddSample(key []string, val float32) {
-	s.AddSampleWithLabels(key, val, nil)
+// IncrCounter increases the value of a counter by a given value
+func (s *Sink) IncrCounter(key []string, val float32) {
+	s.IncrCounterWithLabels(key, val, nil)
 }
 
-// The following ...WithLabels methods correspond to Datadog's Tag extension to Statsd.
-// http://docs.datadoghq.com/guides/dogstatsd/#tags
-func (s *Sink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
-	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
-	rate := 1.0
-	s.client.Gauge(flatKey, float64(val), tags, rate)
-}
-
+// IncrCounterWithLabels increases the value of a counter by a given value with labels
 func (s *Sink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
 	rate := 1.0
 	s.client.Count(flatKey, int64(val), tags, rate)
 }
 
+// AddSample adds a sample metrics
+func (s *Sink) AddSample(key []string, val float32) {
+	s.AddSampleWithLabels(key, val, nil)
+}
+
+// AddSampleWithLabels adds a sample metrics with labels
 func (s *Sink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
 	rate := 1.0

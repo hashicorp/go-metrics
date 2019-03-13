@@ -16,7 +16,7 @@ func mockMetric() (*MockSink, *MetricService) {
 
 func TestMetricService_New(t *testing.T) {
 	m := &MockSink{}
-	met := New(&MetricServiceConfig{}, m)
+	met := NewMetricService(&MetricServiceConfig{}, m)
 
 	if met == nil {
 		t.Fatalf("met must noe be nil")

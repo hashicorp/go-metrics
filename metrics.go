@@ -21,8 +21,8 @@ const (
 	keyType     = "kv"
 )
 
-// New is used to create a new instance of MetricService
-func New(conf *MetricServiceConfig, sink Sinker) *MetricService {
+// NewMetricService is used to create a new instance of MetricService
+func NewMetricService(conf *MetricServiceConfig, sink Sinker) *MetricService {
 	met := &MetricService{}
 	met.MetricServiceConfig = *conf
 	met.sink = sink
@@ -34,42 +34,51 @@ func New(conf *MetricServiceConfig, sink Sinker) *MetricService {
 	return met
 }
 
+// SetGauge sets a value on a gauge
 func (m *MetricService) SetGauge(key []string, val float32) {
 	m.SetGaugeWithLabels(key, val, nil)
 }
 
+// SetGaugeWithLabels sets a value on a gauge with labels
 func (m *MetricService) SetGaugeWithLabels(key []string, val float32, labels []Label) {
 	k := m.getKey(key, gaugeType)
 	m.sink.SetGaugeWithLabels(k, val, labels)
 }
 
+// EmitKey emits a key value metric
 func (m *MetricService) EmitKey(key []string, val float32) {
 	k := m.getKey(key, keyType)
 	m.sink.EmitKey(k, val)
 }
 
+// IncrCounter increases the value of a counter by a given value
 func (m *MetricService) IncrCounter(key []string, val float32) {
 	m.IncrCounterWithLabels(key, val, nil)
 }
 
+// IncrCounterWithLabels increases the value of a counter by a given value with labels
 func (m *MetricService) IncrCounterWithLabels(key []string, val float32, labels []Label) {
 	k := m.getKey(key, counterType)
 	m.sink.IncrCounterWithLabels(k, val, labels)
 }
 
+// AddSample adds a sample metrics
 func (m *MetricService) AddSample(key []string, val float32) {
 	m.AddSampleWithLabels(key, val, nil)
 }
 
+// AddSampleWithLabels adds a sample metrics with labels
 func (m *MetricService) AddSampleWithLabels(key []string, val float32, labels []Label) {
 	k := m.getKey(key, sampleType)
 	m.sink.AddSampleWithLabels(k, val, labels)
 }
 
+// MeasureSince measure time since the start time until now
 func (m *MetricService) MeasureSince(key []string, start time.Time) {
 	m.MeasureSinceWithLabels(key, start, nil)
 }
 
+// MeasureSinceWithLabels measure time since the start time until now with labels
 func (m *MetricService) MeasureSinceWithLabels(key []string, start time.Time, labels []Label) {
 	k := m.getKey(key, timerType)
 	now := time.Now()

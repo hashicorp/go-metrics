@@ -30,7 +30,7 @@ type Sink struct {
 	metricQueue chan string
 }
 
-// New is used to create a new Sink
+// NewSink is used to create a new Sink
 func NewSink(addr string) (*Sink, error) {
 	s := &Sink{
 		addr:        addr,
@@ -40,41 +40,48 @@ func NewSink(addr string) (*Sink, error) {
 	return s, nil
 }
 
-// Close is used to stop flushing to statsd
+// Shutdown is used to stop flushing to statsd
 func (s *Sink) Shutdown() {
 	close(s.metricQueue)
 }
 
+// SetGauge sets a value on a gauge
 func (s *Sink) SetGauge(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
 
+// SetGaugeWithLabels sets a value on a gauge with labels
 func (s *Sink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
 
+// EmitKey emits a key value metric
 func (s *Sink) EmitKey(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|kv\n", flatKey, val))
 }
 
+// IncrCounter increases the value of a counter by a given value
 func (s *Sink) IncrCounter(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
 }
 
+// IncrCounterWithLabels increases the value of a counter by a given value with labels
 func (s *Sink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
 }
 
+// AddSample adds a sample metrics
 func (s *Sink) AddSample(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
 
+// AddSampleWithLabels adds a sample metrics with labels
 func (s *Sink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))

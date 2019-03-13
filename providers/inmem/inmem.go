@@ -137,10 +137,12 @@ func NewSink(interval, retain time.Duration) *Sink {
 	return i
 }
 
+// SetGauge sets a value on a gauge
 func (i *Sink) SetGauge(key []string, val float32) {
 	i.SetGaugeWithLabels(key, val, nil)
 }
 
+// SetGaugeWithLabels sets a value on a gauge with labels
 func (i *Sink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
@@ -150,6 +152,7 @@ func (i *Sink) SetGaugeWithLabels(key []string, val float32, labels []metrics.La
 	intv.Gauges[k] = GaugeValue{Name: name, Value: val, Labels: labels}
 }
 
+// EmitKey emits a key value metric
 func (i *Sink) EmitKey(key []string, val float32) {
 	k := i.flattenKey(key)
 	intv := i.getInterval()
@@ -160,10 +163,12 @@ func (i *Sink) EmitKey(key []string, val float32) {
 	intv.Points[k] = append(vals, val)
 }
 
+// IncrCounter increases the value of a counter by a given value
 func (i *Sink) IncrCounter(key []string, val float32) {
 	i.IncrCounterWithLabels(key, val, nil)
 }
 
+// IncrCounterWithLabels increases the value of a counter by a given value with labels
 func (i *Sink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
@@ -183,10 +188,12 @@ func (i *Sink) IncrCounterWithLabels(key []string, val float32, labels []metrics
 	agg.Ingest(float64(val), i.rateDenom)
 }
 
+// AddSample adds a sample metrics
 func (i *Sink) AddSample(key []string, val float32) {
 	i.AddSampleWithLabels(key, val, nil)
 }
 
+// AddSampleWithLabels adds a sample metrics with labels
 func (i *Sink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
 	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()

@@ -18,6 +18,7 @@ type MetricsSummary struct {
 	Samples   []SampledValue
 }
 
+// GaugeValue hold values of a given event
 type GaugeValue struct {
 	Name  string
 	Hash  string `json:"-"`
@@ -27,11 +28,13 @@ type GaugeValue struct {
 	DisplayLabels map[string]string `json:"Labels"`
 }
 
+// PointValue
 type PointValue struct {
 	Name   string
 	Points []float32
 }
 
+// SampledValue hold sample value for aggregation
 type SampledValue struct {
 	Name string
 	Hash string `json:"-"`

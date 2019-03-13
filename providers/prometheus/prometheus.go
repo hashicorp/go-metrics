@@ -27,6 +27,7 @@ type SinkOptions struct {
 	Expiration time.Duration
 }
 
+// Sink is the Prometheus implementation of the Sinker interface
 type Sink struct {
 	mu         sync.Mutex
 	gauges     map[string]prometheus.Gauge
@@ -121,10 +122,12 @@ func prometheusLabels(labels []metrics.Label) prometheus.Labels {
 	return l
 }
 
+// SetGauge sets a value on a gauge
 func (p *Sink) SetGauge(parts []string, val float32) {
 	p.SetGaugeWithLabels(parts, val, nil)
 }
 
+// SetGaugeWithLabels sets a value on a gauge with labels
 func (p *Sink) SetGaugeWithLabels(parts []string, val float32, labels []metrics.Label) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -142,10 +145,41 @@ func (p *Sink) SetGaugeWithLabels(parts []string, val float32, labels []metrics.
 	p.updates[hash] = time.Now()
 }
 
+// EmitKey is not implemented. Prometheus doesn’t offer a type for which an
+// arbitrary number of values is retained, as Prometheus works with a pull
+// model, rather than a push model.
+func (p *Sink) EmitKey(key []string, val float32) {
+}
+
+// IncrCounter increases the value of a counter by a given value
+func (p *Sink) IncrCounter(parts []string, val float32) {
+	p.IncrCounterWithLabels(parts, val, nil)
+}
+
+// IncrCounterWithLabels increases the value of a counter by a given value with labels
+func (p *Sink) IncrCounterWithLabels(parts []string, val float32, labels []metrics.Label) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	key, hash := p.flattenKey(parts, labels)
+	g, ok := p.counters[hash]
+	if !ok {
+		g = prometheus.NewCounter(prometheus.CounterOpts{
+			Name:        key,
+			Help:        key,
+			ConstLabels: prometheusLabels(labels),
+		})
+		p.counters[hash] = g
+	}
+	g.Add(float64(val))
+	p.updates[hash] = time.Now()
+}
+
+// AddSample adds a sample metrics
 func (p *Sink) AddSample(parts []string, val float32) {
 	p.AddSampleWithLabels(parts, val, nil)
 }
 
+// AddSampleWithLabels adds a sample metrics with labels
 func (p *Sink) AddSampleWithLabels(parts []string, val float32, labels []metrics.Label) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -161,32 +195,5 @@ func (p *Sink) AddSampleWithLabels(parts []string, val float32, labels []metrics
 		p.summaries[hash] = g
 	}
 	g.Observe(float64(val))
-	p.updates[hash] = time.Now()
-}
-
-// EmitKey is not implemented. Prometheus doesn’t offer a type for which an
-// arbitrary number of values is retained, as Prometheus works with a pull
-// model, rather than a push model.
-func (p *Sink) EmitKey(key []string, val float32) {
-}
-
-func (p *Sink) IncrCounter(parts []string, val float32) {
-	p.IncrCounterWithLabels(parts, val, nil)
-}
-
-func (p *Sink) IncrCounterWithLabels(parts []string, val float32, labels []metrics.Label) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	key, hash := p.flattenKey(parts, labels)
-	g, ok := p.counters[hash]
-	if !ok {
-		g = prometheus.NewCounter(prometheus.CounterOpts{
-			Name:        key,
-			Help:        key,
-			ConstLabels: prometheusLabels(labels),
-		})
-		p.counters[hash] = g
-	}
-	g.Add(float64(val))
 	p.updates[hash] = time.Now()
 }
