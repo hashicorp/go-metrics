@@ -23,7 +23,8 @@ func DefaultConfig(serviceName string) *MetricServiceConfig {
 	c := &MetricServiceConfig{
 		ServiceName:          serviceName, // Use client provided service
 		HostName:             "",
-		EnableHostName:       true,             // Enable hostname prefix
+		EnableHostName:       false,            // Enable hostname prefix
+		EnableServiceName:    true,             // Enable Service name prefix
 		EnableRuntimeMetrics: true,             // Enable runtime profiling
 		EnableTypeSufix:      false,            // Disable type prefix
 		TimerGranularity:     time.Millisecond, // Timers are in milliseconds
