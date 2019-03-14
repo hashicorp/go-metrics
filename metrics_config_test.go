@@ -13,10 +13,10 @@ func TestMetricsServiceConfig_DefaultConfig(t *testing.T) {
 	if conf.HostName == "" {
 		t.Fatalf("missing hostname")
 	}
-	if !conf.EnableHostName || !conf.EnableRuntimeMetrics {
+	if !conf.EnableServiceName || !conf.EnableRuntimeMetrics {
 		t.Fatalf("expect true")
 	}
-	if conf.EnableTypeSufix {
+	if conf.EnableHostName || conf.EnableTypeSufix {
 		t.Fatalf("expect false")
 	}
 	if conf.TimerGranularity != time.Millisecond {
