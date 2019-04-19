@@ -286,8 +286,8 @@ func TestMetrics_EmitRuntimeStats(t *testing.T) {
 	if m.keys[6][0] != "runtime" || m.keys[6][1] != "total_gc_pause_ns" {
 		t.Fatalf("bad key %v", m.keys)
 	}
-	if m.vals[6] <= 100000 {
-		t.Fatalf("bad val: %v", m.vals)
+	if m.vals[6] <= 100 {
+		t.Fatalf("bad val: %v\nkeys: %v", m.vals, m.keys)
 	}
 
 	if m.keys[7][0] != "runtime" || m.keys[7][1] != "total_gc_runs" {
