@@ -53,7 +53,7 @@ func Test_GlobalMetrics(t *testing.T) {
 				t.Fatalf("got key %s want %s", got, want)
 			}
 			if got, want := s.vals[0], tt.val; !reflect.DeepEqual(got, want) {
-				t.Fatalf("got val %s want %s", got, want)
+				t.Fatalf("got val %v want %v", got, want)
 			}
 		})
 	}
@@ -82,7 +82,7 @@ func Test_GlobalMetrics_Labels(t *testing.T) {
 				t.Fatalf("got key %s want %s", got, want)
 			}
 			if got, want := s.vals[0], tt.val; !reflect.DeepEqual(got, want) {
-				t.Fatalf("got val %s want %s", got, want)
+				t.Fatalf("got val %v want %v", got, want)
 			}
 			if got, want := s.labels[0], tt.labels; !reflect.DeepEqual(got, want) {
 				t.Fatalf("got val %s want %s", got, want)
@@ -124,7 +124,7 @@ func Test_GlobalMetrics_DefaultLabels(t *testing.T) {
 				t.Fatalf("got key %s want %s", got, want)
 			}
 			if got, want := s.vals[0], tt.val; !reflect.DeepEqual(got, want) {
-				t.Fatalf("got val %s want %s", got, want)
+				t.Fatalf("got val %v want %v", got, want)
 			}
 			if got, want := s.labels[0], tt.labels; !reflect.DeepEqual(got, want) {
 				t.Fatalf("got val %s want %s", got, want)
