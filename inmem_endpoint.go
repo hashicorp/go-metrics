@@ -43,19 +43,9 @@ type SampledValue struct {
 
 // DisplayMetrics returns a summary of the metrics from the most recent finished interval.
 func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error) {
-	data := i.Data()
-
-	var interval *IntervalMetrics
-	n := len(data)
-	switch {
-	case n == 0:
-		return nil, fmt.Errorf("no metric intervals have been initialized yet")
-	case n == 1:
-		// Show the current interval if it's all we have
-		interval = data[0]
-	default:
-		// Show the most recent finished interval if we have one
-		interval = data[n-2]
+	interval, err := i.recentInterval()
+	if err != nil {
+		return nil, err
 	}
 
 	interval.RLock()
@@ -94,6 +84,23 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 	summary.Samples = formatSamples(interval.Samples)
 
 	return summary, nil
+}
+
+func (i *InmemSink) recentInterval() (*IntervalMetrics, error) {
+	i.intervalLock.RLock()
+	defer i.intervalLock.RUnlock()
+
+	n := len(i.intervals)
+	switch {
+	case n == 0:
+		return nil, fmt.Errorf("no metric intervals have been initialized yet")
+	case n == 1:
+		// Show the current interval if it's all we have
+		return i.intervals[0], nil
+	default:
+		// Show the most recent finished interval if we have one
+		return i.intervals[n-2], nil
+	}
 }
 
 func formatSamples(source map[string]SampledValue) []SampledValue {
