@@ -52,11 +52,14 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 		return nil, fmt.Errorf("no metric intervals have been initialized yet")
 	case n == 1:
 		// Show the current interval if it's all we have
-		interval = i.intervals[0]
+		interval = data[0]
 	default:
 		// Show the most recent finished interval if we have one
-		interval = i.intervals[n-2]
+		interval = data[n-2]
 	}
+
+	interval.RLock()
+	defer interval.RUnlock()
 
 	summary := MetricsSummary{
 		Timestamp: interval.Interval.Round(time.Second).UTC().String(),
