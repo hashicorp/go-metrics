@@ -87,13 +87,16 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 }
 
 func (i *InmemSink) recentInterval() (*IntervalMetrics, error) {
+	// forces creation of interval if none exists
+	i.getInterval()
+
 	i.intervalLock.RLock()
 	defer i.intervalLock.RUnlock()
 
 	n := len(i.intervals)
 	switch {
 	case n == 0:
-		return nil, fmt.Errorf("no metric intervals have been initialized yet")
+		return nil, fmt.Errorf("unexpected empty intervals even after forced interval creation")
 	case n == 1:
 		// Show the current interval if it's all we have
 		return i.intervals[0], nil
