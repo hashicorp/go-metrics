@@ -233,3 +233,43 @@ func TestDisplayMetrics_RaceIncrCounter(t *testing.T) {
 	got := <-result
 	verify.Values(t, "all", got, float32(0.0))
 }
+
+func TestDisplayMetrics_RaceMetricsSetGauge(t *testing.T) {
+	interval := 200 * time.Millisecond
+	inm := NewInmemSink(interval, 10*interval)
+	met := &Metrics{Config: Config{FilterDefault: true}, sink: inm}
+	result := make(chan float32)
+	labels := []Label{
+		{"name1", "value1"},
+		{"name2", "value2"},
+	}
+
+	go func() {
+		for {
+			time.Sleep(75 * time.Millisecond)
+			met.SetGaugeWithLabels([]string{"foo", "bar"}, float32(42), labels)
+		}
+	}()
+
+	go func() {
+		start := time.Now()
+		var summary MetricsSummary
+		// test for twenty intervals
+		for time.Now().Sub(start) < 40*interval {
+			time.Sleep(150 * time.Millisecond)
+			raw, _ := inm.DisplayMetrics(nil, nil)
+			summary = raw.(MetricsSummary)
+		}
+		// save result
+		for _, g := range summary.Gauges {
+			if g.Name == "foo.bar" {
+				result <- g.Value
+			}
+		}
+		close(result)
+	}()
+
+	got := <-result
+	verify.Values(t, "all", got, float32(42))
+}
+
