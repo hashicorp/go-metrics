@@ -41,6 +41,16 @@ type SampledValue struct {
 	DisplayLabels map[string]string `json:"Labels"`
 }
 
+// deepCopy allocates a new instance of AggregateSample
+func (source *SampledValue) deepCopy() SampledValue {
+	dest := *source
+	if source.AggregateSample != nil {
+		dest.AggregateSample = &AggregateSample{}
+		*dest.AggregateSample = *source.AggregateSample
+	}
+	return dest
+}
+
 // DisplayMetrics returns a summary of the metrics from the most recent finished interval.
 func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) (interface{}, error) {
 	data := i.Data()

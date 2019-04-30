@@ -491,3 +491,29 @@ func TestMetrics_Filter_Labels_Whitelist(t *testing.T) {
 		t.Fatalf("good label is not present in %v", m.labels[1])
 	}
 }
+
+func TestMetrics_Filter_Labels_ModifyArgs(t *testing.T) {
+	m := &MockSink{}
+	conf := DefaultConfig("")
+	conf.FilterDefault = false
+	conf.EnableHostname = false
+	conf.AllowedLabels = []string{"keep"}
+	conf.BlockedLabels = []string{"delete"}
+	met, err := New(conf, m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Blocked by default
+	key := []string{"thing"}
+	key = []string{"debug", "thing"}
+	goodLabel := Label{Name: "keep", Value: "should be kept"}
+	badLabel := Label{Name: "delete", Value: "should be deleted"}
+	argLabels := []Label{badLabel, goodLabel, badLabel, goodLabel, badLabel, goodLabel, badLabel}
+	origLabels := append([]Label{}, argLabels...)
+	met.SetGaugeWithLabels(key, 1, argLabels)
+
+	if !reflect.DeepEqual(argLabels, origLabels) {
+		t.Fatalf("SetGaugeWithLabels modified the input argument")
+	}
+}
