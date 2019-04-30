@@ -42,8 +42,8 @@ type SampledValue struct {
 }
 
 // deepCopy allocates a new instance of AggregateSample
-func (source SampledValue) deepCopy() SampledValue {
-	dest := source
+func (source *SampledValue) deepCopy() SampledValue {
+	dest := *source
 	if source.AggregateSample != nil {
 		dest.AggregateSample = &AggregateSample{}
 		*dest.AggregateSample = *source.AggregateSample
