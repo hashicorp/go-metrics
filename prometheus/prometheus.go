@@ -22,6 +22,9 @@ var (
 	}
 )
 
+// This ensures *PrometheusSink implements the MetricSink interface.
+var _ metrics.MetricSink = (*PrometheusSink)(nil)
+
 // PrometheusOpts is used to configure the Prometheus Sink
 type PrometheusOpts struct {
 	// Expiration is the duration a metric is valid for, after which it will be

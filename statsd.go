@@ -16,6 +16,9 @@ const (
 	statsdMaxLen = 1400
 )
 
+// This ensures *StatsdSink implements the MetricSink interface.
+var _ MetricSink = (*StatsdSink)(nil)
+
 // StatsdSink provides a MetricSink that can be used
 // with a statsite or statsd metrics server. It uses
 // only UDP packets, while StatsiteSink uses TCP.

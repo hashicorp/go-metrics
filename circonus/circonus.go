@@ -9,6 +9,9 @@ import (
 	cgm "github.com/circonus-labs/circonus-gometrics"
 )
 
+// This ensures *CirconusSink implements the MetricSink interface.
+var _ metrics.MetricSink = (*CirconusSink)(nil)
+
 // CirconusSink provides an interface to forward metrics to Circonus with
 // automatic check creation and metric management
 type CirconusSink struct {

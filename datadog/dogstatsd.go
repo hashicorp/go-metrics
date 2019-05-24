@@ -8,6 +8,9 @@ import (
 	"github.com/armon/go-metrics"
 )
 
+// This ensures *DogStatsdSink implements the MetricSink interface.
+var _ metrics.MetricSink = (*DogStatsdSink)(nil)
+
 // DogStatsdSink provides a MetricSink that can be used
 // with a dogstatsd server. It utilizes the Dogstatsd client at github.com/DataDog/datadog-go/statsd
 type DogStatsdSink struct {
