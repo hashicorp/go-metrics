@@ -63,6 +63,10 @@ func (m *MockSink) AddSampleWithLabels(key []string, val float32, labels []Label
 	m.vals = append(m.vals, val)
 	m.labels = append(m.labels, labels)
 }
+func (*MockSink) Histogram(key []string, val float32)                           {}
+func (*MockSink) HistogramWithLabels(key []string, val float32, labels []Label) {}
+func (*MockSink) Set(key []string, val string)                                  {}
+func (*MockSink) SetWithLabels(key []string, val string, labels []Label)        {}
 
 func TestFanoutSink_Gauge(t *testing.T) {
 	m1 := &MockSink{}

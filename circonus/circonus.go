@@ -97,6 +97,11 @@ func (s *CirconusSink) AddSampleWithLabels(key []string, val float32, labels []m
 	s.metrics.RecordValue(flatKey, float64(val))
 }
 
+func (*CirconusSink) Histogram(key []string, val float32)                                   {}
+func (*CirconusSink) HistogramWithLabels(key []string, val float32, labels []metrics.Label) {}
+func (*CirconusSink) Set(key []string, val string)                                          {}
+func (*CirconusSink) SetWithLabels(key []string, val string, labels []metrics.Label)        {}
+
 // Flattens key to Circonus metric name
 func (s *CirconusSink) flattenKey(parts []string) string {
 	joined := strings.Join(parts, "`")

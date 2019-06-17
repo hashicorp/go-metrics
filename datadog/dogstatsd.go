@@ -100,6 +100,14 @@ func (s *DogStatsdSink) AddSample(key []string, val float32) {
 	s.AddSampleWithLabels(key, val, nil)
 }
 
+func (s *DogStatsdSink) Histogram(key []string, val float32) {
+	s.HistogramWithLabels(key, val, nil)
+}
+
+func (s *DogStatsdSink) Set(key []string, val string) {
+	s.SetWithLabels(key, val, nil)
+}
+
 // The following ...WithLabels methods correspond to Datadog's Tag extension to Statsd.
 // http://docs.datadoghq.com/guides/dogstatsd/#tags
 func (s *DogStatsdSink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
@@ -118,6 +126,18 @@ func (s *DogStatsdSink) AddSampleWithLabels(key []string, val float32, labels []
 	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
 	rate := 1.0
 	s.client.TimeInMilliseconds(flatKey, float64(val), tags, rate)
+}
+
+func (s *DogStatsdSink) HistogramWithLabels(key []string, val float32, labels []metrics.Label) {
+	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
+	rate := 1.0
+	s.client.Histogram(flatKey, float64(val), tags, rate)
+}
+
+func (s *DogStatsdSink) SetWithLabels(key []string, val string, labels []metrics.Label) {
+	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
+	rate := 1.0
+	s.client.Set(flatKey, val, tags, rate)
 }
 
 func (s *DogStatsdSink) getFlatkeyAndCombinedLabels(key []string, labels []metrics.Label) (string, []string) {

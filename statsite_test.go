@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+func TestStatsiteImplementsMetricSink(t *testing.T) {
+	var _ MetricSink = &StatsiteSink{}
+}
+
 func TestStatsite_Flatten(t *testing.T) {
 	s := &StatsiteSink{}
 	flat := s.flattenKey([]string{"a", "b", "c", "d"})

@@ -223,6 +223,11 @@ func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []Labe
 	agg.Ingest(float64(val), i.rateDenom)
 }
 
+func (*InmemSink) Histogram(key []string, val float32)                           {}
+func (*InmemSink) HistogramWithLabels(key []string, val float32, labels []Label) {}
+func (*InmemSink) Set(key []string, val string)                                  {}
+func (*InmemSink) SetWithLabels(key []string, val string, labels []Label)        {}
+
 // Data is used to retrieve all the aggregated metrics
 // Intervals may be in use, and a read lock should be acquired
 func (i *InmemSink) Data() []*IntervalMetrics {

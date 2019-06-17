@@ -8,7 +8,13 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/armon/go-metrics"
 )
+
+func TestImplementsMetricSink(t *testing.T) {
+	var _ metrics.MetricSink = &CirconusSink{}
+}
 
 func TestNewCirconusSink(t *testing.T) {
 

@@ -192,3 +192,8 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 	g.Add(float64(val))
 	p.updates[hash] = time.Now()
 }
+
+func (*PrometheusSink) Histogram(key []string, val float32)                                   {}
+func (*PrometheusSink) HistogramWithLabels(key []string, val float32, labels []metrics.Label) {}
+func (*PrometheusSink) Set(key []string, val string)                                          {}
+func (*PrometheusSink) SetWithLabels(key []string, val string, labels []metrics.Label)        {}
