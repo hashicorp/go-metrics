@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+func TestStatsdImplementsMetricSink(t *testing.T) {
+	var _ MetricSink = &StatsdSink{}
+}
+
 func TestStatsd_Flatten(t *testing.T) {
 	s := &StatsdSink{}
 	flat := s.flattenKey([]string{"a", "b", "c", "d"})

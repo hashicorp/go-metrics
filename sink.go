@@ -22,6 +22,14 @@ type MetricSink interface {
 	// Samples are for timing information, where quantiles are used
 	AddSample(key []string, val float32)
 	AddSampleWithLabels(key []string, val float32, labels []Label)
+
+	// Histogram tracks the statistical distribution of a set of values
+	Histogram(key []string, val float32)
+	HistogramWithLabels(key []string, val float32, labels []Label)
+
+	// Set counts the number of unique elements in a group.
+	Set(key []string, val string)
+	SetWithLabels(key []string, val string, labels []Label)
 }
 
 // BlackholeSink is used to just blackhole messages
@@ -34,6 +42,10 @@ func (*BlackholeSink) IncrCounter(key []string, val float32)                    
 func (*BlackholeSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {}
 func (*BlackholeSink) AddSample(key []string, val float32)                             {}
 func (*BlackholeSink) AddSampleWithLabels(key []string, val float32, labels []Label)   {}
+func (*BlackholeSink) Histogram(key []string, val float32)                             {}
+func (*BlackholeSink) HistogramWithLabels(key []string, val float32, labels []Label)   {}
+func (*BlackholeSink) Set(key []string, val string)                                    {}
+func (*BlackholeSink) SetWithLabels(key []string, val string, labels []Label)          {}
 
 // FanoutSink is used to sink to fanout values to multiple sinks
 type FanoutSink []MetricSink

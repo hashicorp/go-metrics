@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+func TestInmemImplementsMetricSink(t *testing.T) {
+	var _ MetricSink = &InmemSink{}
+}
+
 func TestInmemSink(t *testing.T) {
 	inm := NewInmemSink(10*time.Millisecond, 50*time.Millisecond)
 

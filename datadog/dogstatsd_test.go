@@ -17,6 +17,10 @@ const (
 	TestHostname     = "test_hostname"
 )
 
+func TestImplementsMetricSink(t *testing.T) {
+	var _ metrics.MetricSink = &DogStatsdSink{}
+}
+
 func MockGetHostname() string {
 	return TestHostname
 }
@@ -58,6 +62,11 @@ var MetricSinkTests = []struct {
 	{"SetGauge", []string{"foo", "baz"}, float32(42), []metrics.Label{{"my tag", "my_value"}}, HostnameDisabled, "foo.baz:42.000000|g|#my_tag:my_value"},
 	{"SetGauge", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}, {"other_tag", "other_value"}}, HostnameDisabled, "foo.bar:42.000000|g|#my_tag:my_value,other_tag:other_value"},
 	{"SetGauge", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}, {"other_tag", "other_value"}}, HostnameEnabled, "foo.bar:42.000000|g|#my_tag:my_value,other_tag:other_value,host:test_hostname"},
+
+	{"Histogram", []string{"foo", "bar"}, float32(42), EmptyTags, HostnameDisabled, "foo.bar:42.000000|h"},
+	{"Histogram", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}}, HostnameDisabled, "foo.bar:42.000000|h|#my_tag:my_value"},
+	{"Set", []string{"foo", "bar"}, "baz", EmptyTags, HostnameDisabled, "foo.bar:baz|s"},
+	{"Set", []string{"foo", "bar"}, "baz", []metrics.Label{{"my_tag", "my_value"}}, HostnameDisabled, "foo.bar:baz|s|#my_tag:my_value"},
 }
 
 func mockNewDogStatsdSink(addr string, labels []metrics.Label, tagWithHostname bool) *DogStatsdSink {

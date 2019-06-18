@@ -80,6 +80,11 @@ func (s *StatsiteSink) AddSampleWithLabels(key []string, val float32, labels []L
 	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
 
+func (*StatsiteSink) Histogram(key []string, val float32)                           {}
+func (*StatsiteSink) HistogramWithLabels(key []string, val float32, labels []Label) {}
+func (*StatsiteSink) Set(key []string, val string)                                  {}
+func (*StatsiteSink) SetWithLabels(key []string, val string, labels []Label)        {}
+
 // Flattens the key for formatting, removes spaces
 func (s *StatsiteSink) flattenKey(parts []string) string {
 	joined := strings.Join(parts, ".")
