@@ -3,7 +3,7 @@ module github.com/armon/go-metrics
 go 1.12
 
 require (
-	github.com/DataDog/datadog-go v2.2.0+incompatible
+	github.com/DataDog/datadog-go v3.2.0+incompatible
 	github.com/circonus-labs/circonus-gometrics v2.3.1+incompatible
 	github.com/circonus-labs/circonusllhist v0.1.3 // indirect
 	github.com/golang/protobuf v1.2.0
