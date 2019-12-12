@@ -22,17 +22,17 @@ func (m *Metrics) SetGaugeWithLabels(key []string, val float32, labels []Label) 
 		if m.EnableHostnameLabel {
 			labels = append(labels, Label{"host", m.HostName})
 		} else if m.EnableHostname {
-			key = insertAtBeginning(m.HostName, key)
+			key = insert(0, m.HostName, key)
 		}
 	}
 	if m.EnableTypePrefix {
-		key = insertAtBeginning("gauge", key)
+		key = insert(0, "gauge", key)
 	}
 	if m.ServiceName != "" {
 		if m.EnableServiceLabel {
 			labels = append(labels, Label{"service", m.ServiceName})
 		} else {
-			key = insertAtBeginning(m.ServiceName, key)
+			key = insert(0, m.ServiceName, key)
 		}
 	}
 	allowed, labelsFiltered := m.allowMetric(key, labels)
@@ -44,10 +44,10 @@ func (m *Metrics) SetGaugeWithLabels(key []string, val float32, labels []Label) 
 
 func (m *Metrics) EmitKey(key []string, val float32) {
 	if m.EnableTypePrefix {
-		key = insertAtBeginning("kv", key)
+		key = insert(0, "kv", key)
 	}
 	if m.ServiceName != "" {
-		key = insertAtBeginning(m.ServiceName, key)
+		key = insert(0, m.ServiceName, key)
 	}
 	allowed, _ := m.allowMetric(key, nil)
 	if !allowed {
@@ -65,13 +65,13 @@ func (m *Metrics) IncrCounterWithLabels(key []string, val float32, labels []Labe
 		labels = append(labels, Label{"host", m.HostName})
 	}
 	if m.EnableTypePrefix {
-		key = insertAtBeginning("counter", key)
+		key = insert(0, "counter", key)
 	}
 	if m.ServiceName != "" {
 		if m.EnableServiceLabel {
 			labels = append(labels, Label{"service", m.ServiceName})
 		} else {
-			key = insertAtBeginning(m.ServiceName, key)
+			key = insert(0, m.ServiceName, key)
 		}
 	}
 	allowed, labelsFiltered := m.allowMetric(key, labels)
@@ -90,13 +90,13 @@ func (m *Metrics) AddSampleWithLabels(key []string, val float32, labels []Label)
 		labels = append(labels, Label{"host", m.HostName})
 	}
 	if m.EnableTypePrefix {
-		key = insertAtBeginning("sample", key)
+		key = insert(0, "sample", key)
 	}
 	if m.ServiceName != "" {
 		if m.EnableServiceLabel {
 			labels = append(labels, Label{"service", m.ServiceName})
 		} else {
-			key = insertAtBeginning(m.ServiceName, key)
+			key = insert(0, m.ServiceName, key)
 		}
 	}
 	allowed, labelsFiltered := m.allowMetric(key, labels)
@@ -115,13 +115,13 @@ func (m *Metrics) MeasureSinceWithLabels(key []string, start time.Time, labels [
 		labels = append(labels, Label{"host", m.HostName})
 	}
 	if m.EnableTypePrefix {
-		key = insertAtBeginning("timer", key)
+		key = insert(0, "timer", key)
 	}
 	if m.ServiceName != "" {
 		if m.EnableServiceLabel {
 			labels = append(labels, Label{"service", m.ServiceName})
 		} else {
-			key = insertAtBeginning(m.ServiceName, key)
+			key = insert(0, m.ServiceName, key)
 		}
 	}
 	allowed, labelsFiltered := m.allowMetric(key, labels)
@@ -272,6 +272,6 @@ func (m *Metrics) emitRuntimeStats() {
 // Creates a new slice with the provided string value as the first element
 // and the provided slice values as the remaining values.
 // Ordering of the values in the provided input slice is kept in tact in the output slice.
-func insertAtBeginning(v string, s []string) []string {
-	return append([]string{v}, s...)
+func insert(i int, v string, s []string) []string {
+	return append(s[:i], append([]string{v}, s[i:]...)...)
 }
