@@ -4,12 +4,12 @@ package prometheus
 
 import (
 	"fmt"
-	"log"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
-	"regexp"
+	li "github.com/armon/go-metrics/logger"
 
 	"github.com/armon/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -22,6 +22,8 @@ var (
 	DefaultPrometheusOpts = PrometheusOpts{
 		Expiration: 60 * time.Second,
 	}
+
+	standardLogger = li.NewLogger()
 )
 
 // PrometheusOpts is used to configure the Prometheus Sink
@@ -236,7 +238,7 @@ func (s *PrometheusPushSink) flushMetrics() {
 			case <-ticker.C:
 				err := s.pusher.Push()
 				if err != nil {
-					log.Printf("[ERR] Error pushing to Prometheus! Err: %s", err)
+					standardLogger.Printf("[ERR] Error pushing to Prometheus! Err: %s", err)
 				}
 			case <-s.stopChan:
 				ticker.Stop()
