@@ -1,25 +1,25 @@
 package logger
 
 import (
-	log "github.com/sirupsen/logrus"
+	log "github.com/hashicorp/go-hclog"
 )
 
-// // Event stores messages to log later, from our standard interface
-// type Event struct {
-// 	id      int
-// 	message string
-// }
-
-// StandardLogger enforces specific log message formats
-type StandardLogger struct {
-	*log.Logger
+// OurLogger implements a logger interface
+type OurLogger struct {
+	ol Logger
 }
 
-// NewLogger initializes the standard logger
-func NewLogger() *StandardLogger {
-	var baseLogger = log.New()
+//Logger interface is used to make stuff happen with things in places
+type Logger interface {
+	Error(string, ...interface{})
+}
 
-	var standardLogger = &StandardLogger{baseLogger}
+func (ol *OurLogger) Error(msg string, args ...interface{}) {
 
-	return standardLogger
+}
+
+//New returns a new logger
+func (ol *OurLogger) New() Logger {
+	l := log.Default()
+	return l
 }
