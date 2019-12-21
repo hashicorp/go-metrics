@@ -147,7 +147,7 @@ CONNECT:
 	// Attempt to connect
 	sock, err = net.Dial("udp", s.addr)
 	if err != nil {
-		s.logger.Error("Error connecting to statsd", err)
+		logger.Error("Error connecting to statsd", s.logger, err)
 		goto WAIT
 	}
 
@@ -164,7 +164,7 @@ CONNECT:
 				_, err := sock.Write(buf.Bytes())
 				buf.Reset()
 				if err != nil {
-					s.logger.Error("Error writing to statsd", err)
+					logger.Error("Error connecting to statsd", s.logger, err)
 					goto WAIT
 				}
 			}
@@ -180,7 +180,7 @@ CONNECT:
 			_, err := sock.Write(buf.Bytes())
 			buf.Reset()
 			if err != nil {
-				s.logger.Error("Error flushing to statsd", err)
+				logger.Error("Error connecting to statsd", s.logger, err)
 				goto WAIT
 			}
 		}
