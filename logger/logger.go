@@ -15,7 +15,7 @@ type Logger interface {
 
 // Error wraps the go-hclog Error function and logs a separate error for each argument in the error object passed
 func Error(msg string, l Logger, args ...interface{}) {
-	// l.Error(msg, "msg", args)
+	l.Error(msg, "msg", args)
 	// I thought I would try annotating & commenting out codethat didn't work for me in for the initial
 	// code review instead of deleting and re-writing so much that I end up telling you I have interfaces
 	// when I've deleted them and only have structs. (or instance)
@@ -26,8 +26,8 @@ func Error(msg string, l Logger, args ...interface{}) {
 	// *************    		[DISCARDED ATTEMPT]				*************
 	// fmt.Printf("%v", args)
 	// fmt.Println("---")
-	for _, v := range args {
-		l.Error(msg, "msg", v)
+	// for _, v := range args {
+	// 	l.Error(msg, "msg", v)
 	}
 
 	// fmt.Printf("%v", v)
