@@ -3,6 +3,7 @@ package prometheus
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -68,7 +69,7 @@ func TestSetGauge(t *testing.T) {
 	defer server.Close()
 	u, err := url.Parse(server.URL)
 	if err != nil {
-		standardLogger.Fatal(err)
+		log.Fatal(err)
 	}
 	host := u.Hostname() + ":" + u.Port()
 	sink, err := NewPrometheusPushSink(host, time.Second, "pushtest")

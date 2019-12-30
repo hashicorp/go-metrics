@@ -9,9 +9,8 @@ import (
 	"sync"
 	"time"
 
-	li "github.com/armon/go-metrics/logger"
-
 	"github.com/armon/go-metrics"
+	logger "github.com/armon/go-metrics/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 )
@@ -22,8 +21,6 @@ var (
 	DefaultPrometheusOpts = PrometheusOpts{
 		Expiration: 60 * time.Second,
 	}
-
-	standardLogger = li.NewLogger()
 )
 
 // PrometheusOpts is used to configure the Prometheus Sink
@@ -40,6 +37,7 @@ type PrometheusSink struct {
 	counters   map[string]prometheus.Counter
 	updates    map[string]time.Time
 	expiration time.Duration
+	logger     logger.Logger
 }
 
 // NewPrometheusSink creates a new PrometheusSink using the default options.
@@ -47,14 +45,35 @@ func NewPrometheusSink() (*PrometheusSink, error) {
 	return NewPrometheusSinkFrom(DefaultPrometheusOpts)
 }
 
-// NewPrometheusSinkFrom creates a new PrometheusSink using the passed options.
+// NewPrometheusSinkWithCustomLogger creates a new PrometheusSink using the default options and a custom logger.
+func NewPrometheusSinkWithCustomLogger(l logger.Logger) (*PrometheusSink, error) {
+	return NewPrometheusSinkFromWithCustomLogger(l, DefaultPrometheusOpts)
+}
+
+// NewPrometheusSinkFrom creates a new PrometheusSink using the passed options, uses go-hclog by default.
 func NewPrometheusSinkFrom(opts PrometheusOpts) (*PrometheusSink, error) {
+	l := &logger.OurLogger{}
 	sink := &PrometheusSink{
 		gauges:     make(map[string]prometheus.Gauge),
 		summaries:  make(map[string]prometheus.Summary),
 		counters:   make(map[string]prometheus.Counter),
 		updates:    make(map[string]time.Time),
 		expiration: opts.Expiration,
+		logger:     l.New(),
+	}
+
+	return sink, prometheus.Register(sink)
+}
+
+// NewPrometheusSinkFromWithCustomLogger creates a new PrometheusSink using the passed options and a separate logger paramater.
+func NewPrometheusSinkFromWithCustomLogger(l logger.Logger, opts PrometheusOpts) (*PrometheusSink, error) {
+	sink := &PrometheusSink{
+		gauges:     make(map[string]prometheus.Gauge),
+		summaries:  make(map[string]prometheus.Summary),
+		counters:   make(map[string]prometheus.Counter),
+		updates:    make(map[string]time.Time),
+		expiration: opts.Expiration,
+		logger:     l,
 	}
 
 	return sink, prometheus.Register(sink)
@@ -238,7 +257,7 @@ func (s *PrometheusPushSink) flushMetrics() {
 			case <-ticker.C:
 				err := s.pusher.Push()
 				if err != nil {
-					standardLogger.Printf("[ERR] Error pushing to Prometheus! Err: %s", err)
+					logger.Error("Error pushing to Prometheus", s.logger, err)
 				}
 			case <-s.stopChan:
 				ticker.Stop()
