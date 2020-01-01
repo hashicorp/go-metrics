@@ -3,11 +3,13 @@ package metrics
 import (
 	"bufio"
 	"fmt"
-	"log"
+
 	"net"
 	"net/url"
 	"strings"
 	"time"
+
+	logger "github.com/armon/go-metrics/logger"
 )
 
 const (
@@ -18,9 +20,15 @@ const (
 )
 
 // NewStatsiteSinkFromURL creates an StatsiteSink from a URL. It is used
-// (and tested) from NewMetricSinkFromURL.
+// (and tested) from NewMetricSinkFromURL uses go-hclog by default.
 func NewStatsiteSinkFromURL(u *url.URL) (MetricSink, error) {
 	return NewStatsiteSink(u.Host)
+}
+
+// NewStatsiteSinkFromURLWithCustomLogger creates an StatsiteSink from a URL.
+// It allows use of a custom logger
+func NewStatsiteSinkFromURLWithCustomLogger(u *url.URL, l logger.Logger) (MetricSink, error) {
+	return NewStatsiteSinkWithCustomLogger(u.Host, l)
 }
 
 // StatsiteSink provides a MetricSink that can be used with a
@@ -28,13 +36,27 @@ func NewStatsiteSinkFromURL(u *url.URL) (MetricSink, error) {
 type StatsiteSink struct {
 	addr        string
 	metricQueue chan string
+	logger      logger.Logger
 }
 
 // NewStatsiteSink is used to create a new StatsiteSink
 func NewStatsiteSink(addr string) (*StatsiteSink, error) {
+	l := &logger.OurLogger{}
 	s := &StatsiteSink{
 		addr:        addr,
 		metricQueue: make(chan string, 4096),
+		logger:      l.New(),
+	}
+	go s.flushMetrics()
+	return s, nil
+}
+
+// NewStatsiteSinkWithCustomLogger is used to create a new StatsiteSink with a custom logger
+func NewStatsiteSinkWithCustomLogger(addr string, l logger.Logger) (*StatsiteSink, error) {
+	s := &StatsiteSink{
+		addr:        addr,
+		metricQueue: make(chan string, 4096),
+		logger:      l,
 	}
 	go s.flushMetrics()
 	return s, nil
@@ -124,7 +146,7 @@ CONNECT:
 	// Attempt to connect
 	sock, err = net.Dial("tcp", s.addr)
 	if err != nil {
-		log.Printf("[ERR] Error connecting to statsite! Err: %s", err)
+		logger.Error("Error connecting to statsite", s.logger, err)
 		goto WAIT
 	}
 
@@ -142,12 +164,12 @@ CONNECT:
 			// Try to send to statsite
 			_, err := buffered.Write([]byte(metric))
 			if err != nil {
-				log.Printf("[ERR] Error writing to statsite! Err: %s", err)
+				logger.Error("Error writing to statsite", s.logger, err)
 				goto WAIT
 			}
 		case <-ticker.C:
 			if err := buffered.Flush(); err != nil {
-				log.Printf("[ERR] Error flushing to statsite! Err: %s", err)
+				logger.Error("Error flushing to statsite", s.logger, err)
 				goto WAIT
 			}
 		}

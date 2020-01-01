@@ -3,11 +3,12 @@ package metrics
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net"
 	"net/url"
 	"strings"
 	"time"
+
+	logger "github.com/armon/go-metrics/logger"
 )
 
 const (
@@ -22,6 +23,7 @@ const (
 type StatsdSink struct {
 	addr        string
 	metricQueue chan string
+	logger      logger.Logger
 }
 
 // NewStatsdSinkFromURL creates an StatsdSink from a URL. It is used
@@ -30,11 +32,30 @@ func NewStatsdSinkFromURL(u *url.URL) (MetricSink, error) {
 	return NewStatsdSink(u.Host)
 }
 
-// NewStatsdSink is used to create a new StatsdSink
+// NewStatsdSinkFromURLWithCustomLogger creates an StatsdSink from a URL with a custom logger. It is used
+// (and tested) from NewMetricSinkFromURL.
+func NewStatsdSinkFromURLWithCustomLogger(u *url.URL, l logger.Logger) (MetricSink, error) {
+	return NewStatsdSinkWithCustomLogger(u.Host, l)
+}
+
+// NewStatsdSink is used to create a new StatsdSink and uses go-hclog by default
 func NewStatsdSink(addr string) (*StatsdSink, error) {
+	l := &logger.OurLogger{}
 	s := &StatsdSink{
 		addr:        addr,
 		metricQueue: make(chan string, 4096),
+		logger:      l.New(),
+	}
+	go s.flushMetrics()
+	return s, nil
+}
+
+// NewStatsdSinkWithCustomLogger is used to create a new StatsdSink with a custom logger
+func NewStatsdSinkWithCustomLogger(addr string, l logger.Logger) (*StatsdSink, error) {
+	s := &StatsdSink{
+		addr:        addr,
+		metricQueue: make(chan string, 4096),
+		logger:      l,
 	}
 	go s.flushMetrics()
 	return s, nil
@@ -126,7 +147,7 @@ CONNECT:
 	// Attempt to connect
 	sock, err = net.Dial("udp", s.addr)
 	if err != nil {
-		log.Printf("[ERR] Error connecting to statsd! Err: %s", err)
+		logger.Error("Error connecting to statsd", s.logger, err)
 		goto WAIT
 	}
 
@@ -143,7 +164,7 @@ CONNECT:
 				_, err := sock.Write(buf.Bytes())
 				buf.Reset()
 				if err != nil {
-					log.Printf("[ERR] Error writing to statsd! Err: %s", err)
+					logger.Error("Error connecting to statsd", s.logger, err)
 					goto WAIT
 				}
 			}
@@ -159,7 +180,7 @@ CONNECT:
 			_, err := sock.Write(buf.Bytes())
 			buf.Reset()
 			if err != nil {
-				log.Printf("[ERR] Error flushing to statsd! Err: %s", err)
+				logger.Error("Error connecting to statsd", s.logger, err)
 				goto WAIT
 			}
 		}
@@ -170,7 +191,7 @@ WAIT:
 	wait = time.After(time.Duration(5) * time.Second)
 	for {
 		select {
-		// Dequeue the messages to avoid backlog
+		// Dequeue the messages to avoid backstandardLogger
 		case _, ok := <-s.metricQueue:
 			if !ok {
 				goto QUIT
