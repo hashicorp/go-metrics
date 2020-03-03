@@ -32,6 +32,7 @@ type PrometheusOpts struct {
 }
 
 type PrometheusSink struct {
+	// If these will ever be copied, they should be converted to *sync.Map values and initialized appropriately
 	gauges     sync.Map
 	summaries  sync.Map
 	counters   sync.Map
