@@ -11,7 +11,7 @@ import (
 var EmptyTags []metrics.Label
 
 const (
-	DogStatsdAddr    = "127.0.0.1:7254"
+	DiscardAddr      = "localhost:9"
 	HostnameEnabled  = true
 	HostnameDisabled = false
 	TestHostname     = "test_hostname"
@@ -72,7 +72,7 @@ func mockNewDogStatsdSink(addr string, labels []metrics.Label, tagWithHostname b
 }
 
 func setupTestServerAndBuffer(t *testing.T) (*net.UDPConn, []byte) {
-	udpAddr, err := net.ResolveUDPAddr("udp", DogStatsdAddr)
+	udpAddr, err := net.ResolveUDPAddr("udp", "localhost:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func setupTestServerAndBuffer(t *testing.T) (*net.UDPConn, []byte) {
 
 func TestParseKey(t *testing.T) {
 	for _, tt := range ParseKeyTests {
-		dog := mockNewDogStatsdSink(DogStatsdAddr, tt.Tags, tt.PropagateHostname)
+		dog := mockNewDogStatsdSink(DiscardAddr, tt.Tags, tt.PropagateHostname)
 		key, tags := dog.parseKey(tt.KeyToParse)
 
 		if !reflect.DeepEqual(key, tt.ExpectedKey) {
@@ -99,7 +99,7 @@ func TestParseKey(t *testing.T) {
 }
 
 func TestFlattenKey(t *testing.T) {
-	dog := mockNewDogStatsdSink(DogStatsdAddr, EmptyTags, HostnameDisabled)
+	dog := mockNewDogStatsdSink(DiscardAddr, EmptyTags, HostnameDisabled)
 	for _, tt := range FlattenKeyTests {
 		if !reflect.DeepEqual(dog.flattenKey(tt.KeyToFlatten), tt.Expected) {
 			t.Fatalf("Flattening %v failed", tt.KeyToFlatten)
@@ -112,7 +112,7 @@ func TestMetricSink(t *testing.T) {
 	defer server.Close()
 
 	for _, tt := range MetricSinkTests {
-		dog := mockNewDogStatsdSink(DogStatsdAddr, tt.Tags, tt.PropagateHostname)
+		dog := mockNewDogStatsdSink(server.LocalAddr().String(), tt.Tags, tt.PropagateHostname)
 		method := reflect.ValueOf(dog).MethodByName(tt.Method)
 		method.Call([]reflect.Value{
 			reflect.ValueOf(tt.Metric),
@@ -125,7 +125,7 @@ func TestTaggableMetrics(t *testing.T) {
 	server, buf := setupTestServerAndBuffer(t)
 	defer server.Close()
 
-	dog := mockNewDogStatsdSink(DogStatsdAddr, EmptyTags, HostnameDisabled)
+	dog := mockNewDogStatsdSink(server.LocalAddr().String(), EmptyTags, HostnameDisabled)
 
 	dog.AddSampleWithLabels([]string{"sample", "thing"}, float32(4), []metrics.Label{{"tagkey", "tagvalue"}})
 	assertServerMatchesExpected(t, server, buf, "sample.thing:4.000000|ms|#tagkey:tagvalue")
@@ -136,7 +136,7 @@ func TestTaggableMetrics(t *testing.T) {
 	dog.IncrCounterWithLabels([]string{"sample", "thing"}, float32(4), []metrics.Label{{"tagkey", "tagvalue"}})
 	assertServerMatchesExpected(t, server, buf, "sample.thing:4|c|#tagkey:tagvalue")
 
-	dog = mockNewDogStatsdSink(DogStatsdAddr, []metrics.Label{{Name: "global"}}, HostnameEnabled) // with hostname, global tags
+	dog = mockNewDogStatsdSink(server.LocalAddr().String(), []metrics.Label{{Name: "global"}}, HostnameEnabled) // with hostname, global tags
 	dog.IncrCounterWithLabels([]string{"sample", "thing"}, float32(4), []metrics.Label{{"tagkey", "tagvalue"}})
 	assertServerMatchesExpected(t, server, buf, "sample.thing:4|c|#global,tagkey:tagvalue,host:test_hostname")
 }
