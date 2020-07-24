@@ -145,7 +145,9 @@ func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels 
 	// The sync.Map underlying gauges stores pointers to our structs. If we need to make updates,
 	// rather than modifying the underlying value directly, which would be racy, we make a local
 	// copy by dereferencing the pointer we get back, making the appropriate changes, and then
-	// storing a pointer to our local copy.
+	// storing a pointer to our local copy. The underlying Prometheus types are threadsafe,
+	// so there's no issues there. It's possible for racy updates to occur to the updatedAt
+	// value, but since we're always setting it to time.Now(), it doesn't really matter.
 	if ok {
 		localGauge := *pg.(*PrometheusGauge)
 		localGauge.Set(float64(val))
