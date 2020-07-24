@@ -5,11 +5,10 @@ package prometheus
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
-
-	"regexp"
 
 	"github.com/armon/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -142,19 +141,28 @@ func (p *PrometheusSink) SetGauge(parts []string, val float32) {
 func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels []metrics.Label) {
 	key, hash := p.flattenKey(parts, labels)
 	pg, ok := p.gauges.Load(hash)
-	if !ok {
+
+	// The sync.Map underlying gauges stores pointers to our structs. If we need to make updates,
+	// rather than modifying the underlying value directly, which would be racy, we make a local
+	// copy by dereferencing the pointer we get back, making the appropriate changes, and then
+	// storing a pointer to our local copy.
+	if ok {
+		localGauge := *pg.(*PrometheusGauge)
+		localGauge.Set(float64(val))
+		localGauge.updatedAt = time.Now()
+		p.gauges.Store(hash, &localGauge)
+	} else {
 		g := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name:        key,
 			Help:        key,
 			ConstLabels: prometheusLabels(labels),
 		})
+		g.Set(float64(val))
 		pg = &PrometheusGauge{
 			g, time.Now(),
 		}
 		p.gauges.Store(hash, pg)
 	}
-	pg.(*PrometheusGauge).Set(float64(val))
-	pg.(*PrometheusGauge).updatedAt = time.Now()
 }
 
 func (p *PrometheusSink) AddSample(parts []string, val float32) {
@@ -164,7 +172,13 @@ func (p *PrometheusSink) AddSample(parts []string, val float32) {
 func (p *PrometheusSink) AddSampleWithLabels(parts []string, val float32, labels []metrics.Label) {
 	key, hash := p.flattenKey(parts, labels)
 	ps, ok := p.summaries.Load(hash)
-	if !ok {
+
+	if ok {
+		localSummary := *ps.(*PrometheusSummary)
+		localSummary.Observe(float64(val))
+		localSummary.updatedAt = time.Now()
+		p.summaries.Store(hash, &localSummary)
+	} else {
 		s := prometheus.NewSummary(prometheus.SummaryOpts{
 			Name:        key,
 			Help:        key,
@@ -172,13 +186,12 @@ func (p *PrometheusSink) AddSampleWithLabels(parts []string, val float32, labels
 			ConstLabels: prometheusLabels(labels),
 			Objectives:  map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		})
+		s.Observe(float64(val))
 		ps = &PrometheusSummary{
 			s, time.Now(),
 		}
 		p.summaries.Store(hash, ps)
 	}
-	ps.(*PrometheusSummary).Observe(float64(val))
-	ps.(*PrometheusSummary).updatedAt = time.Now()
 }
 
 // EmitKey is not implemented. Prometheus doesn’t offer a type for which an
@@ -194,19 +207,24 @@ func (p *PrometheusSink) IncrCounter(parts []string, val float32) {
 func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labels []metrics.Label) {
 	key, hash := p.flattenKey(parts, labels)
 	pc, ok := p.counters.Load(hash)
-	if !ok {
+
+	if ok {
+		localCounter := *pc.(*PrometheusCounter)
+		localCounter.Add(float64(val))
+		localCounter.updatedAt = time.Now()
+		p.counters.Store(hash, &localCounter)
+	} else {
 		c := prometheus.NewCounter(prometheus.CounterOpts{
 			Name:        key,
 			Help:        key,
 			ConstLabels: prometheusLabels(labels),
 		})
+		c.Add(float64(val))
 		pc = &PrometheusCounter{
 			c, time.Now(),
 		}
 		p.counters.Store(hash, pc)
 	}
-	pc.(*PrometheusCounter).Add(float64(val))
-	pc.(*PrometheusCounter).updatedAt = time.Now()
 }
 
 type PrometheusPushSink struct {
