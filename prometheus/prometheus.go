@@ -84,29 +84,35 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 	expire := p.expiration != 0
 	now := time.Now()
 	p.gauges.Range(func(k, v interface{}) bool {
-		lastUpdate := v.(*PrometheusGauge).updatedAt
-		if expire && lastUpdate.Add(p.expiration).Before(now) {
-			p.gauges.Delete(k)
-		} else {
-			v.(*PrometheusGauge).Collect(c)
+		if v != nil {
+			lastUpdate := v.(*PrometheusGauge).updatedAt
+			if expire && lastUpdate.Add(p.expiration).Before(now) {
+				p.gauges.Delete(k)
+			} else {
+				v.(*PrometheusGauge).Collect(c)
+			}
 		}
 		return true
 	})
 	p.summaries.Range(func(k, v interface{}) bool {
-		lastUpdate := v.(*PrometheusSummary).updatedAt
-		if expire && lastUpdate.Add(p.expiration).Before(now) {
-			p.summaries.Delete(k)
-		} else {
-			v.(*PrometheusSummary).Collect(c)
+		if v != nil {
+			lastUpdate := v.(*PrometheusSummary).updatedAt
+			if expire && lastUpdate.Add(p.expiration).Before(now) {
+				p.summaries.Delete(k)
+			} else {
+				v.(*PrometheusSummary).Collect(c)
+			}
 		}
 		return true
 	})
 	p.counters.Range(func(k, v interface{}) bool {
-		lastUpdate := v.(*PrometheusCounter).updatedAt
-		if expire && lastUpdate.Add(p.expiration).Before(now) {
-			p.counters.Delete(k)
-		} else {
-			v.(*PrometheusCounter).Collect(c)
+		if v != nil {
+			lastUpdate := v.(*PrometheusCounter).updatedAt
+			if expire && lastUpdate.Add(p.expiration).Before(now) {
+				p.counters.Delete(k)
+			} else {
+				v.(*PrometheusCounter).Collect(c)
+			}
 		}
 		return true
 	})
