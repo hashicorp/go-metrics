@@ -37,9 +37,11 @@ func TestStatsite_PushFullQueue(t *testing.T) {
 }
 
 func TestStatsite_Conn(t *testing.T) {
-	addr := "localhost:7523"
-
-	ln, _ := net.Listen("tcp", addr)
+	ln, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := ln.Addr().String()
 
 	done := make(chan bool)
 	go func() {

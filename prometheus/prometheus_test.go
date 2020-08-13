@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -71,7 +72,7 @@ func TestSetGauge(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	host := u.Hostname() + ":" + u.Port()
+	host := net.JoinHostPort(u.Hostname(), u.Port())
 	sink, err := NewPrometheusPushSink(host, time.Second, "pushtest")
 	metricsConf := metrics.DefaultConfig("default")
 	metricsConf.HostName = MockGetHostname()

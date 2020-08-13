@@ -38,14 +38,18 @@ func TestStatsd_PushFullQueue(t *testing.T) {
 }
 
 func TestStatsd_Conn(t *testing.T) {
-	addr := "127.0.0.1:7524"
+	udpAddr, err := net.ResolveUDPAddr("udp", "localhost:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	list, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		panic(err)
+	}
+	defer list.Close()
+	addr := list.LocalAddr().String()
 	done := make(chan bool)
 	go func() {
-		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 7524})
-		if err != nil {
-			panic(err)
-		}
-		defer list.Close()
 		buf := make([]byte, 1500)
 		n, err := list.Read(buf)
 		if err != nil {
