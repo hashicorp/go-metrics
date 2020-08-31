@@ -1,7 +1,6 @@
 package prometheus
 
 import (
-	"testing"
 	"errors"
 	"fmt"
 	"log"
@@ -16,8 +15,8 @@ import (
 	dto "github.com/prometheus/client_model/go"
 
 	"github.com/armon/go-metrics"
-	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/expfmt"
 )
 
 const (
@@ -52,7 +51,8 @@ func TestNewPrometheusSink(t *testing.T) {
 	ok := prometheus.Unregister(sink)
 	if !ok {
 		t.Fatalf("Unregister(sink) = false, want true")
-)
+	}
+}
 
 func MockGetHostname() string {
 	return TestHostname
