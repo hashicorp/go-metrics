@@ -1,0 +1,23 @@
+version: 2.1
+
+orbs:
+  go: gotest/tools@0.0.13
+
+workflows:
+  ci:
+    jobs:
+    - go/test:
+        name: test-golang-1.13
+        executor:
+          name: go/golang
+          tag:  1.13-alpine
+    - go/test:
+        name: test-golang-1.14
+        executor:
+          name: go/golang
+          tag:  1.14-alpine
+    - go/test:
+        name: test-golang-1.15
+        executor:
+          name: go/golang
+          tag:  1.15-alpine
