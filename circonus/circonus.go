@@ -56,12 +56,6 @@ func (s *CirconusSink) Flush() {
 	s.metrics.Flush()
 }
 
-// SetGauge sets value for a gauge metric
-func (s *CirconusSink) SetGauge(key []string, val float32) {
-	flatKey := s.flattenKey(key)
-	s.metrics.SetGauge(flatKey, int64(val))
-}
-
 // SetGaugeWithLabels sets value for a gauge metric with the given labels
 func (s *CirconusSink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
@@ -73,22 +67,10 @@ func (s *CirconusSink) EmitKey(key []string, val float32) {
 	// NOP
 }
 
-// IncrCounter increments a counter metric
-func (s *CirconusSink) IncrCounter(key []string, val float32) {
-	flatKey := s.flattenKey(key)
-	s.metrics.IncrementByValue(flatKey, uint64(val))
-}
-
 // IncrCounterWithLabels increments a counter metric with the given labels
 func (s *CirconusSink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.metrics.IncrementByValue(flatKey, uint64(val))
-}
-
-// AddSample adds a sample to a histogram metric
-func (s *CirconusSink) AddSample(key []string, val float32) {
-	flatKey := s.flattenKey(key)
-	s.metrics.RecordValue(flatKey, float64(val))
 }
 
 // AddSampleWithLabels adds a sample to a histogram metric with the given labels

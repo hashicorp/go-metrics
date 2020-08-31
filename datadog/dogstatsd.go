@@ -83,21 +83,9 @@ func (s *DogStatsdSink) parseKey(key []string) ([]string, []metrics.Label) {
 
 // Implementation of methods in the MetricSink interface
 
-func (s *DogStatsdSink) SetGauge(key []string, val float32) {
-	s.SetGaugeWithLabels(key, val, nil)
-}
-
-func (s *DogStatsdSink) IncrCounter(key []string, val float32) {
-	s.IncrCounterWithLabels(key, val, nil)
-}
-
 // EmitKey is not implemented since DogStatsd does not provide a metric type that holds an
 // arbitrary number of values
 func (s *DogStatsdSink) EmitKey(key []string, val float32) {
-}
-
-func (s *DogStatsdSink) AddSample(key []string, val float32) {
-	s.AddSampleWithLabels(key, val, nil)
 }
 
 // The following ...WithLabels methods correspond to Datadog's Tag extension to Statsd.

@@ -49,15 +49,15 @@ var MetricSinkTests = []struct {
 	PropagateHostname bool
 	Expected          string
 }{
-	{"SetGauge", []string{"foo", "bar"}, float32(42), EmptyTags, HostnameDisabled, "foo.bar:42|g"},
-	{"SetGauge", []string{"foo", "bar", "baz"}, float32(42), EmptyTags, HostnameDisabled, "foo.bar.baz:42|g"},
-	{"AddSample", []string{"sample", "thing"}, float32(4), EmptyTags, HostnameDisabled, "sample.thing:4.000000|ms"},
-	{"IncrCounter", []string{"count", "me"}, float32(3), EmptyTags, HostnameDisabled, "count.me:3|c"},
+	{"SetGaugeWithLabels", []string{"foo", "bar"}, float32(42), EmptyTags, HostnameDisabled, "foo.bar:42|g"},
+	{"SetGaugeWithLabels", []string{"foo", "bar", "baz"}, float32(42), EmptyTags, HostnameDisabled, "foo.bar.baz:42|g"},
+	{"AddSampleWithLabels", []string{"sample", "thing"}, float32(4), EmptyTags, HostnameDisabled, "sample.thing:4.000000|ms"},
+	{"IncrCounterWithLabels", []string{"count", "me"}, float32(3), EmptyTags, HostnameDisabled, "count.me:3|c"},
 
-	{"SetGauge", []string{"foo", "baz"}, float32(42), []metrics.Label{{"my_tag", ""}}, HostnameDisabled, "foo.baz:42|g|#my_tag"},
-	{"SetGauge", []string{"foo", "baz"}, float32(42), []metrics.Label{{"my tag", "my_value"}}, HostnameDisabled, "foo.baz:42|g|#my_tag:my_value"},
-	{"SetGauge", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}, {"other_tag", "other_value"}}, HostnameDisabled, "foo.bar:42|g|#my_tag:my_value,other_tag:other_value"},
-	{"SetGauge", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}, {"other_tag", "other_value"}}, HostnameEnabled, "foo.bar:42|g|#my_tag:my_value,other_tag:other_value,host:test_hostname"},
+	{"SetGaugeWithLabels", []string{"foo", "baz"}, float32(42), []metrics.Label{{"my_tag", ""}}, HostnameDisabled, "foo.baz:42|g|#my_tag"},
+	{"SetGaugeWithLabels", []string{"foo", "baz"}, float32(42), []metrics.Label{{"my tag", "my_value"}}, HostnameDisabled, "foo.baz:42|g|#my_tag:my_value"},
+	{"SetGaugeWithLabels", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}, {"other_tag", "other_value"}}, HostnameDisabled, "foo.bar:42|g|#my_tag:my_value,other_tag:other_value"},
+	{"SetGaugeWithLabels", []string{"foo", "bar"}, float32(42), []metrics.Label{{"my_tag", "my_value"}, {"other_tag", "other_value"}}, HostnameEnabled, "foo.bar:42|g|#my_tag:my_value,other_tag:other_value,host:test_hostname"},
 }
 
 func mockNewDogStatsdSink(addr string, labels []metrics.Label, tagWithHostname bool) *DogStatsdSink {
@@ -117,7 +117,8 @@ func TestMetricSink(t *testing.T) {
 			method := reflect.ValueOf(dog).MethodByName(tt.Method)
 			method.Call([]reflect.Value{
 				reflect.ValueOf(tt.Metric),
-				reflect.ValueOf(tt.Value)})
+				reflect.ValueOf(tt.Value),
+				reflect.ValueOf([]metrics.Label{})})
 			assertServerMatchesExpected(t, server, buf, tt.Expected)
 		})
 	}

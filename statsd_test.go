@@ -117,12 +117,12 @@ func TestStatsd_Conn(t *testing.T) {
 		t.Fatalf("bad error")
 	}
 
-	s.SetGauge([]string{"gauge", "val"}, float32(1))
+	s.SetGaugeWithLabels([]string{"gauge", "val"}, float32(1), nil)
 	s.SetGaugeWithLabels([]string{"gauge_labels", "val"}, float32(2), []Label{{"a", "label"}})
 	s.EmitKey([]string{"key", "other"}, float32(3))
-	s.IncrCounter([]string{"counter", "me"}, float32(4))
+	s.IncrCounterWithLabels([]string{"counter", "me"}, float32(4), nil)
 	s.IncrCounterWithLabels([]string{"counter_labels", "me"}, float32(5), []Label{{"a", "label"}})
-	s.AddSample([]string{"sample", "slow thingy"}, float32(6))
+	s.AddSampleWithLabels([]string{"sample", "slow thingy"}, float32(6), nil)
 	s.AddSampleWithLabels([]string{"sample_labels", "slow thingy"}, float32(7), []Label{{"a", "label"}})
 
 	select {

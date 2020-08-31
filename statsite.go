@@ -45,11 +45,6 @@ func (s *StatsiteSink) Shutdown() {
 	close(s.metricQueue)
 }
 
-func (s *StatsiteSink) SetGauge(key []string, val float32) {
-	flatKey := s.flattenKey(key)
-	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
-}
-
 func (s *StatsiteSink) SetGaugeWithLabels(key []string, val float32, labels []Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
@@ -60,19 +55,9 @@ func (s *StatsiteSink) EmitKey(key []string, val float32) {
 	s.pushMetric(fmt.Sprintf("%s:%f|kv\n", flatKey, val))
 }
 
-func (s *StatsiteSink) IncrCounter(key []string, val float32) {
-	flatKey := s.flattenKey(key)
-	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
-}
-
 func (s *StatsiteSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {
 	flatKey := s.flattenKeyLabels(key, labels)
 	s.pushMetric(fmt.Sprintf("%s:%f|c\n", flatKey, val))
-}
-
-func (s *StatsiteSink) AddSample(key []string, val float32) {
-	flatKey := s.flattenKey(key)
-	s.pushMetric(fmt.Sprintf("%s:%f|ms\n", flatKey, val))
 }
 
 func (s *StatsiteSink) AddSampleWithLabels(key []string, val float32, labels []Label) {

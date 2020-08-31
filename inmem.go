@@ -156,10 +156,6 @@ func NewInmemSink(interval, retain time.Duration) *InmemSink {
 	return i
 }
 
-func (i *InmemSink) SetGauge(key []string, val float32) {
-	i.SetGaugeWithLabels(key, val, nil)
-}
-
 func (i *InmemSink) SetGaugeWithLabels(key []string, val float32, labels []Label) {
 	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
@@ -179,10 +175,6 @@ func (i *InmemSink) EmitKey(key []string, val float32) {
 	intv.Points[k] = append(vals, val)
 }
 
-func (i *InmemSink) IncrCounter(key []string, val float32) {
-	i.IncrCounterWithLabels(key, val, nil)
-}
-
 func (i *InmemSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {
 	k, name := i.flattenKeyLabels(key, labels)
 	intv := i.getInterval()
@@ -200,10 +192,6 @@ func (i *InmemSink) IncrCounterWithLabels(key []string, val float32, labels []La
 		intv.Counters[k] = agg
 	}
 	agg.Ingest(float64(val), i.rateDenom)
-}
-
-func (i *InmemSink) AddSample(key []string, val float32) {
-	i.AddSampleWithLabels(key, val, nil)
 }
 
 func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []Label) {
