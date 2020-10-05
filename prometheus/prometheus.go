@@ -5,6 +5,7 @@ package prometheus
 import (
 	"fmt"
 	"log"
+	"math"
 	"regexp"
 	"strings"
 	"sync"
@@ -29,26 +30,45 @@ type PrometheusOpts struct {
 	// untracked. If the value is zero, a metric is never expired.
 	Expiration time.Duration
 	Registerer prometheus.Registerer
+	// NanExpire is a flag that allows us to "zero" out gauges and summaries that we have not updated in the expiry
+	// interval. We observe that they do not have a number rather than claiming the number is zero. This is useful
+	// because Prometheus expects that metrics are always present. With NaNExpire we may initialize metrics before
+	// they're first observed and continue to offer some value (NaN) to Prometheus scrapers even if we have not observed
+	// a recent value. Counters are simply collected with the last known value because it is safe to do so. When this
+	// flag is combined with "initializing" each metric at zero or NaN when the process starts, it addresses the problem
+	// of metrics "disappearing" from Prometheus.
+	NaNExpire  bool
 }
 
+// PrometheusSink collects concurrent maps of Prometheus gauges, summaries, and counters along with an expiry length and
+// options for expiry behavior.
 type PrometheusSink struct {
 	// If these will ever be copied, they should be converted to *sync.Map values and initialized appropriately
 	gauges     sync.Map
 	summaries  sync.Map
 	counters   sync.Map
 	expiration time.Duration
+	// Rather than deleting gauges and summaries on expiry we "zero" them with NaN. Counters remain at their
+	// last-observed value.
+	nanExpire bool
 }
 
+// PrometheusGauge associates a prometheus.Gauge with the time it was last updated. The time allows for it to be expired
+// or zeroed as needed.
 type PrometheusGauge struct {
 	prometheus.Gauge
 	updatedAt time.Time
 }
 
+// PrometheusSummary associates a prometheus.Summary with the time it was last updated. The time allows for it to be
+// expired or zeroed as needed.
 type PrometheusSummary struct {
 	prometheus.Summary
 	updatedAt time.Time
 }
 
+// PrometheusCounter associates a prometheus.Summary with the time it was last updated. The time allows for it to be
+// expired as needed.
 type PrometheusCounter struct {
 	prometheus.Counter
 	updatedAt time.Time
@@ -93,10 +113,16 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 		if v != nil {
 			lastUpdate := v.(*PrometheusGauge).updatedAt
 			if expire && lastUpdate.Add(p.expiration).Before(now) {
+				if p.nanExpire {
+					// We have not observed the gauge this interval so we don't know its value.
+					v.(*PrometheusGauge).Set(math.NaN())
+					v.(*PrometheusGauge).Collect(c)
+					return true
+				}
 				p.gauges.Delete(k)
-			} else {
-				v.(*PrometheusGauge).Collect(c)
+				return true
 			}
+			v.(*PrometheusGauge).Collect(c)
 		}
 		return true
 	})
@@ -104,10 +130,16 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 		if v != nil {
 			lastUpdate := v.(*PrometheusSummary).updatedAt
 			if expire && lastUpdate.Add(p.expiration).Before(now) {
+				if p.nanExpire {
+					// We have observed nothing in this interval.
+					v.(*PrometheusSummary).Observe(math.NaN())
+					v.(*PrometheusSummary).Collect(c)
+					return true
+				}
 				p.summaries.Delete(k)
-			} else {
-				v.(*PrometheusSummary).Collect(c)
+				return true
 			}
+			v.(*PrometheusSummary).Collect(c)
 		}
 		return true
 	})
@@ -115,10 +147,15 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 		if v != nil {
 			lastUpdate := v.(*PrometheusCounter).updatedAt
 			if expire && lastUpdate.Add(p.expiration).Before(now) {
+				if p.nanExpire {
+					// Counters remain at their previous value when not observed.
+					v.(*PrometheusCounter).Collect(c)
+					return true
+				}
 				p.counters.Delete(k)
-			} else {
-				v.(*PrometheusCounter).Collect(c)
+				return true
 			}
+			v.(*PrometheusCounter).Collect(c)
 		}
 		return true
 	})
