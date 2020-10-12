@@ -31,8 +31,8 @@ type PrometheusOpts struct {
 	Expiration time.Duration
 	Registerer prometheus.Registerer
 
-	// Gauges, Summaries, and Counters allow us to pre-declare metrics by giving their Name and ConstLabels to the
-	// PrometheusSink when it is created. Metrics declared in this way will be initialized at zero and will not be
+	// Gauges, Summaries, and Counters allow us to pre-declare metrics by giving their Name, Help, and ConstLabels to
+	// the PrometheusSink when it is created. Metrics declared in this way will be initialized at zero and will not be
 	// deleted when their expiry is reached.
 	// - Gauges and Summaries will be set to NaN when they expire.
 	// - Counters continue to Collect their last known value.
@@ -42,6 +42,7 @@ type PrometheusOpts struct {
 	//     Gauges: []PrometheusGauge{
 	//         {
 	//	         Name: []string{ "application", "component", "measurement"},
+	//           Help: "application_component_measurement provides an example of how to declare static metrics",
 	//           ConstLabels: []metrics.Label{ { Name: "datacenter", Value: "dc1" }, },
 	//         },
 	//     },
