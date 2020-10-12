@@ -62,6 +62,7 @@ type PrometheusSink struct {
 type PrometheusGauge struct {
 	Name []string
 	ConstLabels []metrics.Label
+	Help string
 	prometheus.Gauge
 	updatedAt time.Time
 	// canDelete is set if the metric is created during runtime so we know it's ephemeral and can delete it on expiry.
@@ -71,6 +72,7 @@ type PrometheusGauge struct {
 type PrometheusSummary struct {
 	Name []string
 	ConstLabels []metrics.Label
+	Help string
 	prometheus.Summary
 	updatedAt time.Time
 	canDelete bool
@@ -79,6 +81,7 @@ type PrometheusSummary struct {
 type PrometheusCounter struct {
 	Name []string
 	ConstLabels []metrics.Label
+	Help string
 	prometheus.Counter
 	updatedAt time.Time
 	canDelete bool
@@ -174,7 +177,7 @@ func initGauges(m *sync.Map, gauges []PrometheusGauge) {
 		key, hash := flattenKey(gauge.Name, gauge.ConstLabels)
 		g := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name:        key,
-			Help:        key,
+			Help:        gauge.Help,
 			ConstLabels: prometheusLabels(gauge.ConstLabels),
 		})
 		g.Set(float64(0)) // Initialize at zero
@@ -189,7 +192,7 @@ func initSummaries(m *sync.Map, summaries []PrometheusSummary) {
 		key, hash := flattenKey(summary.Name, summary.ConstLabels)
 		s := prometheus.NewSummary(prometheus.SummaryOpts{
 			Name:        key,
-			Help:        key,
+			Help:        summary.Help,
 			ConstLabels: prometheusLabels(summary.ConstLabels),
 		})
 		s.Observe(float64(0)) // Initialize at zero
@@ -204,7 +207,7 @@ func initCounters(m *sync.Map, counters []PrometheusCounter) {
 		key, hash := flattenKey(counter.Name, counter.ConstLabels)
 		c := prometheus.NewCounter(prometheus.CounterOpts{
 			Name:        key,
-			Help:        key,
+			Help:        counter.Help,
 			ConstLabels: prometheusLabels(counter.ConstLabels),
 		})
 		c.Add(float64(0)) // Initialize at zero
