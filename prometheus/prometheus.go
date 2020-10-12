@@ -157,7 +157,7 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 		if v != nil {
 			lastUpdate := v.(*PrometheusCounter).updatedAt
 			if expire && lastUpdate.Add(p.expiration).Before(now) {
-				if v.(PrometheusCounter).canDelete {
+				if v.(*PrometheusCounter).canDelete {
 					p.counters.Delete(k)
 					return true
 				}
