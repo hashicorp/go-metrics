@@ -47,9 +47,9 @@ type PrometheusOpts struct {
 	//         },
 	//     },
 	// }
-	Gauges     []PrometheusGauge
-	Summaries  []PrometheusSummary
-	Counters   []PrometheusCounter
+	GaugeDefinitions   []GaugeDefiniton
+	SummaryDefinitions []SummaryDefinition
+	CounterDefinitions []CounterDefinition
 }
 
 type PrometheusSink struct {
@@ -60,29 +60,38 @@ type PrometheusSink struct {
 	expiration time.Duration
 }
 
-type PrometheusGauge struct {
+type GaugeDefiniton struct {
 	Name []string
 	ConstLabels []metrics.Label
 	Help string
+}
+
+type gauge struct {
 	prometheus.Gauge
 	updatedAt time.Time
 	// canDelete is set if the metric is created during runtime so we know it's ephemeral and can delete it on expiry.
 	canDelete bool
 }
 
-type PrometheusSummary struct {
+type SummaryDefinition struct {
 	Name []string
 	ConstLabels []metrics.Label
 	Help string
+}
+
+type summary struct {
 	prometheus.Summary
 	updatedAt time.Time
 	canDelete bool
 }
 
-type PrometheusCounter struct {
+type CounterDefinition struct {
 	Name []string
 	ConstLabels []metrics.Label
 	Help string
+}
+
+type counter struct {
 	prometheus.Counter
 	updatedAt time.Time
 	canDelete bool
@@ -102,9 +111,9 @@ func NewPrometheusSinkFrom(opts PrometheusOpts) (*PrometheusSink, error) {
 		expiration: opts.Expiration,
 	}
 
-	initGauges(&sink.gauges, opts.Gauges)
-	initSummaries(&sink.summaries, opts.Summaries)
-	initCounters(&sink.counters, opts.Counters)
+	initGauges(&sink.gauges, opts.GaugeDefinitions)
+	initSummaries(&sink.summaries, opts.SummaryDefinitions)
+	initCounters(&sink.counters, opts.CounterDefinitions)
 
 	reg := opts.Registerer
 	if reg == nil {
@@ -129,91 +138,88 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 	now := time.Now()
 	p.gauges.Range(func(k, v interface{}) bool {
 		if v != nil {
-			lastUpdate := v.(*PrometheusGauge).updatedAt
+			lastUpdate := v.(*gauge).updatedAt
 			if expire && lastUpdate.Add(p.expiration).Before(now) {
-				if v.(*PrometheusGauge).canDelete {
+				if v.(*gauge).canDelete {
 					p.gauges.Delete(k)
 					return true
 				}
 				// We have not observed the gauge this interval so we don't know its value.
-				v.(*PrometheusGauge).Set(math.NaN())
+				v.(*gauge).Set(math.NaN())
 			}
-			v.(*PrometheusGauge).Collect(c)
+			v.(*gauge).Collect(c)
 		}
 		return true
 	})
 	p.summaries.Range(func(k, v interface{}) bool {
 		if v != nil {
-			lastUpdate := v.(*PrometheusSummary).updatedAt
+			lastUpdate := v.(*summary).updatedAt
 			if expire && lastUpdate.Add(p.expiration).Before(now) {
-				if v.(*PrometheusSummary).canDelete {
+				if v.(*summary).canDelete {
 					p.summaries.Delete(k)
 					return true
 				}
 				// We have observed nothing in this interval.
-				v.(*PrometheusSummary).Observe(math.NaN())
+				v.(*summary).Observe(math.NaN())
 			}
-			v.(*PrometheusSummary).Collect(c)
+			v.(*summary).Collect(c)
 		}
 		return true
 	})
 	p.counters.Range(func(k, v interface{}) bool {
 		if v != nil {
-			lastUpdate := v.(*PrometheusCounter).updatedAt
+			lastUpdate := v.(*counter).updatedAt
 			if expire && lastUpdate.Add(p.expiration).Before(now) {
-				if v.(*PrometheusCounter).canDelete {
+				if v.(*counter).canDelete {
 					p.counters.Delete(k)
 					return true
 				}
 				// Counters remain at their previous value when not observed, so we do not set it to NaN.
 			}
-			v.(*PrometheusCounter).Collect(c)
+			v.(*counter).Collect(c)
 		}
 		return true
 	})
 }
 
-func initGauges(m *sync.Map, gauges []PrometheusGauge) {
-	for _, gauge := range gauges {
-		key, hash := flattenKey(gauge.Name, gauge.ConstLabels)
-		g := prometheus.NewGauge(prometheus.GaugeOpts{
+func initGauges(m *sync.Map, gauges []GaugeDefiniton) {
+	for _, g := range gauges {
+		key, hash := flattenKey(g.Name, g.ConstLabels)
+		pG := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name:        key,
-			Help:        gauge.Help,
-			ConstLabels: prometheusLabels(gauge.ConstLabels),
+			Help:        g.Help,
+			ConstLabels: prometheusLabels(g.ConstLabels),
 		})
-		g.Set(float64(0)) // Initialize at zero
-		gauge.Gauge = g
-		m.Store(hash, &gauge)
+		pG.Set(float64(0)) // Initialize at zero
+		m.Store(hash, &gauge{ Gauge: pG })
 	}
 	return
 }
 
-func initSummaries(m *sync.Map, summaries []PrometheusSummary) {
-	for _, summary := range summaries {
-		key, hash := flattenKey(summary.Name, summary.ConstLabels)
-		s := prometheus.NewSummary(prometheus.SummaryOpts{
+func initSummaries(m *sync.Map, summaries []SummaryDefinition) {
+	for _, s := range summaries {
+		key, hash := flattenKey(s.Name, s.ConstLabels)
+		pS := prometheus.NewSummary(prometheus.SummaryOpts{
 			Name:        key,
-			Help:        summary.Help,
-			ConstLabels: prometheusLabels(summary.ConstLabels),
+			Help:        s.Help,
+			ConstLabels: prometheusLabels(s.ConstLabels),
 		})
-		s.Observe(float64(0)) // Initialize at zero
-		summary.Summary = s
-		m.Store(hash, &summary)
+		pS.Observe(float64(0)) // Initialize at zero
+		m.Store(hash, &summary{ Summary: pS })
 	}
 	return
 }
 
-func initCounters(m *sync.Map, counters []PrometheusCounter) {
-	for _, counter := range counters {
-		key, hash := flattenKey(counter.Name, counter.ConstLabels)
-		c := prometheus.NewCounter(prometheus.CounterOpts{
+func initCounters(m *sync.Map, counters []CounterDefinition) {
+	for _, c := range counters {
+		key, hash := flattenKey(c.Name, c.ConstLabels)
+		pC := prometheus.NewCounter(prometheus.CounterOpts{
 			Name:        key,
-			Help:        counter.Help,
-			ConstLabels: prometheusLabels(counter.ConstLabels),
+			Help:        c.Help,
+			ConstLabels: prometheusLabels(c.ConstLabels),
 		})
-		c.Add(float64(0)) // Initialize at zero
-		counter.Counter = c
-		m.Store(hash, &counter)
+		pC.Add(float64(0)) // Initialize at zero
+		m.Store(hash, &counter{ Counter: pC })
 	}
 	return
 }
@@ -255,7 +261,7 @@ func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels 
 	// so there's no issues there. It's possible for racy updates to occur to the updatedAt
 	// value, but since we're always setting it to time.Now(), it doesn't really matter.
 	if ok {
-		localGauge := *pg.(*PrometheusGauge)
+		localGauge := *pg.(*gauge)
 		localGauge.Set(float64(val))
 		localGauge.updatedAt = time.Now()
 		p.gauges.Store(hash, &localGauge)
@@ -268,7 +274,7 @@ func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels 
 			ConstLabels: prometheusLabels(labels),
 		})
 		g.Set(float64(val))
-		pg = &PrometheusGauge{
+		pg = &gauge{
 			Gauge: g,
 			updatedAt: time.Now(),
 			canDelete: true,
@@ -287,7 +293,7 @@ func (p *PrometheusSink) AddSampleWithLabels(parts []string, val float32, labels
 
 	// Does the summary already exist for this sample type?
 	if ok {
-		localSummary := *ps.(*PrometheusSummary)
+		localSummary := *ps.(*summary)
 		localSummary.Observe(float64(val))
 		localSummary.updatedAt = time.Now()
 		p.summaries.Store(hash, &localSummary)
@@ -302,7 +308,7 @@ func (p *PrometheusSink) AddSampleWithLabels(parts []string, val float32, labels
 			Objectives:  map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		})
 		s.Observe(float64(val))
-		ps = &PrometheusSummary{
+		ps = &summary{
 			Summary: s,
 			updatedAt: time.Now(),
 			canDelete: true,
@@ -327,7 +333,7 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 
 	// Does the counter exist?
 	if ok {
-		localCounter := *pc.(*PrometheusCounter)
+		localCounter := *pc.(*counter)
 		localCounter.Add(float64(val))
 		localCounter.updatedAt = time.Now()
 		p.counters.Store(hash, &localCounter)
@@ -340,7 +346,7 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 			ConstLabels: prometheusLabels(labels),
 		})
 		c.Add(float64(val))
-		pc = &PrometheusCounter{
+		pc = &counter{
 			Counter: c,
 			updatedAt: time.Now(),
 			canDelete: true,
