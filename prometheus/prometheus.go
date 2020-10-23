@@ -39,15 +39,15 @@ type PrometheusOpts struct {
 	// Ex:
 	// PrometheusOpts{
 	//     Expiration: 10 * time.Second,
-	//     Gauges: []PrometheusGauge{
+	//     Gauges: []GaugeDefinition{
 	//         {
 	//	         Name: []string{ "application", "component", "measurement"},
 	//           Help: "application_component_measurement provides an example of how to declare static metrics",
-	//           ConstLabels: []metrics.Label{ { Name: "datacenter", Value: "dc1" }, },
+	//           ConstLabels: []metrics.Label{ { Name: "my_label", Value: "does_not_change" }, },
 	//         },
 	//     },
 	// }
-	GaugeDefinitions   []GaugeDefiniton
+	GaugeDefinitions   []GaugeDefinition
 	SummaryDefinitions []SummaryDefinition
 	CounterDefinitions []CounterDefinition
 }
@@ -60,7 +60,8 @@ type PrometheusSink struct {
 	expiration time.Duration
 }
 
-type GaugeDefiniton struct {
+// GaugeDefinition can be provided to PrometheusOpts to declare a constant gauge that is not deleted on expiry.
+type GaugeDefinition struct {
 	Name []string
 	ConstLabels []metrics.Label
 	Help string
@@ -73,6 +74,7 @@ type gauge struct {
 	canDelete bool
 }
 
+// SummaryDefinition can be provided to PrometheusOpts to declare a constant summary that is not deleted on expiry.
 type SummaryDefinition struct {
 	Name []string
 	ConstLabels []metrics.Label
@@ -85,6 +87,7 @@ type summary struct {
 	canDelete bool
 }
 
+// CounterDefinition can be provided to PrometheusOpts to declare a constant counter that is not deleted on expiry.
 type CounterDefinition struct {
 	Name []string
 	ConstLabels []metrics.Label
@@ -137,52 +140,58 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 	expire := p.expiration != 0
 	now := time.Now()
 	p.gauges.Range(func(k, v interface{}) bool {
-		if v != nil {
-			lastUpdate := v.(*gauge).updatedAt
-			if expire && lastUpdate.Add(p.expiration).Before(now) {
-				if v.(*gauge).canDelete {
-					p.gauges.Delete(k)
-					return true
-				}
-				// We have not observed the gauge this interval so we don't know its value.
-				v.(*gauge).Set(math.NaN())
-			}
-			v.(*gauge).Collect(c)
+		if v == nil {
+			return true
 		}
+		g := v.(*gauge)
+		lastUpdate := g.updatedAt
+		if expire && lastUpdate.Add(p.expiration).Before(now) {
+			if g.canDelete {
+				p.gauges.Delete(k)
+				return true
+			}
+			// We have not observed the gauge this interval so we don't know its value.
+			g.Set(math.NaN())
+		}
+		g.Collect(c)
 		return true
 	})
 	p.summaries.Range(func(k, v interface{}) bool {
-		if v != nil {
-			lastUpdate := v.(*summary).updatedAt
-			if expire && lastUpdate.Add(p.expiration).Before(now) {
-				if v.(*summary).canDelete {
-					p.summaries.Delete(k)
-					return true
-				}
-				// We have observed nothing in this interval.
-				v.(*summary).Observe(math.NaN())
-			}
-			v.(*summary).Collect(c)
+		if v == nil {
+			return true
 		}
+		s := v.(*summary)
+		lastUpdate := s.updatedAt
+		if expire && lastUpdate.Add(p.expiration).Before(now) {
+			if s.canDelete {
+				p.summaries.Delete(k)
+				return true
+			}
+			// We have observed nothing in this interval.
+			s.Observe(math.NaN())
+		}
+		s.Collect(c)
 		return true
 	})
 	p.counters.Range(func(k, v interface{}) bool {
-		if v != nil {
-			lastUpdate := v.(*counter).updatedAt
-			if expire && lastUpdate.Add(p.expiration).Before(now) {
-				if v.(*counter).canDelete {
-					p.counters.Delete(k)
-					return true
-				}
-				// Counters remain at their previous value when not observed, so we do not set it to NaN.
-			}
-			v.(*counter).Collect(c)
+		if v == nil {
+			return true
 		}
+		count := v.(*counter)
+		lastUpdate := count.updatedAt
+		if expire && lastUpdate.Add(p.expiration).Before(now) {
+			if count.canDelete {
+				p.counters.Delete(k)
+				return true
+			}
+			// Counters remain at their previous value when not observed, so we do not set it to NaN.
+		}
+		count.Collect(c)
 		return true
 	})
 }
 
-func initGauges(m *sync.Map, gauges []GaugeDefiniton) {
+func initGauges(m *sync.Map, gauges []GaugeDefinition) {
 	for _, g := range gauges {
 		key, hash := flattenKey(g.Name, g.ConstLabels)
 		pG := prometheus.NewGauge(prometheus.GaugeOpts{
