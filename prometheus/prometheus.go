@@ -211,7 +211,9 @@ func initSummaries(m *sync.Map, summaries []SummaryDefinition) {
 		pS := prometheus.NewSummary(prometheus.SummaryOpts{
 			Name:        key,
 			Help:        s.Help,
+			MaxAge:      10 * time.Second,
 			ConstLabels: prometheusLabels(s.ConstLabels),
+			Objectives:  map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		})
 		pS.Observe(float64(0)) // Initialize at zero
 		m.Store(hash, &summary{ Summary: pS })
