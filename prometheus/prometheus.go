@@ -199,7 +199,6 @@ func initGauges(m *sync.Map, gauges []GaugeDefinition) {
 			Help:        g.Help,
 			ConstLabels: prometheusLabels(g.ConstLabels),
 		})
-		pG.Set(float64(0)) // Initialize at zero
 		m.Store(hash, &gauge{ Gauge: pG })
 	}
 	return
@@ -215,7 +214,6 @@ func initSummaries(m *sync.Map, summaries []SummaryDefinition) {
 			ConstLabels: prometheusLabels(s.ConstLabels),
 			Objectives:  map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		})
-		pS.Observe(float64(0)) // Initialize at zero
 		m.Store(hash, &summary{ Summary: pS })
 	}
 	return
@@ -229,7 +227,6 @@ func initCounters(m *sync.Map, counters []CounterDefinition) {
 			Help:        c.Help,
 			ConstLabels: prometheusLabels(c.ConstLabels),
 		})
-		pC.Add(float64(0)) // Initialize at zero
 		m.Store(hash, &counter{ Counter: pC })
 	}
 	return
