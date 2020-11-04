@@ -54,6 +54,59 @@ func TestNewPrometheusSink(t *testing.T) {
 	}
 }
 
+func TestDefinitions(t *testing.T) {
+	gaugeDef := GaugeDefinition{
+		Name:        []string{"my", "test", "gauge"},
+		Help:        "A gauge for testing? How helpful!",
+	}
+	summaryDef := SummaryDefinition{
+		Name:        []string{"my", "test", "summary"},
+		Help:        "A summary for testing? How helpful!",
+	}
+	counterDef := CounterDefinition{
+		Name:        []string{"my", "test", "summary"},
+		Help:        "A counter for testing? How helpful!",
+	}
+
+	// PrometheusSink config w/ definitions for each metric type
+	cfg := PrometheusOpts{
+		Expiration:         5 * time.Second,
+		GaugeDefinitions:   append([]GaugeDefinition{}, gaugeDef),
+		SummaryDefinitions: append([]SummaryDefinition{}, summaryDef),
+		CounterDefinitions: append([]CounterDefinition{}, counterDef),
+	}
+	sink, err := NewPrometheusSinkFrom(cfg)
+	if err != nil {
+		t.Fatalf("err = #{err}, want nil")
+	}
+
+	// We can't just len(x) where x is a sync.Map, so we range over the single item and assert the name in our metric
+	// definition matches the key we have for the map entry. Should fail if any metrics exist that aren't defined, or if
+	// the defined metrics don't exist.
+	sink.gauges.Range(func(key, value interface{}) bool {
+		name, _ := flattenKey(gaugeDef.Name, gaugeDef.ConstLabels)
+		if name != key {
+			t.Fatalf("expected my_test_gauge, got #{name}")
+		}
+		return true
+	})
+	sink.summaries.Range(func(key, value interface{}) bool {
+		name, _ := flattenKey(summaryDef.Name, summaryDef.ConstLabels)
+		fmt.Printf("k: %+v, v: %+v", key, value)
+		if name != key {
+			t.Fatalf("expected my_test_summary, got #{name}")
+		}
+		return true
+	})
+	sink.counters.Range(func(key, value interface{}) bool {
+		name, _ := flattenKey(counterDef.Name, counterDef.ConstLabels)
+		if name != key {
+			t.Fatalf("expected my_test_counter, got #{name}")
+		}
+		return true
+	})
+}
+
 func MockGetHostname() string {
 	return TestHostname
 }
