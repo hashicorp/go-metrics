@@ -239,7 +239,7 @@ func TestMetrics_MeasureSince(t *testing.T) {
 func TestMetrics_EmitRuntimeStats(t *testing.T) {
 	runtime.GC()
 	m, met := mockMetric()
-	met.emitRuntimeStats()
+	met.EmitRuntimeStats()
 
 	if m.getKeys()[0][0] != "runtime" || m.getKeys()[0][1] != "num_goroutines" {
 		t.Fatalf("bad key %v", m.getKeys())
