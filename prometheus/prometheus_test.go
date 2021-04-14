@@ -107,6 +107,77 @@ func TestDefinitions(t *testing.T) {
 		}
 		return true
 	})
+
+	// Set a bunch of values
+	sink.SetGauge(gaugeDef.Name, 42)
+	sink.AddSample(summaryDef.Name, 42)
+	sink.IncrCounter(counterDef.Name, 1)
+
+	// Test that the expiry behavior works as expected. First pick a time which
+	// is after all the actual updates above.
+	timeAfterUpdates := time.Now()
+	// Buffer the chan to make sure it doesn't block. We expect only 3 metrics to
+	// be produced but give some extra room as this will hand the test if we don't
+	// have a big enough buffer.
+	ch := make(chan prometheus.Metric, 10)
+
+	// Collect the metrics as if it's some time in the future, way beyond the 5
+	// second expiry.
+	sink.collectAtTime(ch, timeAfterUpdates.Add(10*time.Second))
+
+	// We should see all the metrics desired Expiry behavior
+	expectedNum := 3
+	for i := 0; i < expectedNum; i++ {
+		select {
+		case m := <-ch:
+			// m is a prometheus.Metric the only thing we can do is Write it to a
+			// protobuf type and read from there.
+			var pb dto.Metric
+			if err := m.Write(&pb); err != nil {
+				t.Fatalf("unexpected error reading metric: %s", err)
+			}
+			desc := m.Desc().String()
+			switch {
+			case pb.Counter != nil:
+				if !strings.Contains(desc, counterDef.Help) {
+					t.Fatalf("expected counter to include correct help=%s, but was %s", counterDef.Help, m.Desc().String())
+				}
+				// Counters should _not_ reset. We could assert not nil too but that
+				// would be a bug in prometheus client code so assume it's never nil...
+				if *pb.Counter.Value != float64(1) {
+					t.Fatalf("expected defined counter to have value 42 after expiring, got %f", *pb.Counter.Value)
+				}
+			case pb.Gauge != nil:
+				if !strings.Contains(desc, gaugeDef.Help) {
+					t.Fatalf("expected gauge to include correct help=%s, but was %s", gaugeDef.Help, m.Desc().String())
+				}
+				// Gauges should _not_ reset. We could assert not nil too but that
+				// would be a bug in prometheus client code so assume it's never nil...
+				if *pb.Gauge.Value != float64(42) {
+					t.Fatalf("expected defined gauge to have value 42 after expiring, got %f", *pb.Gauge.Value)
+				}
+			case pb.Summary != nil:
+				if !strings.Contains(desc, summaryDef.Help) {
+					t.Fatalf("expected summary to include correct help=%s, but was %s", summaryDef.Help, m.Desc().String())
+				}
+				// Summaries should not be reset. Previous behavior here did attempt to
+				// reset them by calling Observe(NaN) which results in all values being
+				// set to NaN but doesn't actually clear the time window of data
+				// predictably so future observations could also end up as NaN until the
+				// NaN sample has aged out of the window. Since the summary is already
+				// aging out a fixed time window (we fix it a 10 seconds currently for
+				// all summaries and it's not affected by Expiration option), there's no
+				// point in trying to reset it after "expiry".
+				if *pb.Summary.SampleSum != float64(42) {
+					t.Fatalf("expected defined summary sum to have value 42 after expiring, got %f", *pb.Summary.SampleSum)
+				}
+			default:
+				t.Fatalf("unexpected metric type %v", pb)
+			}
+		case <-time.After(100 * time.Millisecond):
+			t.Fatalf("Timed out waiting to collect expected metric. Got %d, want %d", i, expectedNum)
+		}
+	}
 }
 
 func MockGetHostname() string {
