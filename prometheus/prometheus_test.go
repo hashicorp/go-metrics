@@ -117,7 +117,7 @@ func TestDefinitions(t *testing.T) {
 	// is after all the actual updates above.
 	timeAfterUpdates := time.Now()
 	// Buffer the chan to make sure it doesn't block. We expect only 3 metrics to
-	// be produced but give some extra room as this will hand the test if we don't
+	// be produced but give some extra room as this will hang the test if we don't
 	// have a big enough buffer.
 	ch := make(chan prometheus.Metric, 10)
 
