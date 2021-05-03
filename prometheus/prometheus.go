@@ -257,10 +257,6 @@ func prometheusLabels(labels []metrics.Label) prometheus.Labels {
 	return l
 }
 
-func (p *PrometheusSink) SetGauge(parts []string, val float32) {
-	p.SetGaugeWithLabels(parts, val, nil)
-}
-
 func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels []metrics.Label) {
 	key, hash := flattenKey(parts, labels)
 	pg, ok := p.gauges.Load(hash)
@@ -297,10 +293,6 @@ func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels 
 		}
 		p.gauges.Store(hash, pg)
 	}
-}
-
-func (p *PrometheusSink) AddSample(parts []string, val float32) {
-	p.AddSampleWithLabels(parts, val, nil)
 }
 
 func (p *PrometheusSink) AddSampleWithLabels(parts []string, val float32, labels []metrics.Label) {
@@ -342,10 +334,6 @@ func (p *PrometheusSink) AddSampleWithLabels(parts []string, val float32, labels
 // arbitrary number of values is retained, as Prometheus works with a pull
 // model, rather than a push model.
 func (p *PrometheusSink) EmitKey(key []string, val float32) {
-}
-
-func (p *PrometheusSink) IncrCounter(parts []string, val float32) {
-	p.IncrCounterWithLabels(parts, val, nil)
 }
 
 func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labels []metrics.Label) {

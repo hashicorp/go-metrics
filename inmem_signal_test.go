@@ -16,10 +16,10 @@ func TestInmemSignal(t *testing.T) {
 	sig := NewInmemSignal(inm, syscall.SIGUSR1, buf)
 	defer sig.Stop()
 
-	inm.SetGauge([]string{"foo"}, 42)
+	inm.SetGaugeWithLabels([]string{"foo"}, 42, nil)
 	inm.EmitKey([]string{"bar"}, 42)
-	inm.IncrCounter([]string{"baz"}, 42)
-	inm.AddSample([]string{"wow"}, 42)
+	inm.IncrCounterWithLabels([]string{"baz"}, 42, nil)
+	inm.AddSampleWithLabels([]string{"wow"}, 42, nil)
 	inm.SetGaugeWithLabels([]string{"asdf"}, 42, []Label{{"a", "b"}})
 	inm.IncrCounterWithLabels([]string{"qwer"}, 42, []Label{{"a", "b"}})
 	inm.AddSampleWithLabels([]string{"zxcv"}, 42, []Label{{"a", "b"}})

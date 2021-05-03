@@ -12,15 +12,15 @@ func TestDisplayMetrics(t *testing.T) {
 	inm := NewInmemSink(interval, 50*time.Millisecond)
 
 	// Add data points
-	inm.SetGauge([]string{"foo", "bar"}, 42)
+	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 42, nil)
 	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
 	inm.EmitKey([]string{"foo", "bar"}, 42)
-	inm.IncrCounter([]string{"foo", "bar"}, 20)
-	inm.IncrCounter([]string{"foo", "bar"}, 22)
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, nil)
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 22, nil)
 	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, []Label{{"a", "b"}})
 	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 40, []Label{{"a", "b"}})
-	inm.AddSample([]string{"foo", "bar"}, 20)
-	inm.AddSample([]string{"foo", "bar"}, 24)
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 20, nil)
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 24, nil)
 	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
 	inm.AddSampleWithLabels([]string{"foo", "bar"}, 33, []Label{{"a", "b"}})
 
@@ -140,7 +140,7 @@ func TestDisplayMetrics_RaceSetGauge(t *testing.T) {
 	go func() {
 		for {
 			time.Sleep(150 * time.Millisecond)
-			inm.SetGauge([]string{"foo", "bar"}, float32(42))
+			inm.SetGaugeWithLabels([]string{"foo", "bar"}, float32(42), nil)
 		}
 	}()
 
@@ -174,7 +174,7 @@ func TestDisplayMetrics_RaceAddSample(t *testing.T) {
 	go func() {
 		for {
 			time.Sleep(75 * time.Millisecond)
-			inm.AddSample([]string{"foo", "bar"}, float32(0.0))
+			inm.AddSampleWithLabels([]string{"foo", "bar"}, float32(0.0), nil)
 		}
 	}()
 
@@ -208,7 +208,7 @@ func TestDisplayMetrics_RaceIncrCounter(t *testing.T) {
 	go func() {
 		for {
 			time.Sleep(75 * time.Millisecond)
-			inm.IncrCounter([]string{"foo", "bar"}, float32(0.0))
+			inm.IncrCounterWithLabels([]string{"foo", "bar"}, float32(0.0), nil)
 		}
 	}()
 
@@ -272,4 +272,3 @@ func TestDisplayMetrics_RaceMetricsSetGauge(t *testing.T) {
 	got := <-result
 	verify.Values(t, "all", got, float32(42))
 }
-

@@ -84,7 +84,7 @@ func TestSetGauge(t *testing.T) {
 	}
 
 	go func() {
-		cs.SetGauge([]string{"foo", "bar"}, 1)
+		cs.SetGaugeWithLabels([]string{"foo", "bar"}, 1, nil)
 		cs.Flush()
 	}()
 
@@ -112,7 +112,7 @@ func TestIncrCounter(t *testing.T) {
 	}
 
 	go func() {
-		cs.IncrCounter([]string{"foo", "bar"}, 1)
+		cs.IncrCounterWithLabels([]string{"foo", "bar"}, 1, nil)
 		cs.Flush()
 	}()
 
@@ -140,7 +140,7 @@ func TestAddSample(t *testing.T) {
 	}
 
 	go func() {
-		cs.AddSample([]string{"foo", "bar"}, 1)
+		cs.AddSampleWithLabels([]string{"foo", "bar"}, 1, nil)
 		cs.Flush()
 	}()
 

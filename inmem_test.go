@@ -17,15 +17,15 @@ func TestInmemSink(t *testing.T) {
 	}
 
 	// Add data points
-	inm.SetGauge([]string{"foo", "bar"}, 42)
+	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 42, nil)
 	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
 	inm.EmitKey([]string{"foo", "bar"}, 42)
-	inm.IncrCounter([]string{"foo", "bar"}, 20)
-	inm.IncrCounter([]string{"foo", "bar"}, 22)
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, nil)
+	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 22, nil)
 	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 20, []Label{{"a", "b"}})
 	inm.IncrCounterWithLabels([]string{"foo", "bar"}, 22, []Label{{"a", "b"}})
-	inm.AddSample([]string{"foo", "bar"}, 20)
-	inm.AddSample([]string{"foo", "bar"}, 22)
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 20, nil)
+	inm.AddSampleWithLabels([]string{"foo", "bar"}, 22, nil)
 	inm.AddSampleWithLabels([]string{"foo", "bar"}, 23, []Label{{"a", "b"}})
 
 	data = inm.Data()
@@ -97,7 +97,7 @@ func TestInmemSink(t *testing.T) {
 
 	for i := 1; i < 10; i++ {
 		time.Sleep(10 * time.Millisecond)
-		inm.SetGauge([]string{"foo", "bar"}, 42)
+		inm.SetGaugeWithLabels([]string{"foo", "bar"}, 42, nil)
 		data = inm.Data()
 		if len(data) != min(i+1, 5) {
 			t.Fatalf("bad: %v", data)
@@ -106,7 +106,7 @@ func TestInmemSink(t *testing.T) {
 
 	// Should not exceed 5 intervals!
 	time.Sleep(10 * time.Millisecond)
-	inm.SetGauge([]string{"foo", "bar"}, 42)
+	inm.SetGaugeWithLabels([]string{"foo", "bar"}, 42, nil)
 	data = inm.Data()
 	if len(data) != 5 {
 		t.Fatalf("bad: %v", data)
