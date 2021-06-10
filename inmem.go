@@ -69,6 +69,7 @@ func NewIntervalMetrics(intv time.Time) *IntervalMetrics {
 		Points:   make(map[string][]float32),
 		Counters: make(map[string]SampledValue),
 		Samples:  make(map[string]SampledValue),
+		done:     make(chan struct{}),
 	}
 }
 
@@ -301,8 +302,11 @@ func (i *InmemSink) getInterval() *IntervalMetrics {
 
 	current := NewIntervalMetrics(intv)
 	i.intervals = append(i.intervals, current)
-	n++
+	if n > 0 {
+		close(i.intervals[n-1].done)
+	}
 
+	n++
 	// Prune old intervals if the count exceeds the max.
 	if n >= i.maxIntervals {
 		copy(i.intervals[0:], i.intervals[n-i.maxIntervals:])

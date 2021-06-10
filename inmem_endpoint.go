@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -68,6 +70,10 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 		interval = data[n-2]
 	}
 
+	return newMetricSummaryFromInterval(interval), nil
+}
+
+func newMetricSummaryFromInterval(interval *IntervalMetrics) MetricsSummary {
 	interval.RLock()
 	defer interval.RUnlock()
 
@@ -103,7 +109,7 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 	summary.Counters = formatSamples(interval.Counters)
 	summary.Samples = formatSamples(interval.Samples)
 
-	return summary, nil
+	return summary
 }
 
 func formatSamples(source map[string]SampledValue) []SampledValue {
@@ -129,3 +135,48 @@ func formatSamples(source map[string]SampledValue) []SampledValue {
 
 	return output
 }
+
+type Logger interface {
+	Warn(msg string, args ...interface{})
+}
+
+// Stream writes metrics to resp each time an interval ends. Runs until the
+// request context is cancelled.
+func (i *InmemSink) Stream(ctx context.Context, logger Logger, resp http.ResponseWriter) {
+	interval := i.getInterval()
+
+	resp.WriteHeader(http.StatusOK)
+	flusher, ok := resp.(http.Flusher)
+	if ok {
+		// call Write with 0 bytes before a flush, so that GzipResponseWriter
+		// can write response headers.
+		resp.Write([]byte(""))
+		flusher.Flush()
+	} else {
+		flusher = noopFlusher{}
+	}
+
+	encoder := json.NewEncoder(resp)
+
+	for {
+		select {
+		case <-interval.done:
+			summary := newMetricSummaryFromInterval(interval)
+
+			if err := encoder.Encode(summary); err != nil {
+				logger.Warn("failed to encode metrics summary", "error", err)
+				return
+			}
+			flusher.Flush()
+
+			// update interval to the next one
+			interval = i.getInterval()
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+type noopFlusher struct{}
+
+func (noopFlusher) Flush() {}
