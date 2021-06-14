@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -301,8 +302,11 @@ func TestInmemSink_Stream(t *testing.T) {
 	}()
 
 	resp := httptest.NewRecorder()
-	logger := stdoutLogger{}
-	inm.Stream(ctx, logger, resp)
+	enc := encoder{
+		encoder: json.NewEncoder(resp),
+		flusher: resp,
+	}
+	inm.Stream(ctx, enc)
 
 	<-chDone
 
@@ -330,9 +334,16 @@ func TestInmemSink_Stream(t *testing.T) {
 	}
 }
 
-type stdoutLogger struct{}
+type encoder struct {
+	flusher http.Flusher
+	encoder *json.Encoder
+}
 
-func (stdoutLogger) Warn(msg string, args ...interface{}) {
-	fmt.Print(msg)
-	fmt.Println(args...)
+func (e encoder) Encode(metrics interface{}) error {
+	if err := e.encoder.Encode(metrics); err != nil {
+		fmt.Println("failed to encode metrics summary", "error", err)
+		return err
+	}
+	e.flusher.Flush()
+	return nil
 }
