@@ -1,6 +1,11 @@
 package metrics
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -273,3 +278,72 @@ func TestDisplayMetrics_RaceMetricsSetGauge(t *testing.T) {
 	verify.Values(t, "all", got, float32(42))
 }
 
+func TestInmemSink_Stream(t *testing.T) {
+	interval := 10 * time.Millisecond
+	total := 50 * time.Millisecond
+	inm := NewInmemSink(interval, total)
+
+	ctx, cancel := context.WithTimeout(context.Background(), total*2)
+	defer cancel()
+
+	chDone := make(chan struct{})
+
+	go func() {
+		for i := float32(0); ctx.Err() == nil; i++ {
+			inm.SetGaugeWithLabels([]string{"gauge", "foo"}, 20+i, []Label{{"a", "b"}})
+			inm.EmitKey([]string{"key", "foo"}, 30+i)
+			inm.IncrCounterWithLabels([]string{"counter", "bar"}, 40+i, []Label{{"a", "b"}})
+			inm.IncrCounterWithLabels([]string{"counter", "bar"}, 50+i, []Label{{"a", "b"}})
+			inm.AddSampleWithLabels([]string{"sample", "bar"}, 60+i, []Label{{"a", "b"}})
+			inm.AddSampleWithLabels([]string{"sample", "bar"}, 70+i, []Label{{"a", "b"}})
+			time.Sleep(interval / 3)
+		}
+		close(chDone)
+	}()
+
+	resp := httptest.NewRecorder()
+	enc := encoder{
+		encoder: json.NewEncoder(resp),
+		flusher: resp,
+	}
+	inm.Stream(ctx, enc)
+
+	<-chDone
+
+	decoder := json.NewDecoder(resp.Body)
+	var prevGaugeValue float32
+	for i := 0; i < 8; i++ {
+		var summary MetricsSummary
+		if err := decoder.Decode(&summary); err != nil {
+			t.Fatalf("expected no error while decoding response %d, got %v", i, err)
+		}
+		if count := len(summary.Gauges); count != 1 {
+			t.Fatalf("expected at least one gauge in response %d, got %v", i, count)
+		}
+		value := summary.Gauges[0].Value
+		// The upper bound of the gauge value is not known, but we can expect it
+		// to be less than 50 because it increments by 3 every interval and we run
+		// for ~10 intervals.
+		if value < 20 || value > 50 {
+			t.Fatalf("expected interval %d guage value between 20 and 50, got %v", i, value)
+		}
+		if value <= prevGaugeValue {
+			t.Fatalf("expected interval %d guage value to be greater than previous, %v == %v", i, value, prevGaugeValue)
+		}
+		prevGaugeValue = value
+	}
+}
+
+type encoder struct {
+	flusher http.Flusher
+	encoder *json.Encoder
+}
+
+func (e encoder) Encode(metrics interface{}) error {
+	if err := e.encoder.Encode(metrics); err != nil {
+		fmt.Println("failed to encode metrics summary", "error", err)
+		return err
+	}
+	e.flusher.Flush()
+	return nil
+}
