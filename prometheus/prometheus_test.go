@@ -54,6 +54,64 @@ func TestNewPrometheusSink(t *testing.T) {
 		t.Fatalf("Unregister(sink) = false, want true")
 	}
 }
+// TestMultiplePrometheusSink tests registering multiple sinks on the same registerer with different descriptors
+func TestMultiplePrometheusSink(t *testing.T) {
+	gaugeDef := GaugeDefinition{
+		Name: []string{"my", "test", "gauge"},
+		Help: "A gauge for testing? How helpful!",
+	}
+
+	cfg := PrometheusOpts{
+		Expiration:         5 * time.Second,
+		GaugeDefinitions:   append([]GaugeDefinition{}, gaugeDef),
+		SummaryDefinitions: append([]SummaryDefinition{}),
+		CounterDefinitions: append([]CounterDefinition{}),
+		Name: "sink1",
+	}
+
+	sink1, err := NewPrometheusSinkFrom(cfg)
+
+	reg := prometheus.DefaultRegisterer
+
+	if reg == nil {
+		t.Fatalf("Expected default register to be non nil, got nil.")
+	}
+
+	if err != nil {
+		t.Fatalf("err = %v, want nil", err)
+	}
+
+	gaugeDef2 := GaugeDefinition{
+		Name: []string{"my2", "test", "gauge"},
+		Help: "A gauge for testing? How helpful!",
+	}
+
+	cfg2 := PrometheusOpts{
+		Expiration:         15 * time.Second,
+		GaugeDefinitions:   append([]GaugeDefinition{}, gaugeDef2),
+		SummaryDefinitions: append([]SummaryDefinition{}),
+		CounterDefinitions: append([]CounterDefinition{}),
+		// commenting out the name to point out that the default name will be used here instead
+		// Name:               "sink2",
+	}
+
+	sink2, err := NewPrometheusSinkFrom(cfg2)
+
+	if err != nil {
+		t.Fatalf("err = %v, want nil", err)
+	}
+	//check if register has a sink by unregistering it.
+	ok := reg.Unregister(sink1)
+	if !ok {
+		t.Fatalf("Unregister(sink) = false, want true")
+	}
+
+	//check if register has a sink by unregistering it.
+	ok = reg.Unregister(sink2)
+	if !ok {
+		t.Fatalf("Unregister(sink) = false, want true")
+	}
+}
 
 func TestDefinitions(t *testing.T) {
 	gaugeDef := GaugeDefinition{
@@ -65,7 +123,7 @@ func TestDefinitions(t *testing.T) {
 		Help: "A summary for testing? How helpful!",
 	}
 	counterDef := CounterDefinition{
-		Name: []string{"my", "test", "summary"},
+		Name: []string{"my", "test", "counter"},
 		Help: "A counter for testing? How helpful!",
 	}
 
@@ -78,7 +136,7 @@ func TestDefinitions(t *testing.T) {
 	}
 	sink, err := NewPrometheusSinkFrom(cfg)
 	if err != nil {
-		t.Fatalf("err = #{err}, want nil")
+		t.Fatalf("err = %v, want nil", err)
 	}
 	defer prometheus.Unregister(sink)
 
@@ -94,7 +152,6 @@ func TestDefinitions(t *testing.T) {
 	})
 	sink.summaries.Range(func(key, value interface{}) bool {
 		name, _ := flattenKey(summaryDef.Name, summaryDef.ConstLabels)
-		fmt.Printf("k: %+v, v: %+v", key, value)
 		if name != key {
 			t.Fatalf("expected my_test_summary, got #{name}")
 		}
@@ -252,7 +309,7 @@ func TestDefinitionsWithLabels(t *testing.T) {
 		Help: "A summary for testing? How helpful!",
 	}
 	counterDef := CounterDefinition{
-		Name: []string{"my", "test", "summary"},
+		Name: []string{"my", "test", "counter"},
 		Help: "A counter for testing? How helpful!",
 	}
 
