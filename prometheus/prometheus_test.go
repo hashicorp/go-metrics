@@ -70,15 +70,13 @@ func TestMultiplePrometheusSink(t *testing.T) {
 	}
 
 	sink1, err := NewPrometheusSinkFrom(cfg)
-
-	reg := prometheus.DefaultRegisterer
-
-	if reg == nil {
-		t.Fatalf("Expected default register to be non nil, got nil.")
-	}
-
 	if err != nil {
 		t.Fatalf("err = %v, want nil", err)
+	}
+	
+	reg := prometheus.DefaultRegisterer
+	if reg == nil {
+		t.Fatalf("Expected default register to be non nil, got nil.")
 	}
 
 	gaugeDef2 := GaugeDefinition{
@@ -96,7 +94,6 @@ func TestMultiplePrometheusSink(t *testing.T) {
 	}
 
 	sink2, err := NewPrometheusSinkFrom(cfg2)
-
 	if err != nil {
 		t.Fatalf("err = %v, want nil", err)
 	}
