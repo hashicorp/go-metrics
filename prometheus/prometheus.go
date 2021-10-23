@@ -1,5 +1,10 @@
 // +build go1.9
 
+// This package implements a go-metrics sink that Prometheus can scrape.
+//
+// It also registers a factory that can be invoked by using
+// `metrics.NewMetricSinkFromURL` addressed by a URL scheme of `prometheus://`.
+// The rest of the URL is ignored.
 package prometheus
 
 import (
@@ -100,6 +105,10 @@ type counter struct {
 	prometheus.Counter
 	updatedAt time.Time
 	canDelete bool
+}
+
+func init() {
+	metrics.RegisterSinkURLFactory("prometheus", NewPrometheusSink)
 }
 
 // NewPrometheusSink creates a new PrometheusSink using the default options.

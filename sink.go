@@ -74,16 +74,25 @@ func (fh FanoutSink) AddSampleWithLabels(key []string, val float32, labels []Lab
 	}
 }
 
-// sinkURLFactoryFunc is an generic interface around the *SinkFromURL() function provided
-// by each sink type
-type sinkURLFactoryFunc func(*url.URL) (MetricSink, error)
+// SinkURLFactoryFunc is a generic interface around the *SinkFromURL() function
+// provided by each sink type
+type SinkURLFactoryFunc func(*url.URL) (MetricSink, error)
 
 // sinkRegistry supports the generic NewMetricSink function by mapping URL
 // schemes to metric sink factory functions
-var sinkRegistry = map[string]sinkURLFactoryFunc{
+var sinkRegistry = map[string]SinkURLFactoryFunc{
 	"statsd":   NewStatsdSinkFromURL,
 	"statsite": NewStatsiteSinkFromURL,
 	"inmem":    NewInmemSinkFromURL,
+}
+
+// RegisterSinkURLFactory adds the given factory to the global registry used by
+// NewMetricSinkFromURL. It is **not thread safe** and assumes the caller will
+// serialize calls to this and NewMetricSinkFromURL. Note that the Go spec
+// requires that init functions for all packages are executed in serial so it is
+// always safe to call this in your package's init function.
+func RegisterSinkURLFactory(scheme string, factory SinkURLFactoryFunc) {
+	sinkRegistry[scheme] = factory
 }
 
 // NewMetricSinkFromURL allows a generic URL input to configure any of the
@@ -99,6 +108,11 @@ var sinkRegistry = map[string]sinkURLFactoryFunc{
 // "inmem://" - Initializes an InmemSink. The host and port are ignored. The
 // "interval" and "duration" query parameters must be specified with valid
 // durations, see NewInmemSink for details.
+//
+// Custom sink implementations in other packages can hook into this using
+// RegisterSinkURLFactory. The additional sink sub-packages in this repository
+// all register factories on custom schemes and can be used by default. See
+// sub-package docs for details.
 func NewMetricSinkFromURL(urlStr string) (MetricSink, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {

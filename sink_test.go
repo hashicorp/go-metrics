@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"net/url"
 	"reflect"
 	"strings"
 	"sync"
@@ -275,6 +276,55 @@ func TestNewMetricSinkFromURL(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
+			ms, err := NewMetricSinkFromURL(tc.input)
+			if tc.expectErr != "" {
+				if !strings.Contains(err.Error(), tc.expectErr) {
+					t.Fatalf("expected err: %q to contain: %q", err, tc.expectErr)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected err: %s", err)
+				}
+				got := reflect.TypeOf(ms)
+				if got != tc.expect {
+					t.Fatalf("expected return type to be %v, got: %v", tc.expect, got)
+				}
+			}
+		})
+	}
+}
+
+func TestRegisterSinkURLFactory(t *testing.T) {
+	for _, tc := range []struct {
+		desc      string
+		scheme    string
+		factory   SinkURLFactoryFunc
+		input     string
+		expect    reflect.Type
+		expectErr string
+	}{
+		{
+			desc:   "custom scheme yields a Custom Sink",
+			scheme: "test",
+			factory: func(*url.URL) (MetricSink, error) {
+				return &MockSink{}, nil
+			},
+			input:  "test://someserver:123",
+			expect: reflect.TypeOf(&MockSink{}),
+		},
+		{
+			desc:   "statsd scheme (still) yields a StatsdSink",
+			scheme: "test",
+			factory: func(*url.URL) (MetricSink, error) {
+				return &MockSink{}, nil
+			},
+			input:  "statsd://someserver:123",
+			expect: reflect.TypeOf(&StatsdSink{}),
+		},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			RegisterSinkURLFactory(tc.scheme, tc.factory)
+
 			ms, err := NewMetricSinkFromURL(tc.input)
 			if tc.expectErr != "" {
 				if !strings.Contains(err.Error(), tc.expectErr) {
