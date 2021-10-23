@@ -11,11 +11,11 @@ import (
 
 // Config is used to configure metrics settings
 type Config struct {
-	ServiceName          string        // Prefixed with keys to separate services
+	ServiceName          string        // Service name to be used in keys and labels
 	HostName             string        // Hostname to use. If not provided and EnableHostname, it will be os.Hostname
 	EnableHostname       bool          // Enable prefixing gauge values with hostname
-	EnableHostnameLabel  bool          // Enable adding hostname to labels
-	EnableServiceLabel   bool          // Enable adding service to labels
+	EnableHostnameLabel  bool          // Add hostname to labels. Otherwise the key is prefixed with hostname
+	EnableServiceLabel   bool          // Add service name to labels. Otherwise the key is prefixed with service name
 	EnableRuntimeMetrics bool          // Enables profiling of runtime metrics (GC, Goroutines, Memory)
 	EnableTypePrefix     bool          // Prefixes key with a type ("counter", "gauge", "timer")
 	TimerGranularity     time.Duration // Granularity of timers.
