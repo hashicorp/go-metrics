@@ -150,7 +150,7 @@ func UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels []string) 
 // This is intended for use immediately prior to application exit.
 func Shutdown() {
 	m := globalMetrics.Load().(*Metrics)
-  // Replace global metrics with the BlackholeSink like how init setup the library.
+	// Replace global metrics with the BlackholeSink like how init setup the library.
 	globalMetrics.Store(&Metrics{sink: &BlackholeSink{}})
 	m.Shutdown()
 }
