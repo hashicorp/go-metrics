@@ -97,6 +97,13 @@ func (s *CirconusSink) AddSampleWithLabels(key []string, val float32, labels []m
 	s.metrics.RecordValue(flatKey, float64(val))
 }
 
+func (s *CirconusSink) Shutdown() {
+	// The used version of the circonus metrics library does not support a shutdown operation.
+	// Instead we call Flush which blocks until metrics are submitted to storage, and then exit
+	// as the README examples do.
+	s.metrics.Flush()
+}
+
 // Flattens key to Circonus metric name
 func (s *CirconusSink) flattenKey(parts []string) string {
 	joined := strings.Join(parts, "`")

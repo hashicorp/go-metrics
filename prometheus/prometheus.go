@@ -1,3 +1,4 @@
+//go:build go1.9
 // +build go1.9
 
 package prometheus
@@ -20,7 +21,7 @@ var (
 	// PrometheusSink.
 	DefaultPrometheusOpts = PrometheusOpts{
 		Expiration: 60 * time.Second,
-		Name: "default_prometheus_sink",
+		Name:       "default_prometheus_sink",
 	}
 )
 
@@ -391,6 +392,10 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 		}
 		p.counters.Store(hash, pc)
 	}
+}
+
+// Shutdown is not implemented. PrometheusSink is in memory storage.
+func (p *PrometheusSink) Shutdown() {
 }
 
 // PrometheusPushSink wraps a normal prometheus sink and provides an address and facilities to export it to an address

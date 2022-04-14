@@ -22,6 +22,9 @@ type MetricSink interface {
 	// Samples are for timing information, where quantiles are used
 	AddSample(key []string, val float32)
 	AddSampleWithLabels(key []string, val float32, labels []Label)
+
+	// Shutdown the sink, flushing data, and performing cleanup as necessary.
+	Shutdown()
 }
 
 // BlackholeSink is used to just blackhole messages
@@ -34,6 +37,7 @@ func (*BlackholeSink) IncrCounter(key []string, val float32)                    
 func (*BlackholeSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {}
 func (*BlackholeSink) AddSample(key []string, val float32)                             {}
 func (*BlackholeSink) AddSampleWithLabels(key []string, val float32, labels []Label)   {}
+func (*BlackholeSink) Shutdown()                                                       {}
 
 // FanoutSink is used to sink to fanout values to multiple sinks
 type FanoutSink []MetricSink
@@ -71,6 +75,12 @@ func (fh FanoutSink) AddSample(key []string, val float32) {
 func (fh FanoutSink) AddSampleWithLabels(key []string, val float32, labels []Label) {
 	for _, s := range fh {
 		s.AddSampleWithLabels(key, val, labels)
+	}
+}
+
+func (fh FanoutSink) Shutdown() {
+	for _, s := range fh {
+		s.Shutdown()
 	}
 }
 

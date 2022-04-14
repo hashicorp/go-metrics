@@ -54,6 +54,7 @@ func TestNewPrometheusSink(t *testing.T) {
 		t.Fatalf("Unregister(sink) = false, want true")
 	}
 }
+
 // TestMultiplePrometheusSink tests registering multiple sinks on the same registerer with different descriptors
 func TestMultiplePrometheusSink(t *testing.T) {
 	gaugeDef := GaugeDefinition{
@@ -66,14 +67,14 @@ func TestMultiplePrometheusSink(t *testing.T) {
 		GaugeDefinitions:   append([]GaugeDefinition{}, gaugeDef),
 		SummaryDefinitions: append([]SummaryDefinition{}),
 		CounterDefinitions: append([]CounterDefinition{}),
-		Name: "sink1",
+		Name:               "sink1",
 	}
 
 	sink1, err := NewPrometheusSinkFrom(cfg)
 	if err != nil {
 		t.Fatalf("err = %v, want nil", err)
 	}
-	
+
 	reg := prometheus.DefaultRegisterer
 	if reg == nil {
 		t.Fatalf("Expected default register to be non nil, got nil.")
@@ -358,4 +359,11 @@ func TestDefinitionsWithLabels(t *testing.T) {
 		}
 		return true
 	})
+}
+
+func TestMetricSinkInterface(t *testing.T) {
+	var ps *PrometheusSink
+	_ = metrics.MetricSink(ps)
+	var pps *PrometheusPushSink
+	_ = metrics.MetricSink(pps)
 }

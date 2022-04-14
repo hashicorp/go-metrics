@@ -120,6 +120,10 @@ func (s *DogStatsdSink) AddSampleWithLabels(key []string, val float32, labels []
 	s.client.TimeInMilliseconds(flatKey, float64(val), tags, rate)
 }
 
+func (s *DogStatsdSink) Shutdown() {
+	s.client.Close()
+}
+
 func (s *DogStatsdSink) getFlatkeyAndCombinedLabels(key []string, labels []metrics.Label) (string, []string) {
 	key, parsedLabels := s.parseKey(key)
 	flatKey := s.flattenKey(key)

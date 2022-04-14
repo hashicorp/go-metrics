@@ -63,6 +63,7 @@ func (m *MockSink) AddSampleWithLabels(key []string, val float32, labels []Label
 	m.vals = append(m.vals, val)
 	m.labels = append(m.labels, labels)
 }
+func (m *MockSink) Shutdown() {}
 
 func TestFanoutSink_Gauge(t *testing.T) {
 	m1 := &MockSink{}
