@@ -145,12 +145,14 @@ func UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels []string) 
 	globalMetrics.Load().(*Metrics).UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels)
 }
 
-// Shutdown flushes and disables metric collection, blocking while waiting for this to complete.
-// WARNING: Not all MetricSink backends support this functionality, and calling this will cause resource leaks.
+// Shutdown disables metric collection, then blocks while attempting to flush metrics to storage.
+// WARNING: Not all MetricSink backends support this functionality, and calling this will cause them to leak resources.
 // This is intended for use immediately prior to application exit.
 func Shutdown() {
 	m := globalMetrics.Load().(*Metrics)
-	// Replace global metrics with the BlackholeSink like how init setup the library.
+	// Swap whatever MetricSink is currently active with a BlackholeSink. Callers must not have a
+	// reason to expect that calls to the library will successfully collect metrics after Shutdown
+	// has been called.
 	globalMetrics.Store(&Metrics{sink: &BlackholeSink{}})
 	m.Shutdown()
 }

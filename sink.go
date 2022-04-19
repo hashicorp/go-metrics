@@ -23,7 +23,9 @@ type MetricSink interface {
 	AddSample(key []string, val float32)
 	AddSampleWithLabels(key []string, val float32, labels []Label)
 
-	// Shutdown the sink, flushing data, and performing cleanup as necessary.
+	// Shutdown the metric sink, flush metrics to storage, and cleanup resources.
+	// Called immediately prior to application exit. Implementations must block
+	// until metrics are flushed to storage.
 	Shutdown()
 }
 

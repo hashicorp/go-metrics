@@ -451,6 +451,10 @@ func (s *PrometheusPushSink) flushMetrics() {
 	}()
 }
 
+// Shutdown tears down the PrometheusPushSink, and blocks while flushing metrics to the backend.
 func (s *PrometheusPushSink) Shutdown() {
 	close(s.stopChan)
+	// Closing the channel only stops the running goroutine that pushes metrics.
+	// To minimize the chance of data loss pusher.Push is called one last time.
+	s.pusher.Push()
 }

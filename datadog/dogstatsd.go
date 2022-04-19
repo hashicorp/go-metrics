@@ -120,6 +120,7 @@ func (s *DogStatsdSink) AddSampleWithLabels(key []string, val float32, labels []
 	s.client.TimeInMilliseconds(flatKey, float64(val), tags, rate)
 }
 
+// Shutdown disables further metric collection, blocks to flush data, and tears down the sink.
 func (s *DogStatsdSink) Shutdown() {
 	s.client.Close()
 }

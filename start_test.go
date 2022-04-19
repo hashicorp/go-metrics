@@ -192,6 +192,26 @@ func Test_GlobalMetrics_UpdateFilter(t *testing.T) {
 	}
 }
 
+func Test_GlobalMetrics_Shutdown(t *testing.T) {
+	s := &MockSink{}
+	m := &Metrics{sink: s}
+	globalMetrics.Store(m)
+
+	Shutdown()
+
+	loaded := globalMetrics.Load()
+	metrics, ok := loaded.(*Metrics)
+	if !ok {
+		t.Fatalf("Expected globalMetrics to contain a Metrics pointer, but found: %v", loaded)
+	}
+	if metrics == m {
+		t.Errorf("Calling shutdown should have replaced the Metrics struct stored in globalMetrics")
+	}
+	if !s.shutdown {
+		t.Errorf("Expected Shutdown to have been called on MockSink")
+	}
+}
+
 // Benchmark_GlobalMetrics_Direct/direct-8         	 5000000	       278 ns/op
 // Benchmark_GlobalMetrics_Direct/atomic.Value-8   	 5000000	       235 ns/op
 func Benchmark_GlobalMetrics_Direct(b *testing.B) {
