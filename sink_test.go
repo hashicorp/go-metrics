@@ -10,9 +10,10 @@ import (
 type MockSink struct {
 	lock sync.Mutex
 
-	keys   [][]string
-	vals   []float32
-	labels [][]Label
+	shutdown bool
+	keys     [][]string
+	vals     []float32
+	labels   [][]Label
 }
 
 func (m *MockSink) getKeys() [][]string {
@@ -62,6 +63,12 @@ func (m *MockSink) AddSampleWithLabels(key []string, val float32, labels []Label
 	m.keys = append(m.keys, key)
 	m.vals = append(m.vals, val)
 	m.labels = append(m.labels, labels)
+}
+func (m *MockSink) Shutdown() {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	m.shutdown = true
 }
 
 func TestFanoutSink_Gauge(t *testing.T) {

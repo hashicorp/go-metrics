@@ -151,3 +151,8 @@ func assertServerMatchesExpected(t *testing.T, server *net.UDPConn, buf []byte, 
 		t.Fatalf("Line %s does not match expected: %s", string(msg), expected)
 	}
 }
+
+func TestMetricSinkInterface(t *testing.T) {
+	var dd *DogStatsdSink
+	_ = metrics.MetricSink(dd)
+}

@@ -1,3 +1,4 @@
+//go:build go1.9
 // +build go1.9
 
 package prometheus
@@ -20,7 +21,7 @@ var (
 	// PrometheusSink.
 	DefaultPrometheusOpts = PrometheusOpts{
 		Expiration: 60 * time.Second,
-		Name: "default_prometheus_sink",
+		Name:       "default_prometheus_sink",
 	}
 )
 
@@ -393,6 +394,10 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 	}
 }
 
+// Shutdown is not implemented. PrometheusSink is in memory storage.
+func (p *PrometheusSink) Shutdown() {
+}
+
 // PrometheusPushSink wraps a normal prometheus sink and provides an address and facilities to export it to an address
 // on an interval.
 type PrometheusPushSink struct {
@@ -446,6 +451,10 @@ func (s *PrometheusPushSink) flushMetrics() {
 	}()
 }
 
+// Shutdown tears down the PrometheusPushSink, and blocks while flushing metrics to the backend.
 func (s *PrometheusPushSink) Shutdown() {
 	close(s.stopChan)
+	// Closing the channel only stops the running goroutine that pushes metrics.
+	// To minimize the chance of data loss pusher.Push is called one last time.
+	s.pusher.Push()
 }

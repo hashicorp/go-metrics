@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/armon/go-metrics"
 )
 
 func TestNewCirconusSink(t *testing.T) {
@@ -151,4 +153,9 @@ func TestAddSample(t *testing.T) {
 		t.Errorf("Expected '%s', got '%s'", expect, actual)
 
 	}
+}
+
+func TestMetricSinkInterface(t *testing.T) {
+	var cs *CirconusSink
+	_ = metrics.MetricSink(cs)
 }
