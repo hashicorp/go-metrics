@@ -394,10 +394,6 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 	}
 }
 
-// Shutdown is not implemented. PrometheusSink is in memory storage.
-func (p *PrometheusSink) Shutdown() {
-}
-
 // PrometheusPushSink wraps a normal prometheus sink and provides an address and facilities to export it to an address
 // on an interval.
 type PrometheusPushSink struct {
