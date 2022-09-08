@@ -367,3 +367,86 @@ func TestMetricSinkInterface(t *testing.T) {
 	var pps *PrometheusPushSink
 	_ = metrics.MetricSink(pps)
 }
+
+func Test_flattenKey(t *testing.T) {
+	testCases := []struct {
+		name               string
+		inputParts         []string
+		inputLabels        []metrics.Label
+		expectedOutputKey  string
+		expectedOutputHash string
+	}{
+		{
+			name:       "no replacement needed",
+			inputParts: []string{"my", "example", "metric"},
+			inputLabels: []metrics.Label{
+				{Name: "foo", Value: "bar"},
+				{Name: "baz", Value: "buz"},
+			},
+			expectedOutputKey:  "my_example_metric",
+			expectedOutputHash: "my_example_metric;foo=bar;baz=buz",
+		},
+		{
+			name:       "key with whitespace",
+			inputParts: []string{" my ", " example ", " metric "},
+			inputLabels: []metrics.Label{
+				{Name: "foo", Value: "bar"},
+				{Name: "baz", Value: "buz"},
+			},
+			expectedOutputKey:  "_my___example___metric_",
+			expectedOutputHash: "_my___example___metric_;foo=bar;baz=buz",
+		},
+		{
+			name:       "key with dot",
+			inputParts: []string{".my.", ".example.", ".metric."},
+			inputLabels: []metrics.Label{
+				{Name: "foo", Value: "bar"},
+				{Name: "baz", Value: "buz"},
+			},
+			expectedOutputKey:  "_my___example___metric_",
+			expectedOutputHash: "_my___example___metric_;foo=bar;baz=buz",
+		},
+		{
+			name:       "key with dash",
+			inputParts: []string{"-my-", "-example-", "-metric-"},
+			inputLabels: []metrics.Label{
+				{Name: "foo", Value: "bar"},
+				{Name: "baz", Value: "buz"},
+			},
+			expectedOutputKey:  "_my___example___metric_",
+			expectedOutputHash: "_my___example___metric_;foo=bar;baz=buz",
+		},
+		{
+			name:       "key with forward slash",
+			inputParts: []string{"/my/", "/example/", "/metric/"},
+			inputLabels: []metrics.Label{
+				{Name: "foo", Value: "bar"},
+				{Name: "baz", Value: "buz"},
+			},
+			expectedOutputKey:  "_my___example___metric_",
+			expectedOutputHash: "_my___example___metric_;foo=bar;baz=buz",
+		},
+		{
+			name:       "key with all restricted",
+			inputParts: []string{"/my-", ".example ", "metric"},
+			inputLabels: []metrics.Label{
+				{Name: "foo", Value: "bar"},
+				{Name: "baz", Value: "buz"},
+			},
+			expectedOutputKey:  "_my___example__metric",
+			expectedOutputHash: "_my___example__metric;foo=bar;baz=buz",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(b *testing.T) {
+			actualKey, actualHash := flattenKey(tc.inputParts, tc.inputLabels)
+			if actualKey != tc.expectedOutputKey {
+				t.Fatalf("expected key %s, got %s", tc.expectedOutputKey, actualKey)
+			}
+			if actualHash != tc.expectedOutputHash {
+				t.Fatalf("expected hash %s, got %s", tc.expectedOutputHash, actualHash)
+			}
+		})
+	}
+}
