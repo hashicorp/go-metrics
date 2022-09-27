@@ -200,10 +200,16 @@ func (m *Metrics) labelIsAllowed(label *Label) bool {
 // filterLabels return only allowed labels
 // the caller should lock m.filterLock while calling this method
 func (m *Metrics) filterLabels(labels []Label) []Label {
-	if labels == nil {
-		return nil
+	if len(labels) == 0 { // length of nil slice is also zero
+		return labels
 	}
-	toReturn := []Label{}
+
+	// return early if filtering isn't configured, this saves allocating a new Label slice.
+	if m.blockedLabels == nil && m.allowedLabels == nil {
+		return labels
+	}
+
+	var toReturn []Label
 	for _, label := range labels {
 		if m.labelIsAllowed(&label) {
 			toReturn = append(toReturn, label)
