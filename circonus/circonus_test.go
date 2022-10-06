@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/armon/go-metrics"
 )
 
 func TestNewCirconusSink(t *testing.T) {
@@ -14,7 +17,7 @@ func TestNewCirconusSink(t *testing.T) {
 	// test with invalid config (nil)
 	expectedError := errors.New("invalid check manager configuration (no API token AND no submission url)")
 	_, err := NewCirconusSink(nil)
-	if err == nil || err.Error() != expectedError.Error() {
+	if err == nil || !strings.Contains(err.Error(), expectedError.Error()) {
 		t.Errorf("Expected an '%#v' error, got '%#v'", expectedError, err)
 	}
 
@@ -87,7 +90,7 @@ func TestSetGauge(t *testing.T) {
 		cs.Flush()
 	}()
 
-	expect := "{\"foo`bar\":{\"_type\":\"n\",\"_value\":\"1\"}}"
+	expect := "{\"foo`bar\":{\"_type\":\"l\",\"_value\":1}}"
 	actual := <-q
 
 	if actual != expect {
@@ -115,7 +118,7 @@ func TestIncrCounter(t *testing.T) {
 		cs.Flush()
 	}()
 
-	expect := "{\"foo`bar\":{\"_type\":\"n\",\"_value\":1}}"
+	expect := "{\"foo`bar\":{\"_type\":\"L\",\"_value\":1}}"
 	actual := <-q
 
 	if actual != expect {
@@ -150,4 +153,9 @@ func TestAddSample(t *testing.T) {
 		t.Errorf("Expected '%s', got '%s'", expect, actual)
 
 	}
+}
+
+func TestMetricSinkInterface(t *testing.T) {
+	var cs *CirconusSink
+	_ = metrics.MetricSink(cs)
 }
