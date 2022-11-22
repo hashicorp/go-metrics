@@ -4,7 +4,7 @@ go-metrics
 This library provides a `metrics` package which can be used to instrument code,
 expose application metrics, and profile runtime performance in a flexible manner.
 
-Current API: [![GoDoc](https://godoc.org/github.com/armon/go-metrics?status.svg)](https://godoc.org/github.com/armon/go-metrics)
+Current API: [![GoDoc](https://godoc.org/github.com/hashicorp/go-metrics?status.svg)](https://godoc.org/github.com/hashicorp/go-metrics)
 
 Sinks
 -----
@@ -12,8 +12,8 @@ Sinks
 The `metrics` package makes use of a `MetricSink` interface to support delivery
 to any type of backend. Currently the following sinks are provided:
 
-* StatsiteSink : Sinks to a [statsite](https://github.com/armon/statsite/) instance (TCP)
-* StatsdSink: Sinks to a [StatsD](https://github.com/etsy/statsd/) / statsite instance (UDP)
+* StatsiteSink : Sinks to a [statsite](https://github.com/statsite/statsite/) instance (TCP)
+* StatsdSink: Sinks to a [StatsD](hhttps://github.com/statsd/statsd/) / statsite instance (UDP)
 * PrometheusSink: Sinks to a [Prometheus](http://prometheus.io/) metrics endpoint (exposed via HTTP for scrapes)
 * InmemSink : Provides in-memory aggregation, can be used to export stats
 * FanoutSink : Sinks to multiple sinks. Enables writing to multiple statsite instances for example.
