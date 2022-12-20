@@ -1,4 +1,4 @@
-module github.com/armon/go-metrics
+module github.com/hashicorp/go-metrics
 
 go 1.12
 
