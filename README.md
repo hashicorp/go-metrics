@@ -30,16 +30,16 @@ Most metrics do have an equivalent ending with `WithLabels`, such methods
 allow to push metrics with labels and use some features of underlying Sinks
 (ex: translated into Prometheus labels).
 
-Since some of these labels may increase greatly cardinality of metrics, the
-library allow to filter labels using a blacklist/whitelist filtering system
+Since some of these labels may increase the cardinality of metrics, the
+library allows filtering labels using a allow/block list filtering system
 which is global to all metrics.
 
 * If `Config.AllowedLabels` is not nil, then only labels specified in this value will be sent to underlying Sink, otherwise, all labels are sent by default.
 * If `Config.BlockedLabels` is not nil, any label specified in this value will not be sent to underlying Sinks.
 
 By default, both `Config.AllowedLabels` and `Config.BlockedLabels` are nil, meaning that
-no tags are filetered at all, but it allow to a user to globally block some tags with high
-cardinality at application level.
+no tags are filtered at all, but it allows a user to globally block some tags with high
+cardinality at the application level.
 
 Examples
 --------
