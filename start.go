@@ -40,6 +40,16 @@ type Metrics struct {
 	filterLock    sync.RWMutex // Lock filters and allowedLabels/blockedLabels access
 }
 
+// Interface defines a simple metrics interface that can be implemented
+// by something like a mock for other packages
+type Interface interface {
+	SetGauge(key []string, val float32)
+	EmitKey(key []string, val float32)
+	IncrCounter(key []string, val float32)
+	AddSample(key []string, val float32)
+	MeasureSince(key []string, start time.Time)
+}
+
 // Shared global metrics instance
 var globalMetrics atomic.Value // *Metrics
 
@@ -96,7 +106,7 @@ func NewGlobal(conf *Config, sink MetricSink) (*Metrics, error) {
 	return metrics, err
 }
 
-// Proxy all the methods to the globalMetrics instance
+// SetGauge delegates to the globalMetrics instance
 func SetGauge(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).SetGauge(key, val)
 }
@@ -105,10 +115,12 @@ func SetGaugeWithLabels(key []string, val float32, labels []Label) {
 	globalMetrics.Load().(*Metrics).SetGaugeWithLabels(key, val, labels)
 }
 
+// EmitKey delegates to the globalMetrics instance
 func EmitKey(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).EmitKey(key, val)
 }
 
+// IncrCounter delegates to the globalMetrics instance
 func IncrCounter(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).IncrCounter(key, val)
 }
@@ -117,6 +129,7 @@ func IncrCounterWithLabels(key []string, val float32, labels []Label) {
 	globalMetrics.Load().(*Metrics).IncrCounterWithLabels(key, val, labels)
 }
 
+// AddSample delegates to the globalMetrics instance
 func AddSample(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).AddSample(key, val)
 }
@@ -125,6 +138,7 @@ func AddSampleWithLabels(key []string, val float32, labels []Label) {
 	globalMetrics.Load().(*Metrics).AddSampleWithLabels(key, val, labels)
 }
 
+// MeasureSince delegates to the globalMetrics instance
 func MeasureSince(key []string, start time.Time) {
 	globalMetrics.Load().(*Metrics).MeasureSince(key, start)
 }
