@@ -364,6 +364,10 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 	key, hash := flattenKey(parts, labels)
 	pc, ok := p.counters.Load(hash)
 
+	if val < 0 {
+		panic(fmt.Errorf("attempting to add negative value %v to counter metric %v", val, key))
+	}
+
 	// Does the counter exist?
 	if ok {
 		localCounter := *pc.(*counter)
