@@ -168,6 +168,9 @@ func TestDefinitions(t *testing.T) {
 	sink.AddSample(summaryDef.Name, 42)
 	sink.IncrCounter(counterDef.Name, 1)
 
+	// Prometheus panic should not be propagated
+	sink.IncrCounter(counterDef.Name, -1)
+
 	// Test that the expiry behavior works as expected. First pick a time which
 	// is after all the actual updates above.
 	timeAfterUpdates := time.Now()
@@ -358,6 +361,11 @@ func TestDefinitionsWithLabels(t *testing.T) {
 			t.Fatalf("expected gauge to include correct help=%s, but was %s", counterDef.Help, metric.Desc().String())
 		}
 		return true
+	})
+
+	// Prometheus panic should not be propagated
+	sink.IncrCounterWithLabels(counterDef.Name, -1, []metrics.Label{
+		{Name: "version", Value: "some info"},
 	})
 }
 
