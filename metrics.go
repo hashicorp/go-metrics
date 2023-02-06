@@ -1,7 +1,10 @@
 package metrics
 
 import (
+	"fmt"
+	"math"
 	"runtime"
+	"runtime/metrics"
 	"strings"
 	"time"
 
@@ -273,6 +276,33 @@ func (m *Metrics) EmitRuntimeStats() {
 		m.AddSample([]string{"runtime", "gc_pause_ns"}, float32(pause))
 	}
 	m.lastNumGC = num
+
+	m.readSchedulerLatencyAll()
+}
+
+func (m *Metrics) readSchedulerLatencyAll() {
+	sample := make([]metrics.Sample, 1)
+	const metricName = "/sched/latencies:seconds"
+	sample[0].Name = metricName
+
+	metrics.Read(sample)
+	var signal *metrics.Float64Histogram
+	if len(sample) >= 1 && sample[0].Value.Kind() == metrics.KindFloat64Histogram {
+		signal = sample[0].Value.Float64Histogram()
+	}
+	if signal != nil {
+		for i, c := range signal.Counts {
+			bucket := signal.Buckets[i]
+			if math.IsInf(bucket, -1) {
+				bucket = 0
+			}
+			if math.IsInf(bucket, 1) {
+				bucket = math.MaxFloat32
+			}
+			s := fmt.Sprintf("%f", bucket)
+			m.AddSampleWithLabels([]string{"runtime", strings.ReplaceAll(metricName, "/", "_")}, float32(c)*float32(bucket), []Label{{"bucket", s}})
+		}
+	}
 }
 
 // Creates a new slice with the provided string value as the first element
