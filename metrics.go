@@ -282,8 +282,9 @@ func (m *Metrics) EmitRuntimeStats() {
 
 func (m *Metrics) readSchedulerLatencyAll() {
 	sample := make([]metrics.Sample, 1)
-	const metricName = "/sched/latencies:seconds"
-	sample[0].Name = metricName
+	const metricName = "sched_latencies_seconds"
+	const goName = "/sched/latencies:seconds"
+	sample[0].Name = goName
 
 	metrics.Read(sample)
 	var signal *metrics.Float64Histogram
@@ -300,7 +301,7 @@ func (m *Metrics) readSchedulerLatencyAll() {
 				bucket = math.MaxFloat32
 			}
 			s := fmt.Sprintf("%f", bucket)
-			m.AddSampleWithLabels([]string{"runtime", strings.ReplaceAll(metricName, "/", "_")}, float32(c)*float32(bucket), []Label{{"bucket", s}})
+			m.AddSampleWithLabels([]string{"runtime", metricName}, float32(c)*float32(bucket), []Label{{"bucket", s}})
 		}
 	}
 }

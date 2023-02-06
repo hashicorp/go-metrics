@@ -303,6 +303,10 @@ func TestMetrics_EmitRuntimeStats(t *testing.T) {
 	if m.vals[8] <= 1000 {
 		t.Fatalf("bad val: %v", m.vals)
 	}
+
+	if m.getKeys()[9][0] != "runtime" || m.getKeys()[9][1] != "sched_latencies_seconds" {
+		t.Fatalf("bad key %v", m.getKeys())
+	}
 }
 
 func TestInsert(t *testing.T) {
