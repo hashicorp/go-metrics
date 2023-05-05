@@ -129,6 +129,7 @@ CONNECT:
 		log.Printf("[ERR] Error connecting to statsd! Err: %s", err)
 		goto WAIT
 	}
+	defer sock.Close()
 
 	for {
 		select {
