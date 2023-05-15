@@ -91,6 +91,36 @@ func Test_GlobalMetrics_Labels(t *testing.T) {
 	}
 }
 
+func Test_GlobalPrecisionMetrics_Labels(t *testing.T) {
+	labels := []Label{{"a", "b"}}
+	var tests = []struct {
+		desc   string
+		key    []string
+		val    float64
+		fn     func([]string, float64, []Label)
+		labels []Label
+	}{
+		{"SetPrecisionGaugeWithLabels", []string{"test"}, 42, SetPrecisionGaugeWithLabels, labels},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			s := &MockSink{}
+			globalMetrics.Store(&Metrics{Config: Config{FilterDefault: true}, sink: s})
+			tt.fn(tt.key, tt.val, tt.labels)
+			if got, want := s.keys[0], tt.key; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got key %s want %s", got, want)
+			}
+			if got, want := s.precisionVals[0], tt.val; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got val %v want %v", got, want)
+			}
+			if got, want := s.labels[0], tt.labels; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got val %s want %s", got, want)
+			}
+		})
+	}
+}
+
 func Test_GlobalMetrics_DefaultLabels(t *testing.T) {
 	config := Config{
 		HostName:            "host1",
@@ -124,6 +154,46 @@ func Test_GlobalMetrics_DefaultLabels(t *testing.T) {
 				t.Fatalf("got key %s want %s", got, want)
 			}
 			if got, want := s.vals[0], tt.val; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got val %v want %v", got, want)
+			}
+			if got, want := s.labels[0], tt.labels; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got val %s want %s", got, want)
+			}
+		})
+	}
+}
+
+func Test_GlobalPrecisionMetrics_DefaultLabels(t *testing.T) {
+	config := Config{
+		HostName:            "host1",
+		ServiceName:         "redis",
+		EnableHostnameLabel: true,
+		EnableServiceLabel:  true,
+		FilterDefault:       true,
+	}
+	labels := []Label{
+		{"host", config.HostName},
+		{"service", config.ServiceName},
+	}
+	var tests = []struct {
+		desc   string
+		key    []string
+		val    float64
+		fn     func([]string, float64, []Label)
+		labels []Label
+	}{
+		{"SetGaugeWithLabels", []string{"test"}, 42, SetPrecisionGaugeWithLabels, labels},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			s := &MockSink{}
+			globalMetrics.Store(&Metrics{Config: config, sink: s})
+			tt.fn(tt.key, tt.val, nil)
+			if got, want := s.keys[0], tt.key; !reflect.DeepEqual(got, want) {
+				t.Fatalf("got key %s want %s", got, want)
+			}
+			if got, want := s.precisionVals[0], tt.val; !reflect.DeepEqual(got, want) {
 				t.Fatalf("got val %v want %v", got, want)
 			}
 			if got, want := s.labels[0], tt.labels; !reflect.DeepEqual(got, want) {

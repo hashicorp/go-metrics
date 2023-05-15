@@ -270,10 +270,18 @@ func prometheusLabels(labels []metrics.Label) prometheus.Labels {
 }
 
 func (p *PrometheusSink) SetGauge(parts []string, val float32) {
-	p.SetGaugeWithLabels(parts, val, nil)
+	p.SetPrecisionGauge(parts, float64(val))
 }
 
 func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels []metrics.Label) {
+	p.SetPrecisionGaugeWithLabels(parts, float64(val), labels)
+}
+
+func (p *PrometheusSink) SetPrecisionGauge(parts []string, val float64) {
+	p.SetPrecisionGaugeWithLabels(parts, val, nil)
+}
+
+func (p *PrometheusSink) SetPrecisionGaugeWithLabels(parts []string, val float64, labels []metrics.Label) {
 	key, hash := flattenKey(parts, labels)
 	pg, ok := p.gauges.Load(hash)
 
@@ -285,7 +293,7 @@ func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels 
 	// value, but since we're always setting it to time.Now(), it doesn't really matter.
 	if ok {
 		localGauge := *pg.(*gauge)
-		localGauge.Set(float64(val))
+		localGauge.Set(val)
 		localGauge.updatedAt = time.Now()
 		p.gauges.Store(hash, &localGauge)
 
@@ -301,7 +309,7 @@ func (p *PrometheusSink) SetGaugeWithLabels(parts []string, val float32, labels 
 			Help:        help,
 			ConstLabels: prometheusLabels(labels),
 		})
-		g.Set(float64(val))
+		g.Set(val)
 		pg = &gauge{
 			Gauge:     g,
 			updatedAt: time.Now(),

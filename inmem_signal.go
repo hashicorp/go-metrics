@@ -83,6 +83,10 @@ func (i *InmemSignal) dumpStats() {
 			name := i.flattenLabels(val.Name, val.Labels)
 			fmt.Fprintf(buf, "[%v][G] '%s': %0.3f\n", intv.Interval, name, val.Value)
 		}
+		for _, val := range intv.PrecisionGauges {
+			name := i.flattenLabels(val.Name, val.Labels)
+			fmt.Fprintf(buf, "[%v][G] '%s': %0.3f\n", intv.Interval, name, val.Value)
+		}
 		for name, vals := range intv.Points {
 			for _, val := range vals {
 				fmt.Fprintf(buf, "[%v][P] '%s': %0.3f\n", intv.Interval, name, val)

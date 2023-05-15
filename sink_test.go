@@ -10,10 +10,11 @@ import (
 type MockSink struct {
 	lock sync.Mutex
 
-	shutdown bool
-	keys     [][]string
-	vals     []float32
-	labels   [][]Label
+	shutdown      bool
+	keys          [][]string
+	vals          []float32
+	precisionVals []float64
+	labels        [][]Label
 }
 
 func (m *MockSink) getKeys() [][]string {
@@ -32,6 +33,17 @@ func (m *MockSink) SetGaugeWithLabels(key []string, val float32, labels []Label)
 
 	m.keys = append(m.keys, key)
 	m.vals = append(m.vals, val)
+	m.labels = append(m.labels, labels)
+}
+func (m *MockSink) SetPrecisionGauge(key []string, val float64) {
+	m.SetPrecisionGaugeWithLabels(key, val, nil)
+}
+func (m *MockSink) SetPrecisionGaugeWithLabels(key []string, val float64, labels []Label) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	m.keys = append(m.keys, key)
+	m.precisionVals = append(m.precisionVals, val)
 	m.labels = append(m.labels, labels)
 }
 func (m *MockSink) EmitKey(key []string, val float32) {

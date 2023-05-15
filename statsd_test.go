@@ -119,6 +119,8 @@ func TestStatsd_Conn(t *testing.T) {
 
 	s.SetGauge([]string{"gauge", "val"}, float32(1))
 	s.SetGaugeWithLabels([]string{"gauge_labels", "val"}, float32(2), []Label{{"a", "label"}})
+	s.SetPrecisionGauge([]string{"gauge", "val"}, float64(1))
+	s.SetPrecisionGaugeWithLabels([]string{"gauge_labels", "val"}, float64(2), []Label{{"a", "label"}})
 	s.EmitKey([]string{"key", "other"}, float32(3))
 	s.IncrCounter([]string{"counter", "me"}, float32(4))
 	s.IncrCounterWithLabels([]string{"counter_labels", "me"}, float32(5), []Label{{"a", "label"}})
