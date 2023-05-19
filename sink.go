@@ -24,6 +24,12 @@ type MetricSink interface {
 	AddSampleWithLabels(key []string, val float32, labels []Label)
 }
 
+// PrecisionGaugeMetricSink interfae is used to support 64 bit precisions for Sinks, if needed.
+type PrecisionGaugeMetricSink interface {
+	SetPrecisionGauge(key []string, val float64)
+	SetPrecisionGaugeWithLabels(key []string, val float64, labels []Label)
+}
+
 type ShutdownSink interface {
 	MetricSink
 
@@ -36,13 +42,15 @@ type ShutdownSink interface {
 // BlackholeSink is used to just blackhole messages
 type BlackholeSink struct{}
 
-func (*BlackholeSink) SetGauge(key []string, val float32)                              {}
-func (*BlackholeSink) SetGaugeWithLabels(key []string, val float32, labels []Label)    {}
-func (*BlackholeSink) EmitKey(key []string, val float32)                               {}
-func (*BlackholeSink) IncrCounter(key []string, val float32)                           {}
-func (*BlackholeSink) IncrCounterWithLabels(key []string, val float32, labels []Label) {}
-func (*BlackholeSink) AddSample(key []string, val float32)                             {}
-func (*BlackholeSink) AddSampleWithLabels(key []string, val float32, labels []Label)   {}
+func (*BlackholeSink) SetGauge(key []string, val float32)                                    {}
+func (*BlackholeSink) SetGaugeWithLabels(key []string, val float32, labels []Label)          {}
+func (*BlackholeSink) SetPrecisionGauge(key []string, val float64)                           {}
+func (*BlackholeSink) SetPrecisionGaugeWithLabels(key []string, val float64, labels []Label) {}
+func (*BlackholeSink) EmitKey(key []string, val float32)                                     {}
+func (*BlackholeSink) IncrCounter(key []string, val float32)                                 {}
+func (*BlackholeSink) IncrCounterWithLabels(key []string, val float32, labels []Label)       {}
+func (*BlackholeSink) AddSample(key []string, val float32)                                   {}
+func (*BlackholeSink) AddSampleWithLabels(key []string, val float32, labels []Label)         {}
 
 // FanoutSink is used to sink to fanout values to multiple sinks
 type FanoutSink []MetricSink
@@ -54,6 +62,19 @@ func (fh FanoutSink) SetGauge(key []string, val float32) {
 func (fh FanoutSink) SetGaugeWithLabels(key []string, val float32, labels []Label) {
 	for _, s := range fh {
 		s.SetGaugeWithLabels(key, val, labels)
+	}
+}
+
+func (fh FanoutSink) SetPrecisionGauge(key []string, val float64) {
+	fh.SetPrecisionGaugeWithLabels(key, val, nil)
+}
+
+func (fh FanoutSink) SetPrecisionGaugeWithLabels(key []string, val float64, labels []Label) {
+	for _, s := range fh {
+		// The Sink needs to implement PrecisionGaugeMetricSink, in case it doesn't, the metric value won't be set and ingored instead
+		if s64, ok := s.(PrecisionGaugeMetricSink); ok {
+			s64.SetPrecisionGaugeWithLabels(key, val, labels)
+		}
 	}
 }
 

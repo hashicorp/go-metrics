@@ -10,17 +10,27 @@ import (
 
 // MetricsSummary holds a roll-up of metrics info for a given interval
 type MetricsSummary struct {
-	Timestamp string
-	Gauges    []GaugeValue
-	Points    []PointValue
-	Counters  []SampledValue
-	Samples   []SampledValue
+	Timestamp       string
+	Gauges          []GaugeValue
+	PrecisionGauges []PrecisionGaugeValue
+	Points          []PointValue
+	Counters        []SampledValue
+	Samples         []SampledValue
 }
 
 type GaugeValue struct {
 	Name  string
 	Hash  string `json:"-"`
 	Value float32
+
+	Labels        []Label           `json:"-"`
+	DisplayLabels map[string]string `json:"Labels"`
+}
+
+type PrecisionGaugeValue struct {
+	Name  string
+	Hash  string `json:"-"`
+	Value float64
 
 	Labels        []Label           `json:"-"`
 	DisplayLabels map[string]string `json:"Labels"`
@@ -77,9 +87,10 @@ func newMetricSummaryFromInterval(interval *IntervalMetrics) MetricsSummary {
 	defer interval.RUnlock()
 
 	summary := MetricsSummary{
-		Timestamp: interval.Interval.Round(time.Second).UTC().String(),
-		Gauges:    make([]GaugeValue, 0, len(interval.Gauges)),
-		Points:    make([]PointValue, 0, len(interval.Points)),
+		Timestamp:       interval.Interval.Round(time.Second).UTC().String(),
+		Gauges:          make([]GaugeValue, 0, len(interval.Gauges)),
+		PrecisionGauges: make([]PrecisionGaugeValue, 0, len(interval.PrecisionGauges)),
+		Points:          make([]PointValue, 0, len(interval.Points)),
 	}
 
 	// Format and sort the output of each metric type, so it gets displayed in a
@@ -103,6 +114,20 @@ func newMetricSummaryFromInterval(interval *IntervalMetrics) MetricsSummary {
 	}
 	sort.Slice(summary.Gauges, func(i, j int) bool {
 		return summary.Gauges[i].Hash < summary.Gauges[j].Hash
+	})
+
+	for hash, value := range interval.PrecisionGauges {
+		value.Hash = hash
+		value.DisplayLabels = make(map[string]string)
+		for _, label := range value.Labels {
+			value.DisplayLabels[label.Name] = label.Value
+		}
+		value.Labels = nil
+
+		summary.PrecisionGauges = append(summary.PrecisionGauges, value)
+	}
+	sort.Slice(summary.PrecisionGauges, func(i, j int) bool {
+		return summary.PrecisionGauges[i].Hash < summary.PrecisionGauges[j].Hash
 	})
 
 	summary.Counters = formatSamples(interval.Counters)

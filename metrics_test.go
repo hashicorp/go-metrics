@@ -68,6 +68,61 @@ func TestMetrics_SetGauge(t *testing.T) {
 	}
 }
 
+func TestMetrics_SetPrecisionGauge(t *testing.T) {
+	m, met := mockMetric()
+	met.SetPrecisionGauge([]string{"key"}, float64(1))
+	if m.getKeys()[0][0] != "key" {
+		t.Fatalf("")
+	}
+	if m.precisionVals[0] != 1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
+	labels := []Label{{"a", "b"}}
+	met.SetPrecisionGaugeWithLabels([]string{"key"}, float64(1), labels)
+	if m.getKeys()[0][0] != "key" {
+		t.Fatalf("")
+	}
+	if m.precisionVals[0] != 1 {
+		t.Fatalf("")
+	}
+	if !reflect.DeepEqual(m.labels[0], labels) {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
+	met.HostName = "test"
+	met.EnableHostname = true
+	met.SetPrecisionGauge([]string{"key"}, float64(1))
+	if m.getKeys()[0][0] != "test" || m.getKeys()[0][1] != "key" {
+		t.Fatalf("")
+	}
+	if m.precisionVals[0] != 1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
+	met.EnableTypePrefix = true
+	met.SetPrecisionGauge([]string{"key"}, float64(1))
+	if m.getKeys()[0][0] != "gauge" || m.getKeys()[0][1] != "key" {
+		t.Fatalf("")
+	}
+	if m.precisionVals[0] != 1 {
+		t.Fatalf("")
+	}
+
+	m, met = mockMetric()
+	met.ServiceName = "service"
+	met.SetPrecisionGauge([]string{"key"}, float64(1))
+	if m.getKeys()[0][0] != "service" || m.getKeys()[0][1] != "key" {
+		t.Fatalf("")
+	}
+	if m.precisionVals[0] != 1 {
+		t.Fatalf("")
+	}
+}
+
 func TestMetrics_EmitKey(t *testing.T) {
 	m, met := mockMetric()
 	met.EmitKey([]string{"key"}, float32(1))

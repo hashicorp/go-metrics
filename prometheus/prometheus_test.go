@@ -297,6 +297,27 @@ func TestSetGauge(t *testing.T) {
 	}
 }
 
+func TestSetPrecisionGauge(t *testing.T) {
+	q := make(chan string)
+	server := fakeServer(q)
+	defer server.Close()
+	u, err := url.Parse(server.URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	host := u.Hostname() + ":" + u.Port()
+	sink, err := NewPrometheusPushSink(host, time.Second, "pushtest")
+	metricsConf := metrics.DefaultConfig("default")
+	metricsConf.HostName = MockGetHostname()
+	metricsConf.EnableHostnameLabel = true
+	metrics.NewGlobal(metricsConf, sink)
+	metrics.SetPrecisionGauge([]string{"one", "two"}, 42)
+	response := <-q
+	if response != "ok" {
+		t.Fatal(response)
+	}
+}
+
 func TestDefinitionsWithLabels(t *testing.T) {
 	gaugeDef := GaugeDefinition{
 		Name: []string{"my", "test", "gauge"},

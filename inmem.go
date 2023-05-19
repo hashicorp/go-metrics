@@ -44,6 +44,9 @@ type IntervalMetrics struct {
 	// Gauges maps the key to the last set value
 	Gauges map[string]GaugeValue
 
+	// PrecisionGauges maps the key to the last set value
+	PrecisionGauges map[string]PrecisionGaugeValue
+
 	// Points maps the string to the list of emitted values
 	// from EmitKey
 	Points map[string][]float32
@@ -64,12 +67,13 @@ type IntervalMetrics struct {
 // NewIntervalMetrics creates a new IntervalMetrics for a given interval
 func NewIntervalMetrics(intv time.Time) *IntervalMetrics {
 	return &IntervalMetrics{
-		Interval: intv,
-		Gauges:   make(map[string]GaugeValue),
-		Points:   make(map[string][]float32),
-		Counters: make(map[string]SampledValue),
-		Samples:  make(map[string]SampledValue),
-		done:     make(chan struct{}),
+		Interval:        intv,
+		Gauges:          make(map[string]GaugeValue),
+		PrecisionGauges: make(map[string]PrecisionGaugeValue),
+		Points:          make(map[string][]float32),
+		Counters:        make(map[string]SampledValue),
+		Samples:         make(map[string]SampledValue),
+		done:            make(chan struct{}),
 	}
 }
 
@@ -174,6 +178,19 @@ func (i *InmemSink) SetGaugeWithLabels(key []string, val float32, labels []Label
 	intv.Gauges[k] = GaugeValue{Name: name, Value: val, Labels: labels}
 }
 
+func (i *InmemSink) SetPrecisionGauge(key []string, val float64) {
+	i.SetPrecisionGaugeWithLabels(key, val, nil)
+}
+
+func (i *InmemSink) SetPrecisionGaugeWithLabels(key []string, val float64, labels []Label) {
+	k, name := i.flattenKeyLabels(key, labels)
+	intv := i.getInterval()
+
+	intv.Lock()
+	defer intv.Unlock()
+	intv.PrecisionGauges[k] = PrecisionGaugeValue{Name: name, Value: val, Labels: labels}
+}
+
 func (i *InmemSink) EmitKey(key []string, val float32) {
 	k := i.flattenKey(key)
 	intv := i.getInterval()
@@ -256,6 +273,10 @@ func (i *InmemSink) Data() []*IntervalMetrics {
 	copyCurrent.Gauges = make(map[string]GaugeValue, len(current.Gauges))
 	for k, v := range current.Gauges {
 		copyCurrent.Gauges[k] = v
+	}
+	copyCurrent.PrecisionGauges = make(map[string]PrecisionGaugeValue, len(current.PrecisionGauges))
+	for k, v := range current.PrecisionGauges {
+		copyCurrent.PrecisionGauges[k] = v
 	}
 	// saved values will be not change, just copy its link
 	copyCurrent.Points = make(map[string][]float32, len(current.Points))

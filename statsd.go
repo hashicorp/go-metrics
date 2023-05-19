@@ -55,6 +55,16 @@ func (s *StatsdSink) SetGaugeWithLabels(key []string, val float32, labels []Labe
 	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
 }
 
+func (s *StatsdSink) SetPrecisionGauge(key []string, val float64) {
+	flatKey := s.flattenKey(key)
+	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
+}
+
+func (s *StatsdSink) SetPrecisionGaugeWithLabels(key []string, val float64, labels []Label) {
+	flatKey := s.flattenKeyLabels(key, labels)
+	s.pushMetric(fmt.Sprintf("%s:%f|g\n", flatKey, val))
+}
+
 func (s *StatsdSink) EmitKey(key []string, val float32) {
 	flatKey := s.flattenKey(key)
 	s.pushMetric(fmt.Sprintf("%s:%f|kv\n", flatKey, val))

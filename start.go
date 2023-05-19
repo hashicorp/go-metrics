@@ -97,12 +97,27 @@ func NewGlobal(conf *Config, sink MetricSink) (*Metrics, error) {
 }
 
 // Proxy all the methods to the globalMetrics instance
+
+// Set gauge key and value with 32 bit precision
 func SetGauge(key []string, val float32) {
 	globalMetrics.Load().(*Metrics).SetGauge(key, val)
 }
 
+// Set gauge key and value with 32 bit precision
 func SetGaugeWithLabels(key []string, val float32, labels []Label) {
 	globalMetrics.Load().(*Metrics).SetGaugeWithLabels(key, val, labels)
+}
+
+// Set gauge key and value with 64 bit precision
+// The Sink needs to implement PrecisionGaugeMetricSink, in case it doesn't,  the metric value won't be set and ingored instead
+func SetPrecisionGauge(key []string, val float64) {
+	globalMetrics.Load().(*Metrics).SetPrecisionGauge(key, val)
+}
+
+// Set gauge key, value with 64 bit precision, and labels
+// The Sink needs to implement PrecisionGaugeMetricSink, in case it doesn't, the metric value won't be set and ingored instead
+func SetPrecisionGaugeWithLabels(key []string, val float64, labels []Label) {
+	globalMetrics.Load().(*Metrics).SetPrecisionGaugeWithLabels(key, val, labels)
 }
 
 func EmitKey(key []string, val float32) {
