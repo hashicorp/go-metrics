@@ -86,6 +86,10 @@ func setupTestServerAndBuffer(t *testing.T) (*net.UDPConn, []byte) {
 func TestParseKey(t *testing.T) {
 	for _, tt := range ParseKeyTests {
 		dog := mockNewDogStatsdSink(DogStatsdAddr, tt.Tags, tt.PropagateHostname)
+		// make a copy of the original key
+		original := make([]string, len(tt.KeyToParse))
+		copy(original, tt.KeyToParse)
+
 		key, tags := dog.parseKey(tt.KeyToParse)
 
 		if !reflect.DeepEqual(key, tt.ExpectedKey) {
@@ -94,6 +98,10 @@ func TestParseKey(t *testing.T) {
 
 		if !reflect.DeepEqual(tags, tt.ExpectedTags) {
 			t.Fatalf("Tag Parsing Failed for %v, %v != %v", tt.KeyToParse, tags, tt.ExpectedTags)
+		}
+
+		if !reflect.DeepEqual(original, tt.KeyToParse) {
+			t.Fatalf("Key parsing modified the original input key:, original: %v, after parse: %v", original, tt.KeyToParse)
 		}
 	}
 }
