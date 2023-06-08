@@ -70,7 +70,10 @@ func (s *DogStatsdSink) parseKey(key []string) ([]string, []metrics.Label) {
 	// Splice the hostname out of the key
 	for i, el := range key {
 		if el == hostName {
-			key = append(key[:i], key[i+1:]...)
+			// We need an intermediate key to prevent clobbering the
+			// original backing array that other sinks might be consuming.
+			tempKey := append([]string{}, key[:i]...)
+			key = append(tempKey, key[i+1:]...)
 			break
 		}
 	}
