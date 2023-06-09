@@ -99,6 +99,34 @@ func TestSetGauge(t *testing.T) {
 	}
 }
 
+func TestSetPrecisionGauge(t *testing.T) {
+	q := make(chan string)
+
+	server := fakeBroker(q)
+	defer server.Close()
+
+	cfg := &Config{}
+	cfg.CheckManager.Check.SubmissionURL = server.URL
+
+	cs, err := NewCirconusSink(cfg)
+	if err != nil {
+		t.Errorf("Expected no error, got '%v'", err)
+	}
+
+	go func() {
+		cs.SetPrecisionGauge([]string{"foo", "bar"}, 1)
+		cs.Flush()
+	}()
+
+	expect := "{\"foo`bar\":{\"_type\":\"n\",\"_value\":1}}"
+	actual := <-q
+
+	if actual != expect {
+		t.Errorf("Expected '%s', got '%s'", expect, actual)
+
+	}
+}
+
 func TestIncrCounter(t *testing.T) {
 	q := make(chan string)
 

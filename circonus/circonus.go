@@ -68,6 +68,18 @@ func (s *CirconusSink) SetGaugeWithLabels(key []string, val float32, labels []me
 	s.metrics.SetGauge(flatKey, int64(val))
 }
 
+// SetPrecisionGauge sets value for a gauge metric with float64 precision
+func (s *CirconusSink) SetPrecisionGauge(key []string, val float64) {
+	flatKey := s.flattenKey(key)
+	s.metrics.SetGauge(flatKey, val)
+}
+
+// SetPrecisionGaugeWithLabels sets value for a gauge metric with the given labels with float64 precision
+func (s *CirconusSink) SetPrecisionGaugeWithLabels(key []string, val float64, labels []metrics.Label) {
+	flatKey := s.flattenKeyLabels(key, labels)
+	s.metrics.SetGauge(flatKey, val)
+}
+
 // EmitKey is not implemented in circonus
 func (s *CirconusSink) EmitKey(key []string, val float32) {
 	// NOP
