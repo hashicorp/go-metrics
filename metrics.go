@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	iradix "github.com/hashicorp/go-immutable-radix"
+	iradix "github.com/hashicorp/go-immutable-radix/v2"
 )
 
 type Label struct {
@@ -197,12 +197,12 @@ func (m *Metrics) UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabe
 	m.AllowedLabels = allowedLabels
 	m.BlockedLabels = blockedLabels
 
-	m.filter = iradix.New()
+	m.filter = iradix.New[byte]()
 	for _, prefix := range m.AllowedPrefixes {
-		m.filter, _, _ = m.filter.Insert([]byte(prefix), true)
+		m.filter, _, _ = m.filter.Insert([]byte(prefix), 1)
 	}
 	for _, prefix := range m.BlockedPrefixes {
-		m.filter, _, _ = m.filter.Insert([]byte(prefix), false)
+		m.filter, _, _ = m.filter.Insert([]byte(prefix), 0)
 	}
 }
 
@@ -256,6 +256,7 @@ func (m *Metrics) allowMetric(key []string, labels []Label) (bool, []Label) {
 		return m.Config.FilterDefault, m.filterLabels(labels)
 	}
 
+	var allowed interface{}
 	_, allowed, ok := m.filter.Root().LongestPrefix([]byte(strings.Join(key, ".")))
 	if !ok {
 		return m.Config.FilterDefault, m.filterLabels(labels)

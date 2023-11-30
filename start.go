@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	iradix "github.com/hashicorp/go-immutable-radix"
+	iradix "github.com/hashicorp/go-immutable-radix/v2"
 )
 
 // Config is used to configure metrics settings
@@ -34,7 +34,7 @@ type Metrics struct {
 	Config
 	lastNumGC     uint32
 	sink          MetricSink
-	filter        *iradix.Tree
+	filter        *iradix.Tree[byte]
 	allowedLabels map[string]bool
 	blockedLabels map[string]bool
 	filterLock    sync.RWMutex // Lock filters and allowedLabels/blockedLabels access
