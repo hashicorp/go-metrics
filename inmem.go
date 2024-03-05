@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-var spaceReplacer = strings.NewReplacer(" ", "_")
-
 // InmemSink provides a MetricSink that does in-memory aggregation
 // without sending metrics over a network. It can be embedded within
 // an application to provide profiling information.
@@ -338,13 +336,7 @@ func (i *InmemSink) getInterval() *IntervalMetrics {
 
 // Flattens the key for formatting, removes spaces
 func (i *InmemSink) flattenKey(parts []string) string {
-	buf := &bytes.Buffer{}
-
-	joined := strings.Join(parts, ".")
-
-	spaceReplacer.WriteString(buf, joined)
-
-	return buf.String()
+	return strings.Replace(strings.Join(parts, "."), " ", "_", -1)
 }
 
 // Flattens the key for formatting along with its labels, removes spaces
@@ -353,8 +345,11 @@ func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) (string, st
 	buf := bytes.NewBufferString(key)
 
 	for _, label := range labels {
-		spaceReplacer.WriteString(buf, fmt.Sprintf(";%s=%s", label.Name, label.Value))
+		buf.WriteByte(';')
+		buf.WriteString(label.Name)
+		buf.WriteByte('=')
+		buf.WriteString(label.Value)
 	}
 
-	return buf.String(), key
+	return strings.Replace(buf.String(), " ", "_", -1), key
 }

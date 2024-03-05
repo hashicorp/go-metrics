@@ -188,3 +188,69 @@ func duration(t *testing.T, s string) time.Duration {
 	}
 	return dur
 }
+
+func BenchmarkFlattenKey(b *testing.B) {
+	cases := []struct {
+		name  string
+		parts []string
+	}{
+		{
+			name:  "three-segments",
+			parts: []string{"foo", "bar", "baz"},
+		},
+		{
+			name:  "five-segments",
+			parts: []string{"foo", "bar", "baz", "qux", "quux"},
+		},
+		{
+			name:  "ten-segments",
+			parts: []string{"foo", "bar", "baz", "qux", "quux", "corge", "grault", "garply", "waldo", "fred"},
+		},
+	}
+
+	for _, c := range cases {
+		b.Run(c.name, func(b *testing.B) {
+			s := &InmemSink{}
+			for i := 0; i < b.N; i++ {
+				s.flattenKey(c.parts)
+			}
+		})
+	}
+}
+
+func BenchmarkFlattenKeyLabels(b *testing.B) {
+	cases := []struct {
+		name   string
+		parts  []string
+		labels []Label
+	}{
+		{
+			name:  "three-segments-no-labels",
+			parts: []string{"foo", "bar", "baz"},
+		},
+		{
+			name:   "three-segments-one-label",
+			parts:  []string{"foo", "bar", "baz"},
+			labels: []Label{{"blah", "arg"}},
+		},
+		{
+			name:   "five-segments-three-labels",
+			parts:  []string{"foo", "bar", "baz", "qux", "quux"},
+			labels: []Label{{"blah1", "arg1"}, {"blah2", "arg2"}, {"blah3", "arg3"}},
+		},
+		{
+			name:   "ten-segments-five-labels",
+			parts:  []string{"foo", "bar", "baz", "qux", "quux", "corge", "grault", "garply", "waldo", "fred"},
+			labels: []Label{{"blah1", "arg1"}, {"blah2", "arg2"}, {"blah3", "arg3"}, {"blah4", "arg4"}, {"blah5", "arg5"}},
+		},
+	}
+
+	for _, c := range cases {
+		b.Run(c.name, func(b *testing.B) {
+			s := &InmemSink{}
+			for i := 0; i < b.N; i++ {
+				s.flattenKeyLabels(c.parts, c.labels)
+			}
+		})
+	}
+}
