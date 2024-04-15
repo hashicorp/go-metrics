@@ -7,7 +7,7 @@ require (
 	github.com/circonus-labs/circonus-gometrics v2.3.1+incompatible
 	github.com/circonus-labs/circonusllhist v0.1.3 // indirect
 	github.com/golang/protobuf v1.3.2
-	github.com/hashicorp/go-immutable-radix v1.0.0
+	github.com/hashicorp/go-immutable-radix v1.3.1
 	github.com/hashicorp/go-retryablehttp v0.5.3 // indirect
 	github.com/pascaldekloe/goe v0.1.0
 	github.com/prometheus/client_golang v1.4.0
