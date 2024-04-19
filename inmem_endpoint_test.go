@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
-
-	"github.com/pascaldekloe/goe/verify"
 )
 
 func TestDisplayMetrics(t *testing.T) {
@@ -35,7 +34,8 @@ func TestDisplayMetrics(t *testing.T) {
 	}
 
 	expected := MetricsSummary{
-		Timestamp: data[0].Interval.Round(time.Second).UTC().String(),
+		Timestamp:       data[0].Interval.Round(time.Second).UTC().String(),
+		PrecisionGauges: make([]PrecisionGaugeValue, 0),
 		Gauges: []GaugeValue{
 			{
 				Name:          "foo.bar",
@@ -68,8 +68,9 @@ func TestDisplayMetrics(t *testing.T) {
 					SumSq: 884,
 					Rate:  4200,
 				},
-				Mean:   21,
-				Stddev: 1.4142135623730951,
+				Mean:          21,
+				Stddev:        1.4142135623730951,
+				DisplayLabels: make(map[string]string),
 			},
 			{
 				Name: "foo.bar",
@@ -99,8 +100,9 @@ func TestDisplayMetrics(t *testing.T) {
 					SumSq: 976,
 					Rate:  4400,
 				},
-				Mean:   22,
-				Stddev: 2.8284271247461903,
+				Mean:          22,
+				Stddev:        2.8284271247461903,
+				DisplayLabels: make(map[string]string),
 			},
 			{
 				Name: "foo.bar",
@@ -134,7 +136,9 @@ func TestDisplayMetrics(t *testing.T) {
 		expected.Samples[i].LastUpdated = got.LastUpdated
 	}
 
-	verify.Values(t, "all", result, expected)
+	if !reflect.DeepEqual(result, expected) {
+		t.Fatalf("")
+	}
 }
 
 func TestDisplayMetrics_RaceSetGauge(t *testing.T) {
@@ -168,7 +172,9 @@ func TestDisplayMetrics_RaceSetGauge(t *testing.T) {
 	}()
 
 	got := <-result
-	verify.Values(t, "all", got, float32(42))
+	if got != 42 {
+		t.Fatalf("expected 42, got %v", got)
+	}
 }
 
 func TestDisplayMetrics_RaceAddSample(t *testing.T) {
@@ -202,7 +208,9 @@ func TestDisplayMetrics_RaceAddSample(t *testing.T) {
 	}()
 
 	got := <-result
-	verify.Values(t, "all", got, float32(0.0))
+	if got != 0.0 {
+		t.Fatalf("expected 0.0, got %v", got)
+	}
 }
 
 func TestDisplayMetrics_RaceIncrCounter(t *testing.T) {
@@ -236,7 +244,9 @@ func TestDisplayMetrics_RaceIncrCounter(t *testing.T) {
 	}()
 
 	got := <-result
-	verify.Values(t, "all", got, float32(0.0))
+	if got != 0.0 {
+		t.Fatalf("expected 0.0, got %v", got)
+	}
 }
 
 func TestDisplayMetrics_RaceMetricsSetGauge(t *testing.T) {
@@ -275,7 +285,9 @@ func TestDisplayMetrics_RaceMetricsSetGauge(t *testing.T) {
 	}()
 
 	got := <-result
-	verify.Values(t, "all", got, float32(42))
+	if got != 42 {
+		t.Fatalf("expected 42, got %v", got)
+	}
 }
 
 func TestInmemSink_Stream(t *testing.T) {

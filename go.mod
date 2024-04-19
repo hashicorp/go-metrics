@@ -9,7 +9,6 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/hashicorp/go-immutable-radix v1.0.0
 	github.com/hashicorp/go-retryablehttp v0.5.3 // indirect
-	github.com/pascaldekloe/goe v0.1.0
 	github.com/prometheus/client_golang v1.4.0
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.9.1
