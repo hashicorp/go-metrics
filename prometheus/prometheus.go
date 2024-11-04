@@ -6,12 +6,14 @@ package prometheus
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/client_golang/prometheus/push"
 )
 
@@ -399,6 +401,65 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 		}
 		p.counters.Store(hash, pc)
 	}
+}
+
+// PrometheusScrapeSink wraps a normal prometheus sink and provides an address and port on which it will
+// serve metrics in prometheus scrape format.
+type PrometheusScrapeSink struct {
+	*PrometheusSink
+	address string
+	port    int
+	path    string
+	server  *http.Server
+}
+
+// startServer starts the http server that serves the prometheus metrics.
+func (s *PrometheusScrapeSink) startServer() {
+	go func() {
+		err := s.server.ListenAndServe()
+		if err != nil {
+			log.Printf("[ERR] Error starting Prometheus metrics server! Err: %s", err)
+		}
+	}()
+}
+
+// Shutdown tears down the PrometheusScrapeSink, and blocks while flushing metrics to the backend.
+func (s *PrometheusScrapeSink) Shutdown() {
+	err := s.server.Shutdown(nil)
+	if err != nil {
+		log.Printf("[ERR] Error shutting down Prometheus metrics server! Err: %s", err)
+	}
+}
+
+func NewPrometheusScrapeSink(address string, port int, path string) (*PrometheusScrapeSink, error) {
+	promSink := &PrometheusSink{
+		gauges:     sync.Map{},
+		summaries:  sync.Map{},
+		counters:   sync.Map{},
+		expiration: 60 * time.Second,
+		name:       "default_prometheus_sink",
+	}
+	prometheus.MustRegister(promSink)
+	handler := promhttp.Handler()
+	serveMux := http.NewServeMux()
+	serveMux.Handle(path, handler)
+	server := &http.Server{
+		Addr:         fmt.Sprintf("%s:%d", address, port),
+		Handler:      serveMux,
+		ReadTimeout:  1 * time.Minute,
+		WriteTimeout: 1 * time.Minute,
+		IdleTimeout:  10 * time.Second,
+	}
+	sink := &PrometheusScrapeSink{
+		promSink,
+		address,
+		port,
+		path,
+		server,
+	}
+
+	sink.startServer()
+	return sink, nil
 }
 
 // PrometheusPushSink wraps a normal prometheus sink and provides an address and facilities to export it to an address
