@@ -8,7 +8,7 @@ require (
 	github.com/circonus-labs/circonusllhist v0.1.3 // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/hashicorp/go-immutable-radix v1.0.0
-	github.com/hashicorp/go-retryablehttp v0.5.3 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/pascaldekloe/goe v0.1.0
 	github.com/prometheus/client_golang v1.11.1
 	github.com/prometheus/client_model v0.2.0
