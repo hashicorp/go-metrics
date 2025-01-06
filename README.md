@@ -53,7 +53,7 @@ go-metrics exporting via the `armon` namespace, then any metrics sent to go-metr
 will never get exported.
 
 Eventually all usage of `armon/go-metrics` should be replaced with usage of `hashicorp/go-metrics`. However, a single
-point-in-time coordinated update across all libraries than an application may depend on isn't always feasible. To faciliate migrations, 
+point-in-time coordinated update across all libraries that an application may depend on isn't always feasible. To facilitate migrations, 
 a `github.com/hashicorp/go-metrics/compat` package has been introduced. This package and sub-packages are API compatible with
 `armon/go-metrics`. Libraries should be updated to use this package for emitting metrics via the global handlers. Internally,
 the package will route metrics to either `armon/go-metrics` or `hashicorp/go-metrics`. This is achieved at a global level
