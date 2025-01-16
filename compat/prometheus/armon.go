@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MIT
+
 //go:build armonmetrics || ignore || !hashicorpmetrics
 // +build armonmetrics ignore !hashicorpmetrics
 
