@@ -98,8 +98,12 @@ func (m *Metrics) IncrCounter(key []string, val float32) {
 }
 
 func (m *Metrics) IncrCounterWithLabels(key []string, val float32, labels []Label) {
-	if m.HostName != "" && m.EnableHostnameLabel {
-		labels = append(labels, Label{"host", m.HostName})
+	if m.HostName != "" {
+		if m.EnableHostnameLabel {
+			labels = append(labels, Label{"host", m.HostName})
+		} else if m.EnableHostname {
+			key = insert(0, m.HostName, key)
+		}
 	}
 	if m.EnableTypePrefix {
 		key = insert(0, "counter", key)
@@ -123,8 +127,12 @@ func (m *Metrics) AddSample(key []string, val float32) {
 }
 
 func (m *Metrics) AddSampleWithLabels(key []string, val float32, labels []Label) {
-	if m.HostName != "" && m.EnableHostnameLabel {
-		labels = append(labels, Label{"host", m.HostName})
+	if m.HostName != "" {
+		if m.EnableHostnameLabel {
+			labels = append(labels, Label{"host", m.HostName})
+		} else if m.EnableHostname {
+			key = insert(0, m.HostName, key)
+		}
 	}
 	if m.EnableTypePrefix {
 		key = insert(0, "sample", key)
@@ -148,8 +156,12 @@ func (m *Metrics) MeasureSince(key []string, start time.Time) {
 }
 
 func (m *Metrics) MeasureSinceWithLabels(key []string, start time.Time, labels []Label) {
-	if m.HostName != "" && m.EnableHostnameLabel {
-		labels = append(labels, Label{"host", m.HostName})
+	if m.HostName != "" {
+		if m.EnableHostnameLabel {
+			labels = append(labels, Label{"host", m.HostName})
+		} else if m.EnableHostname {
+			key = insert(0, m.HostName, key)
+		}
 	}
 	if m.EnableTypePrefix {
 		key = insert(0, "timer", key)
