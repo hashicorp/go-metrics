@@ -13,7 +13,7 @@ jobs:
           ports:
             - 8125:8125/udp
          statsite:
-          image: statsite/statsite
+          image: nyxcharon/docker-statsite
           ports:
             - 8126:8126
 
