@@ -15,4 +15,15 @@ jobs:
               uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a
               with:
                 go-version: '1.12'
-            - run: go build ./...
+            - name: Test Go
+              run: |
+                for dir in $(find . -name "go.mod" -exec dirname {} \;); do
+                  echo "Running tests in module $dir"
+                  (cd $dir && go test ./...)
+                done
+            - name: Build Go
+              run: |
+                for dir in $(find . -name "go.mod" -exec dirname {} \;); do
+                  echo "Running build in module $dir"
+                  (cd $dir && go build -v ./...)
+                done
