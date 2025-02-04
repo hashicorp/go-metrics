@@ -40,7 +40,7 @@ func TestStatsite_PushFullQueue(t *testing.T) {
 }
 
 func TestStatsite_Conn(t *testing.T) {
-	addr := "localhost:7523"
+	addr := "localhost:8126"
 
 	ln, _ := net.Listen("tcp", addr)
 

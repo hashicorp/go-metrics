@@ -7,6 +7,15 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
+        services:
+         statsd:
+          image: statsd/statsd
+          ports:
+            - 8125:8125/udp
+         statsite:
+          image: statsite/statsite
+          ports:
+            - 8126:8126
 
         steps:
             - name: Checkout Code
