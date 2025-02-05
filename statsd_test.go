@@ -41,14 +41,15 @@ func TestStatsd_PushFullQueue(t *testing.T) {
 }
 
 func TestStatsd_Conn(t *testing.T) {
-	addr := "localhost:8127"
+	addr := "localhost:0"
 	done := make(chan bool)
 	go func() {
-		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("localhost"), Port: 8127})
+		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("localhost"), Port: 0})
 		if err != nil {
 			panic(err)
 		}
 		defer list.Close()
+		addr = list.LocalAddr().String()
 		buf := make([]byte, 1500)
 		n, err := list.Read(buf)
 		if err != nil {

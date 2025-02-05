@@ -12,6 +12,7 @@ jobs:
           image: statsd/statsd
           ports:
             - 8127:8127/udp
+          options: --health-cmd='nc -zv localhost 8127' --health-interval=5s --health-timeout=5s --health-retries=3
          statsite:
           image: quay.io/prometheus/statsd-exporter
           ports:
