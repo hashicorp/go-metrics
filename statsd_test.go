@@ -41,10 +41,10 @@ func TestStatsd_PushFullQueue(t *testing.T) {
 }
 
 func TestStatsd_Conn(t *testing.T) {
-	addr := "127.0.0.1:8125"
+	addr := "localhost:8125"
 	done := make(chan bool)
 	go func() {
-		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8125})
+		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("localhost"), Port: 8125})
 		if err != nil {
 			panic(err)
 		}
