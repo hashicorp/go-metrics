@@ -11,7 +11,7 @@ jobs:
          statsd:
           image: statsd/statsd
           ports:
-            - 8125:8125/udp
+            - 8127:8125/udp
          statsite:
           image: quay.io/prometheus/statsd-exporter
           ports:
