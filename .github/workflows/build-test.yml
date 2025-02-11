@@ -24,6 +24,10 @@ jobs:
               uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a
               with:
                 go-version: '1.18'
+            - name: Cleanup running processes
+              run: |
+                  sudo lsof -t -i:8127 | xargs kill -9 || true
+                  sudo lsof -t -i:8125 | xargs kill -9 || true
             - name: Test Go
               run: |
                 for dir in $(find . -name "go.mod" -exec dirname {} \;); do
@@ -36,3 +40,6 @@ jobs:
                   echo "Running build in module $dir"
                   (cd $dir && go build -v ./...)
                 done
+            - name: Debug active processes
+              run: |
+                  sudo lsof -i
