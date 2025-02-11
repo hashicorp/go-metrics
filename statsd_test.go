@@ -4,9 +4,13 @@
 package metrics
 
 import (
+	"bufio"
+	"bytes"
+	"net"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestStatsd_Flatten(t *testing.T) {
@@ -39,7 +43,7 @@ func TestStatsd_PushFullQueue(t *testing.T) {
 // initially there was some error connecting to the server.
 // to correct it used the 8125 port which is a standard udp port and also added container creation in workflow
 // but on above changes showed address already in use.
-/*func TestStatsd_Conn(t *testing.T) {
+func TestStatsd_Conn(t *testing.T) {
 	addr := "127.0.0.1:8127"
 	done := make(chan bool)
 	go func() {
@@ -136,7 +140,7 @@ func TestStatsd_PushFullQueue(t *testing.T) {
 	case <-time.After(3 * time.Second):
 		t.Fatalf("timeout")
 	}
-}*/
+}
 
 func TestNewStatsdSinkFromURL(t *testing.T) {
 	for _, tc := range []struct {
