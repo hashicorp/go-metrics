@@ -44,15 +44,15 @@ func TestStatsd_PushFullQueue(t *testing.T) {
 // to correct it used the 8125 port which is a standard udp port and also added container creation in workflow
 // but on above changes showed address already in use.
 func TestStatsd_Conn(t *testing.T) {
-	addr := "127.0.0.1:0"
+	addr := "127.0.0.1:8128"
 	done := make(chan bool)
 	go func() {
-		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 0})
+		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8128})
 		if err != nil {
 			panic(err)
 		}
 		defer list.Close()
-		addr = list.LocalAddr().String()
+
 		buf := make([]byte, 1500)
 		n, err := list.Read(buf)
 		if err != nil {
