@@ -277,12 +277,12 @@ func TestNewMetricSinkFromURL(t *testing.T) {
 	}{
 		{
 			desc:   "statsd scheme yields a StatsdSink",
-			input:  "statsd://someserver:123",
+			input:  "statsd://127.0.0.1:7524",
 			expect: reflect.TypeOf(&StatsdSink{}),
 		},
 		{
 			desc:   "statsite scheme yields a StatsiteSink",
-			input:  "statsite://someserver:123",
+			input:  "statsite://127.0.0.1:7523",
 			expect: reflect.TypeOf(&StatsiteSink{}),
 		},
 		{

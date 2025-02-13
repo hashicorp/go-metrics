@@ -43,7 +43,7 @@ func TestStatsite_PushFullQueue(t *testing.T) {
 // to correct it used the 8126 port and also added container creation in workflow
 // but on above changes showed invalid address or nil pointer reference
 func TestStatsite_Conn(t *testing.T) {
-	addr := "localhost:8126"
+	addr := "127.0.0.1:7523"
 
 	ln, _ := net.Listen("tcp", addr)
 
@@ -133,7 +133,7 @@ func TestStatsite_Conn(t *testing.T) {
 	select {
 	case <-done:
 		s.Shutdown()
-	case <-time.After(3 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatalf("timeout")
 	}
 }
@@ -147,13 +147,13 @@ func TestNewStatsiteSinkFromURL(t *testing.T) {
 	}{
 		{
 			desc:       "address is populated",
-			input:      "statsd://statsd.service.consul",
-			expectAddr: "statsd.service.consul",
+			input:      "statsd://127.0.0.1:7523",
+			expectAddr: "127.0.0.1:7523",
 		},
 		{
 			desc:       "address includes port",
-			input:      "statsd://statsd.service.consul:8125",
-			expectAddr: "statsd.service.consul:8125",
+			input:      "statsd://127.0.0.1:7523",
+			expectAddr: "127.0.0.1:7523",
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {

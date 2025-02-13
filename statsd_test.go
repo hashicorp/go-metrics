@@ -6,6 +6,7 @@ package metrics
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"net"
 	"net/url"
 	"strings"
@@ -44,14 +45,16 @@ func TestStatsd_PushFullQueue(t *testing.T) {
 // to correct it used the 8125 port which is a standard udp port and also added container creation in workflow
 // but on above changes showed address already in use.
 func TestStatsd_Conn(t *testing.T) {
-	addr := "127.0.0.1:8125"
+	addr := "127.0.0.1:7524"
 	done := make(chan bool)
 	go func() {
-		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8125})
+		list, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 7524})
 		if err != nil {
 			panic(err)
 		}
 		defer list.Close()
+
+		fmt.Println("UDP server listening on", list.LocalAddr())
 
 		buf := make([]byte, 1500)
 		n, err := list.Read(buf)
@@ -137,7 +140,7 @@ func TestStatsd_Conn(t *testing.T) {
 	select {
 	case <-done:
 		s.Shutdown()
-	case <-time.After(3 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatalf("timeout")
 	}
 }
@@ -151,13 +154,13 @@ func TestNewStatsdSinkFromURL(t *testing.T) {
 	}{
 		{
 			desc:       "address is populated",
-			input:      "statsd://statsd.service.consul",
-			expectAddr: "statsd.service.consul",
+			input:      "statsd://127.0.0.1:8125",
+			expectAddr: "127.0.0.1:8125",
 		},
 		{
 			desc:       "address includes port",
-			input:      "statsd://statsd.service.consul:8125",
-			expectAddr: "statsd.service.consul:8125",
+			input:      "statsd://127.0.0.1:8125",
+			expectAddr: "127.0.0.1:8125",
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {

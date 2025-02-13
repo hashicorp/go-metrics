@@ -11,11 +11,11 @@ jobs:
          statsd:
           image: statsd/statsd
           ports:
-            - 8127:8125/udp
+            - 8125:8125/udp
          statsite:
           image: quay.io/prometheus/statsd-exporter
           ports:
-            - 8126:8126
+            - 7523:7523
 
         steps:
             - name: Checkout Code
