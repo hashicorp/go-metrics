@@ -4,6 +4,7 @@
 package metrics
 
 import (
+	"fmt"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -77,6 +78,11 @@ func DefaultConfig(serviceName string) *Config {
 
 // New is used to create a new instance of Metrics
 func New(conf *Config, sink MetricSink) (*Metrics, error) {
+
+	if conf.EnableHostname && conf.EnableHostnameLabel {
+		return nil, fmt.Errorf("both EnableHostname and EnableHostnameLabel can't be true at the same time")
+	}
+
 	met := &Metrics{}
 	met.Config = *conf
 	met.sink = sink
