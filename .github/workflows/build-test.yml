@@ -27,6 +27,7 @@ jobs:
             - name: Debug active processes
               run: |
                     sudo lsof -i
+                    go mod tidy
             - name: Build Go
               run: go build ./...
             - name: Run Tests
