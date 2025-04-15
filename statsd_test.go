@@ -84,6 +84,22 @@ func TestStatsd_Conn(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected err %s", err)
 		}
+		if line != "gauge.val:1.000000|g\n" {
+			t.Fatalf("bad line %s", line)
+		}
+
+		line, err = reader.ReadString('\n')
+		if err != nil {
+			t.Fatalf("unexpected err %s", err)
+		}
+		if line != "gauge_labels.val.label:2.000000|g\n" {
+			t.Fatalf("bad line %s", line)
+		}
+
+		line, err = reader.ReadString('\n')
+		if err != nil {
+			t.Fatalf("unexpected err %s", err)
+		}
 		if line != "key.other:3.000000|kv\n" {
 			t.Fatalf("bad line %s", line)
 		}
