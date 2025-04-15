@@ -27,15 +27,7 @@ jobs:
             - name: Debug active processes
               run: |
                     sudo lsof -i
-            - name: Test Go
-              run: |
-                for dir in $(find . -name "go.mod" -exec dirname {} \;); do
-                  echo "Running tests in module $dir"
-                  (cd $dir && go test -v ./...)
-                done
             - name: Build Go
-              run: |
-                for dir in $(find . -name "go.mod" -exec dirname {} \;); do
-                  echo "Running build in module $dir"
-                  (cd $dir && go build -v ./...)
-                done
+              run: go build ./...
+            - name: Run Tests
+              run: go test ./...
