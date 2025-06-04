@@ -6,7 +6,7 @@ package circonus
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -61,7 +61,7 @@ func fakeBroker(q chan string) *httptest.Server {
 		w.WriteHeader(200)
 		w.Header().Set("Content-Type", "application/json")
 		defer r.Body.Close()
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			q <- err.Error()
 			fmt.Fprintln(w, err.Error())

@@ -39,7 +39,7 @@ func TestInmemSink(t *testing.T) {
 	intvM := data[0]
 	intvM.RLock()
 
-	if time.Now().Sub(intvM.Interval) > 10*time.Millisecond {
+	if time.Since(intvM.Interval) > 10*time.Millisecond {
 		t.Fatalf("interval too old")
 	}
 	if intvM.Gauges["foo.bar"].Value != 42 {
@@ -82,7 +82,7 @@ func TestInmemSink(t *testing.T) {
 			t.Fatalf("agg.LastUpdated is not set: %v", agg)
 		}
 
-		diff := time.Now().Sub(agg.LastUpdated).Seconds()
+		diff := time.Since(agg.LastUpdated).Seconds()
 		if diff > 1 {
 			t.Fatalf("time diff too great: %f", diff)
 		}
@@ -133,22 +133,22 @@ func TestNewInmemSinkFromURL(t *testing.T) {
 		{
 			desc:      "interval is required",
 			input:     "inmem://?retain=22s",
-			expectErr: "Bad 'interval' param",
+			expectErr: "bad 'interval' param",
 		},
 		{
 			desc:      "interval must be a duration",
 			input:     "inmem://?retain=30s&interval=HIYA",
-			expectErr: "Bad 'interval' param",
+			expectErr: "bad 'interval' param",
 		},
 		{
 			desc:      "retain is required",
 			input:     "inmem://?interval=30s",
-			expectErr: "Bad 'retain' param",
+			expectErr: "bad 'retain' param",
 		},
 		{
 			desc:      "retain must be a valid duration",
 			input:     "inmem://?interval=30s&retain=HELLO",
-			expectErr: "Bad 'retain' param",
+			expectErr: "bad 'retain' param",
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {

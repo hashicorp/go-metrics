@@ -5,6 +5,7 @@ package metrics
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 	"net/url"
 	"strings"
@@ -44,94 +45,114 @@ func TestStatsite_Conn(t *testing.T) {
 
 	ln, _ := net.Listen("tcp", addr)
 
-	done := make(chan bool)
+	errCh := make(chan error)
 	go func() {
+		defer close(errCh)
 		conn, err := ln.Accept()
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 
 		reader := bufio.NewReader(conn)
 
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "gauge.val:1.000000|g\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		line, err = reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "gauge_labels.val.label:2.000000|g\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		line, err = reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "gauge.val:1.000000|g\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		line, err = reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "gauge_labels.val.label:2.000000|g\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		line, err = reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "key.other:3.000000|kv\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		line, err = reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "counter.me:4.000000|c\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		line, err = reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "counter_labels.me.label:5.000000|c\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		line, err = reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "sample.slow_thingy:6.000000|ms\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		line, err = reader.ReadString('\n')
 		if err != nil {
-			t.Fatalf("unexpected err %s", err)
+			errCh <- fmt.Errorf("unexpected err %s", err)
+			return
 		}
 		if line != "sample_labels.slow_thingy.label:7.000000|ms\n" {
-			t.Fatalf("bad line %s", line)
+			errCh <- fmt.Errorf("bad line %s", line)
+			return
 		}
 
 		conn.Close()
-		done <- true
 	}()
 	s, err := NewStatsiteSink(addr)
 	if err != nil {
 		t.Fatalf("bad error")
 	}
+	defer s.Shutdown()
 
 	s.SetGauge([]string{"gauge", "val"}, float32(1))
 	s.SetGaugeWithLabels([]string{"gauge_labels", "val"}, float32(2), []Label{{"a", "label"}})
@@ -144,8 +165,10 @@ func TestStatsite_Conn(t *testing.T) {
 	s.AddSampleWithLabels([]string{"sample_labels", "slow thingy"}, float32(7), []Label{{"a", "label"}})
 
 	select {
-	case <-done:
-		s.Shutdown()
+	case err := <-errCh:
+		if err != nil {
+			t.Fatal(err)
+		}
 	case <-time.After(3 * time.Second):
 		t.Fatalf("timeout")
 	}

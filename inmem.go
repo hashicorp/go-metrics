@@ -94,7 +94,7 @@ type AggregateSample struct {
 
 // Computes a Stddev of the values
 func (a *AggregateSample) Stddev() float64 {
-	num := (float64(a.Count) * a.SumSq) - math.Pow(a.Sum, 2)
+	num := (float64(a.Count) * a.SumSq) - (a.Sum * a.Sum)
 	div := float64(a.Count * (a.Count - 1))
 	if div == 0 {
 		return 0
@@ -143,12 +143,12 @@ func NewInmemSinkFromURL(u *url.URL) (MetricSink, error) {
 
 	interval, err := time.ParseDuration(params.Get("interval"))
 	if err != nil {
-		return nil, fmt.Errorf("Bad 'interval' param: %s", err)
+		return nil, fmt.Errorf("bad 'interval' param: %s", err)
 	}
 
 	retain, err := time.ParseDuration(params.Get("retain"))
 	if err != nil {
-		return nil, fmt.Errorf("Bad 'retain' param: %s", err)
+		return nil, fmt.Errorf("bad 'retain' param: %s", err)
 	}
 
 	return NewInmemSink(interval, retain), nil
@@ -309,7 +309,7 @@ func (i *InmemSink) getInterval() *IntervalMetrics {
 	// a read lock.
 	i.intervalLock.RLock()
 	n := len(i.intervals)
-	if n > 0 && i.intervals[n-1].Interval == intv {
+	if n > 0 && i.intervals[n-1].Interval.Equal(intv) {
 		defer i.intervalLock.RUnlock()
 		return i.intervals[n-1]
 	}
@@ -320,7 +320,7 @@ func (i *InmemSink) getInterval() *IntervalMetrics {
 
 	// Re-check for an existing interval now that the lock is re-acquired.
 	n = len(i.intervals)
-	if n > 0 && i.intervals[n-1].Interval == intv {
+	if n > 0 && i.intervals[n-1].Interval.Equal(intv) {
 		return i.intervals[n-1]
 	}
 

@@ -516,8 +516,7 @@ func TestMetrics_Filter_Labels_Whitelist(t *testing.T) {
 	}
 
 	// Blocked by default
-	key := []string{"thing"}
-	key = []string{"debug", "thing"}
+	key := []string{"debug", "thing"}
 	goodLabel := Label{Name: "good_label", Value: "should be present"}
 	notReallyGoodLabel := Label{Name: "not_really_good_label", Value: "not whitelisted, but not blacklisted"}
 	badLabel := Label{Name: "bad_label", Value: "should not be there"}
@@ -563,8 +562,7 @@ func TestMetrics_Filter_Labels_ModifyArgs(t *testing.T) {
 	}
 
 	// Blocked by default
-	key := []string{"thing"}
-	key = []string{"debug", "thing"}
+	key := []string{"debug", "thing"}
 	goodLabel := Label{Name: "keep", Value: "should be kept"}
 	badLabel := Label{Name: "delete", Value: "should be deleted"}
 	argLabels := []Label{badLabel, goodLabel, badLabel, goodLabel, badLabel, goodLabel, badLabel}
