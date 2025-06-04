@@ -217,7 +217,6 @@ func initGauges(m *sync.Map, gauges []GaugeDefinition, help map[string]string) {
 		})
 		m.Store(hash, &gauge{Gauge: pG})
 	}
-	return
 }
 
 func initSummaries(m *sync.Map, summaries []SummaryDefinition, help map[string]string) {
@@ -233,7 +232,6 @@ func initSummaries(m *sync.Map, summaries []SummaryDefinition, help map[string]s
 		})
 		m.Store(hash, &summary{Summary: pS})
 	}
-	return
 }
 
 func initCounters(m *sync.Map, counters []CounterDefinition, help map[string]string) {
@@ -247,7 +245,6 @@ func initCounters(m *sync.Map, counters []CounterDefinition, help map[string]str
 		})
 		m.Store(hash, &counter{Counter: pC})
 	}
-	return
 }
 
 var forbiddenCharsReplacer = strings.NewReplacer(" ", "_", ".", "_", "=", "_", "-", "_", "/", "_")

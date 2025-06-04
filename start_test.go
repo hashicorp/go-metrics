@@ -4,7 +4,7 @@
 package metrics
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"reflect"
 	"sync/atomic"
@@ -288,7 +288,7 @@ func Test_GlobalMetrics_Shutdown(t *testing.T) {
 // Benchmark_GlobalMetrics_Direct/direct-8         	 5000000	       278 ns/op
 // Benchmark_GlobalMetrics_Direct/atomic.Value-8   	 5000000	       235 ns/op
 func Benchmark_GlobalMetrics_Direct(b *testing.B) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	s := &MockSink{}
 	m := &Metrics{sink: s}
 	var v atomic.Value

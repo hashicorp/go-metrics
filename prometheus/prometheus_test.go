@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	dto "github.com/prometheus/client_model/go"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -68,8 +68,8 @@ func TestMultiplePrometheusSink(t *testing.T) {
 	cfg := PrometheusOpts{
 		Expiration:         5 * time.Second,
 		GaugeDefinitions:   append([]GaugeDefinition{}, gaugeDef),
-		SummaryDefinitions: append([]SummaryDefinition{}),
-		CounterDefinitions: append([]CounterDefinition{}),
+		SummaryDefinitions: []SummaryDefinition{},
+		CounterDefinitions: []CounterDefinition{},
 		Name:               "sink1",
 	}
 
@@ -91,8 +91,8 @@ func TestMultiplePrometheusSink(t *testing.T) {
 	cfg2 := PrometheusOpts{
 		Expiration:         15 * time.Second,
 		GaugeDefinitions:   append([]GaugeDefinition{}, gaugeDef2),
-		SummaryDefinitions: append([]SummaryDefinition{}),
-		CounterDefinitions: append([]CounterDefinition{}),
+		SummaryDefinitions: []SummaryDefinition{},
+		CounterDefinitions: []CounterDefinition{},
 		// commenting out the name to point out that the default name will be used here instead
 		// Name:               "sink2",
 	}
@@ -291,7 +291,7 @@ func TestSetGauge(t *testing.T) {
 		log.Fatal(err)
 	}
 	host := u.Hostname() + ":" + u.Port()
-	sink, err := NewPrometheusPushSink(host, time.Second, "pushtest")
+	sink, _ := NewPrometheusPushSink(host, time.Second, "pushtest")
 	metricsConf := metrics.DefaultConfig("default")
 	metricsConf.HostName = MockGetHostname()
 	metricsConf.EnableHostnameLabel = true
@@ -312,7 +312,7 @@ func TestSetPrecisionGauge(t *testing.T) {
 		log.Fatal(err)
 	}
 	host := u.Hostname() + ":" + u.Port()
-	sink, err := NewPrometheusPushSink(host, time.Second, "pushtest")
+	sink, _ := NewPrometheusPushSink(host, time.Second, "pushtest")
 	metricsConf := metrics.DefaultConfig("default")
 	metricsConf.HostName = MockGetHostname()
 	metricsConf.EnableHostnameLabel = true

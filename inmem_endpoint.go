@@ -71,10 +71,10 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 
 	var interval *IntervalMetrics
 	n := len(data)
-	switch {
-	case n == 0:
+	switch n {
+	case 0:
 		return nil, fmt.Errorf("no metric intervals have been initialized yet")
-	case n == 1:
+	case 1:
 		// Show the current interval if it's all we have
 		interval = data[0]
 	default:

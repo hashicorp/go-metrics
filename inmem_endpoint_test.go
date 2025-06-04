@@ -156,7 +156,7 @@ func TestDisplayMetrics_RaceSetGauge(t *testing.T) {
 		start := time.Now()
 		var summary MetricsSummary
 		// test for twenty intervals
-		for time.Now().Sub(start) < 20*interval {
+		for time.Since(start) < 20*interval {
 			time.Sleep(100 * time.Millisecond)
 			raw, _ := inm.DisplayMetrics(nil, nil)
 			summary = raw.(MetricsSummary)
@@ -190,7 +190,7 @@ func TestDisplayMetrics_RaceAddSample(t *testing.T) {
 		start := time.Now()
 		var summary MetricsSummary
 		// test for twenty intervals
-		for time.Now().Sub(start) < 20*interval {
+		for time.Since(start) < 20*interval {
 			time.Sleep(100 * time.Millisecond)
 			raw, _ := inm.DisplayMetrics(nil, nil)
 			summary = raw.(MetricsSummary)
@@ -224,7 +224,7 @@ func TestDisplayMetrics_RaceIncrCounter(t *testing.T) {
 		start := time.Now()
 		var summary MetricsSummary
 		// test for twenty intervals
-		for time.Now().Sub(start) < 20*interval {
+		for time.Since(start) < 20*interval {
 			time.Sleep(30 * time.Millisecond)
 			raw, _ := inm.DisplayMetrics(nil, nil)
 			summary = raw.(MetricsSummary)
@@ -263,7 +263,7 @@ func TestDisplayMetrics_RaceMetricsSetGauge(t *testing.T) {
 		start := time.Now()
 		var summary MetricsSummary
 		// test for twenty intervals
-		for time.Now().Sub(start) < 40*interval {
+		for time.Since(start) < 40*interval {
 			time.Sleep(150 * time.Millisecond)
 			raw, _ := inm.DisplayMetrics(nil, nil)
 			summary = raw.(MetricsSummary)

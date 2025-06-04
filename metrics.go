@@ -256,12 +256,12 @@ func (m *Metrics) allowMetric(key []string, labels []Label) (bool, []Label) {
 	defer m.filterLock.RUnlock()
 
 	if m.filter == nil || m.filter.Len() == 0 {
-		return m.Config.FilterDefault, m.filterLabels(labels)
+		return m.FilterDefault, m.filterLabels(labels)
 	}
 
 	_, allowed, ok := m.filter.Root().LongestPrefix([]byte(strings.Join(key, ".")))
 	if !ok {
-		return m.Config.FilterDefault, m.filterLabels(labels)
+		return m.FilterDefault, m.filterLabels(labels)
 	}
 
 	return allowed.(bool), m.filterLabels(labels)
