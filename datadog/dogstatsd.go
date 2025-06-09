@@ -25,12 +25,17 @@ func NewDogStatsdSink(addr string, hostName string) (*DogStatsdSink, error) {
 	if err != nil {
 		return nil, err
 	}
+	return NewDogStatsdSinkFromClient(client, hostName), nil
+}
+
+// NewDogStatsdSinkFromClient is used to create a new DogStatsdSink with an existing datadog-statsd client
+func NewDogStatsdSinkFromClient(client *statsd.Client, hostName string) *DogStatsdSink {
 	sink := &DogStatsdSink{
 		client:            client,
 		hostName:          hostName,
 		propagateHostname: false,
 	}
-	return sink, nil
+	return sink
 }
 
 // SetTags sets common tags on the Dogstatsd Client that will be sent
