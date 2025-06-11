@@ -269,7 +269,7 @@ func (i *InmemSink) Data() []*IntervalMetrics {
 	intervals[n-1] = &IntervalMetrics{}
 	copyCurrent := intervals[n-1]
 	current.RLock()
-	*copyCurrent = *current
+	*copyCurrent = *current.shallowCopy()
 	// RWMutex is not safe to copy, so create a new instance on the copy
 	copyCurrent.RWMutex = sync.RWMutex{}
 
@@ -345,7 +345,7 @@ func (i *InmemSink) flattenKey(parts []string) string {
 
 	joined := strings.Join(parts, ".")
 
-	spaceReplacer.WriteString(buf, joined)
+	_, _ = spaceReplacer.WriteString(buf, joined)
 
 	return buf.String()
 }
@@ -356,8 +356,21 @@ func (i *InmemSink) flattenKeyLabels(parts []string, labels []Label) (string, st
 	buf := bytes.NewBufferString(key)
 
 	for _, label := range labels {
-		spaceReplacer.WriteString(buf, fmt.Sprintf(";%s=%s", label.Name, label.Value))
+		_, _ = spaceReplacer.WriteString(buf, fmt.Sprintf(";%s=%s", label.Name, label.Value))
 	}
 
 	return buf.String(), key
+}
+
+// Create a shallow shallowCopy of the IntervalMetrics
+func (intv *IntervalMetrics) shallowCopy() *IntervalMetrics {
+	return &IntervalMetrics{
+		Interval:        intv.Interval,
+		Gauges:          intv.Gauges,
+		PrecisionGauges: intv.PrecisionGauges,
+		Points:          intv.Points,
+		Counters:        intv.Counters,
+		Samples:         intv.Samples,
+		done:            intv.done,
+	}
 }

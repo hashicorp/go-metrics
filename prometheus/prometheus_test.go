@@ -249,10 +249,10 @@ func fakeServer(q chan string) *httptest.Server {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(202)
 		w.Header().Set("Content-Type", "application/json")
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		dec := expfmt.NewDecoder(r.Body, expfmt.FmtProtoDelim)
 		m := &dto.MetricFamily{}
-		dec.Decode(m)
+		_ = dec.Decode(m)
 		expectedm := &dto.MetricFamily{
 			Name: proto.String("default_one_two"),
 			Help: proto.String("default_one_two"),
@@ -295,7 +295,7 @@ func TestSetGauge(t *testing.T) {
 	metricsConf := metrics.DefaultConfig("default")
 	metricsConf.HostName = MockGetHostname()
 	metricsConf.EnableHostnameLabel = true
-	metrics.NewGlobal(metricsConf, sink)
+	_, _ = metrics.NewGlobal(metricsConf, sink)
 	metrics.SetGauge([]string{"one", "two"}, 42)
 	response := <-q
 	if response != "ok" {
@@ -316,7 +316,7 @@ func TestSetPrecisionGauge(t *testing.T) {
 	metricsConf := metrics.DefaultConfig("default")
 	metricsConf.HostName = MockGetHostname()
 	metricsConf.EnableHostnameLabel = true
-	metrics.NewGlobal(metricsConf, sink)
+	_, _ = metrics.NewGlobal(metricsConf, sink)
 	metrics.SetPrecisionGauge([]string{"one", "two"}, 42)
 	response := <-q
 	if response != "ok" {

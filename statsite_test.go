@@ -146,7 +146,7 @@ func TestStatsite_Conn(t *testing.T) {
 			return
 		}
 
-		conn.Close()
+		_ = conn.Close()
 	}()
 	s, err := NewStatsiteSink(addr)
 	if err != nil {

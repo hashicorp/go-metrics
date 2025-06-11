@@ -60,14 +60,14 @@ func fakeBroker(q chan string) *httptest.Server {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Header().Set("Content-Type", "application/json")
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			q <- err.Error()
-			fmt.Fprintln(w, err.Error())
+			_, _ = fmt.Fprintln(w, err.Error())
 		} else {
 			q <- string(body)
-			fmt.Fprintln(w, `{"stats":1}`)
+			_, _ = fmt.Fprintln(w, `{"stats":1}`)
 		}
 	}
 

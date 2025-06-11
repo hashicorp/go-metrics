@@ -31,7 +31,10 @@ func TestInmemSignal(t *testing.T) {
 	time.Sleep(15 * time.Millisecond)
 
 	// Send signal!
-	syscall.Kill(os.Getpid(), syscall.SIGUSR1)
+	err := syscall.Kill(os.Getpid(), syscall.SIGUSR1)
+	if err != nil {
+		t.Fatalf("failed to signal process: %s", err)
+	}
 
 	// Wait for flush
 	time.Sleep(10 * time.Millisecond)

@@ -82,7 +82,7 @@ func (s *DogStatsdSink) parseKey(key []string) ([]string, []metrics.Label) {
 	}
 
 	if s.propagateHostname {
-		labels = append(labels, metrics.Label{"host", hostName})
+		labels = append(labels, metrics.Label{Name: "host", Value: hostName})
 	}
 	return key, labels
 }
@@ -115,7 +115,7 @@ func (s *DogStatsdSink) AddSample(key []string, val float32) {
 func (s *DogStatsdSink) SetGaugeWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
 	rate := 1.0
-	s.client.Gauge(flatKey, float64(val), tags, rate)
+	_ = s.client.Gauge(flatKey, float64(val), tags, rate)
 }
 
 // The following ...WithLabels methods correspond to Datadog's Tag extension to Statsd.
@@ -123,24 +123,24 @@ func (s *DogStatsdSink) SetGaugeWithLabels(key []string, val float32, labels []m
 func (s *DogStatsdSink) SetPrecisionGaugeWithLabels(key []string, val float64, labels []metrics.Label) {
 	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
 	rate := 1.0
-	s.client.Gauge(flatKey, val, tags, rate)
+	_ = s.client.Gauge(flatKey, val, tags, rate)
 }
 
 func (s *DogStatsdSink) IncrCounterWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
 	rate := 1.0
-	s.client.Count(flatKey, int64(val), tags, rate)
+	_ = s.client.Count(flatKey, int64(val), tags, rate)
 }
 
 func (s *DogStatsdSink) AddSampleWithLabels(key []string, val float32, labels []metrics.Label) {
 	flatKey, tags := s.getFlatkeyAndCombinedLabels(key, labels)
 	rate := 1.0
-	s.client.TimeInMilliseconds(flatKey, float64(val), tags, rate)
+	_ = s.client.TimeInMilliseconds(flatKey, float64(val), tags, rate)
 }
 
 // Shutdown disables further metric collection, blocks to flush data, and tears down the sink.
 func (s *DogStatsdSink) Shutdown() {
-	s.client.Close()
+	_ = s.client.Close()
 }
 
 func (s *DogStatsdSink) getFlatkeyAndCombinedLabels(key []string, labels []metrics.Label) (string, []string) {
