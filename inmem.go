@@ -252,7 +252,7 @@ func (i *InmemSink) AddSampleWithLabels(key []string, val float32, labels []Labe
 }
 
 // Data is used to retrieve all the aggregated metrics
-// The current metric is a snapshot
+// The metric for the current interval is a snapshot
 // Intervals may be in use, and a read lock should be acquired
 func (i *InmemSink) Data() []*IntervalMetrics {
 	// Get the current interval, forces creation
