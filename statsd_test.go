@@ -50,7 +50,7 @@ func TestStatsd_Conn(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		defer list.Close()
+		defer func() { _ = list.Close() }()
 		buf := make([]byte, 1500)
 		n, err := list.Read(buf)
 		if err != nil {
