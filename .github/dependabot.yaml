@@ -8,6 +8,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
     commit-message:
       prefix: "[chore] : "
     groups:
@@ -20,6 +21,7 @@ updates:
       - "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
     commit-message:
       prefix: "[chore] : "
     groups:
