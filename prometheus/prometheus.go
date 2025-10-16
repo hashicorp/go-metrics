@@ -77,6 +77,7 @@ type gauge struct {
 	updatedAt time.Time
 	// canDelete is set if the metric is created during runtime so we know it's ephemeral and can delete it on expiry.
 	canDelete bool
+	mu        sync.RWMutex
 }
 
 // SummaryDefinition can be provided to PrometheusOpts to declare a constant summary that is not deleted on expiry.
@@ -90,6 +91,7 @@ type summary struct {
 	prometheus.Summary
 	updatedAt time.Time
 	canDelete bool
+	mu        sync.RWMutex
 }
 
 // CounterDefinition can be provided to PrometheusOpts to declare a constant counter that is not deleted on expiry.
@@ -103,6 +105,7 @@ type counter struct {
 	prometheus.Counter
 	updatedAt time.Time
 	canDelete bool
+	mu        sync.RWMutex
 }
 
 // NewPrometheusSink creates a new PrometheusSink using the default options.
@@ -164,14 +167,17 @@ func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) 
 			return true
 		}
 		g := v.(*gauge)
+		g.mu.RLock()
 		lastUpdate := g.updatedAt
 		if expire && lastUpdate.Add(p.expiration).Before(t) {
 			if g.canDelete {
 				p.gauges.Delete(k)
+				g.mu.RUnlock()
 				return true
 			}
 		}
 		g.Collect(c)
+		g.mu.RUnlock()
 		return true
 	})
 	p.summaries.Range(func(k, v interface{}) bool {
@@ -179,14 +185,17 @@ func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) 
 			return true
 		}
 		s := v.(*summary)
+		s.mu.RLock()
 		lastUpdate := s.updatedAt
 		if expire && lastUpdate.Add(p.expiration).Before(t) {
 			if s.canDelete {
 				p.summaries.Delete(k)
+				s.mu.RUnlock()
 				return true
 			}
 		}
 		s.Collect(c)
+		s.mu.RUnlock()
 		return true
 	})
 	p.counters.Range(func(k, v interface{}) bool {
@@ -194,14 +203,17 @@ func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) 
 			return true
 		}
 		count := v.(*counter)
+		count.mu.RLock()
 		lastUpdate := count.updatedAt
 		if expire && lastUpdate.Add(p.expiration).Before(t) {
 			if count.canDelete {
 				p.counters.Delete(k)
+				count.mu.RUnlock()
 				return true
 			}
 		}
 		count.Collect(c)
+		count.mu.RUnlock()
 		return true
 	})
 }
@@ -283,40 +295,37 @@ func (p *PrometheusSink) SetPrecisionGauge(parts []string, val float64) {
 
 func (p *PrometheusSink) SetPrecisionGaugeWithLabels(parts []string, val float64, labels []metrics.Label) {
 	key, hash := flattenKey(parts, labels)
+
+	// Try to load existing gauge
 	pg, ok := p.gauges.Load(hash)
-
-	// The sync.Map underlying gauges stores pointers to our structs. If we need to make updates,
-	// rather than modifying the underlying value directly, which would be racy, we make a local
-	// copy by dereferencing the pointer we get back, making the appropriate changes, and then
-	// storing a pointer to our local copy. The underlying Prometheus types are threadsafe,
-	// so there's no issues there. It's possible for racy updates to occur to the updatedAt
-	// value, but since we're always setting it to time.Now(), it doesn't really matter.
-	if ok {
-		localGauge := *pg.(*gauge)
-		localGauge.Set(val)
-		localGauge.updatedAt = time.Now()
-		p.gauges.Store(hash, &localGauge)
-
-		// The gauge does not exist, create the gauge and allow it to be deleted
-	} else {
+	if !ok {
+		// Gauge doesn't exist, create it
 		help := key
-		existingHelp, ok := p.help[fmt.Sprintf("gauge.%s", key)]
-		if ok {
+		existingHelp, helpOk := p.help[fmt.Sprintf("gauge.%s", key)]
+		if helpOk {
 			help = existingHelp
 		}
-		g := prometheus.NewGauge(prometheus.GaugeOpts{
+		newGauge := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name:        key,
 			Help:        help,
 			ConstLabels: prometheusLabels(labels),
 		})
-		g.Set(val)
-		pg = &gauge{
-			Gauge:     g,
+		newWrapper := &gauge{
+			Gauge:     newGauge,
 			updatedAt: time.Now(),
 			canDelete: true,
 		}
-		p.gauges.Store(hash, pg)
+		// Use LoadOrStore to handle race where multiple goroutines try to create the same gauge
+		pg, _ = p.gauges.LoadOrStore(hash, newWrapper)
+		// If another goroutine won the race and stored first, we'll use their gauge instead
 	}
+
+	// Update the gauge (either existing or newly created)
+	g := pg.(*gauge)
+	g.mu.Lock()
+	g.Set(val)
+	g.updatedAt = time.Now()
+	g.mu.Unlock()
 }
 
 func (p *PrometheusSink) AddSample(parts []string, val float32) {
@@ -325,37 +334,39 @@ func (p *PrometheusSink) AddSample(parts []string, val float32) {
 
 func (p *PrometheusSink) AddSampleWithLabels(parts []string, val float32, labels []metrics.Label) {
 	key, hash := flattenKey(parts, labels)
+
+	// Try to load existing summary
 	ps, ok := p.summaries.Load(hash)
-
-	// Does the summary already exist for this sample type?
-	if ok {
-		localSummary := *ps.(*summary)
-		localSummary.Observe(float64(val))
-		localSummary.updatedAt = time.Now()
-		p.summaries.Store(hash, &localSummary)
-
-		// The summary does not exist, create the Summary and allow it to be deleted
-	} else {
+	if !ok {
+		// Summary doesn't exist, create it
 		help := key
-		existingHelp, ok := p.help[fmt.Sprintf("summary.%s", key)]
-		if ok {
+		existingHelp, helpOk := p.help[fmt.Sprintf("summary.%s", key)]
+		if helpOk {
 			help = existingHelp
 		}
-		s := prometheus.NewSummary(prometheus.SummaryOpts{
+		newSummary := prometheus.NewSummary(prometheus.SummaryOpts{
 			Name:        key,
 			Help:        help,
 			MaxAge:      10 * time.Second,
 			ConstLabels: prometheusLabels(labels),
 			Objectives:  map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		})
-		s.Observe(float64(val))
-		ps = &summary{
-			Summary:   s,
+		newWrapper := &summary{
+			Summary:   newSummary,
 			updatedAt: time.Now(),
 			canDelete: true,
 		}
-		p.summaries.Store(hash, ps)
+		// Use LoadOrStore to handle race where multiple goroutines try to create the same summary
+		ps, _ = p.summaries.LoadOrStore(hash, newWrapper)
+		// If another goroutine won the race and stored first, we'll use their summary instead
 	}
+
+	// Update the summary (either existing or newly created)
+	s := ps.(*summary)
+	s.mu.Lock()
+	s.Observe(float64(val))
+	s.updatedAt = time.Now()
+	s.mu.Unlock()
 }
 
 // EmitKey is not implemented. Prometheus doesn’t offer a type for which an
@@ -370,7 +381,6 @@ func (p *PrometheusSink) IncrCounter(parts []string, val float32) {
 
 func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labels []metrics.Label) {
 	key, hash := flattenKey(parts, labels)
-	pc, ok := p.counters.Load(hash)
 
 	// Prometheus Counter.Add() panics if val < 0. We don't want this to
 	// cause applications to crash, so log an error instead.
@@ -379,33 +389,36 @@ func (p *PrometheusSink) IncrCounterWithLabels(parts []string, val float32, labe
 		return
 	}
 
-	// Does the counter exist?
-	if ok {
-		localCounter := *pc.(*counter)
-		localCounter.Add(float64(val))
-		localCounter.updatedAt = time.Now()
-		p.counters.Store(hash, &localCounter)
-
-		// The counter does not exist yet, create it and allow it to be deleted
-	} else {
+	// Try to load existing counter
+	pc, ok := p.counters.Load(hash)
+	if !ok {
+		// Counter doesn't exist, create it
 		help := key
-		existingHelp, ok := p.help[fmt.Sprintf("counter.%s", key)]
-		if ok {
+		existingHelp, helpOk := p.help[fmt.Sprintf("counter.%s", key)]
+		if helpOk {
 			help = existingHelp
 		}
-		c := prometheus.NewCounter(prometheus.CounterOpts{
+		newCounter := prometheus.NewCounter(prometheus.CounterOpts{
 			Name:        key,
 			Help:        help,
 			ConstLabels: prometheusLabels(labels),
 		})
-		c.Add(float64(val))
-		pc = &counter{
-			Counter:   c,
+		newWrapper := &counter{
+			Counter:   newCounter,
 			updatedAt: time.Now(),
 			canDelete: true,
 		}
-		p.counters.Store(hash, pc)
+		// Use LoadOrStore to handle race where multiple goroutines try to create the same counter
+		pc, _ = p.counters.LoadOrStore(hash, newWrapper)
+		// If another goroutine won the race and stored first, we'll use their counter instead
 	}
+
+	// Update the counter (either existing or newly created)
+	c := pc.(*counter)
+	c.mu.Lock()
+	c.Add(float64(val))
+	c.updatedAt = time.Now()
+	c.mu.Unlock()
 }
 
 // PrometheusPushSink wraps a normal prometheus sink and provides an address and facilities to export it to an address
