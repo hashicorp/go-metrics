@@ -11,22 +11,22 @@ import (
 	"testing"
 	"time"
 
-	prom "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 )
 
 func TestPrometheusRaceCondition(t *testing.T) {
-	// Create a new Prometheus sink with expiration
-	promSink, err := NewPrometheusSinkFrom(PrometheusOpts{Expiration: 310 * time.Second})
+	reg := prometheus.NewRegistry()
+
+	promSink, err := NewPrometheusSinkFrom(PrometheusOpts{
+		Registerer: reg,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Register it with a new Prometheus registry for isolation
-	registry := prom.NewRegistry()
-	registry.MustRegister(promSink)
-
-	nrGoroutines := 2
-	incrementsPerGoroutine := 100
+	nrGoroutines := 20
+	incrementsPerGoroutine := 1000
 	expectedTotal := int64(nrGoroutines * incrementsPerGoroutine)
 
 	var wg sync.WaitGroup
@@ -41,25 +41,25 @@ func TestPrometheusRaceCondition(t *testing.T) {
 	}
 	wg.Wait()
 
-	families, err := registry.Gather()
-	if err != nil {
-		t.Fatal(err)
-	}
-	var finalValue int64
-	for _, family := range families {
-		if family.GetName() == "race_test_counter" {
-			for _, metric := range family.GetMetric() {
-				if counter := metric.GetCounter(); counter != nil {
-					finalValue = int64(counter.GetValue())
-				}
-			}
-		}
-	}
-	if finalValue == 0 {
-		t.Fatal("Counter metric not found")
-	}
+	// Collect metrics after all updates
+	timeAfterUpdates := time.Now()
+	ch := make(chan prometheus.Metric, 10)
+	promSink.collectAtTime(ch, timeAfterUpdates)
 
-	if finalValue != expectedTotal {
-		t.Errorf("Race condition detected: got %d want %d", finalValue, expectedTotal)
+	// Read and verify the counter
+	select {
+	case m := <-ch:
+		var pb dto.Metric
+		if err := m.Write(&pb); err != nil {
+			t.Fatalf("unexpected error reading metric: %s", err)
+		}
+		if pb.Counter == nil {
+			t.Fatalf("expected counter metric, got %v", pb)
+		}
+		if *pb.Counter.Value != float64(expectedTotal) {
+			t.Fatalf("expected counter value %d, got %f", expectedTotal, *pb.Counter.Value)
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timed out waiting to collect counter metric")
 	}
 }
