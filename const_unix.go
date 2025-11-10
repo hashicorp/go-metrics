@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 //go:build !windows && !js
-// +build !windows,!js
 
 package metrics
 

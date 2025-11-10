@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MIT
 
-// +build windows
+//go:build windows
 
 package metrics
 
