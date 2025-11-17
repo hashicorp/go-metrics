@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 //go:build hashicorpmetrics
-// +build hashicorpmetrics
 
 package datadog
 

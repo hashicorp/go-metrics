@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 //go:build go1.9
-// +build go1.9
 
 package prometheus
 

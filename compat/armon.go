@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 //go:build armonmetrics || ignore || !hashicorpmetrics
-// +build armonmetrics ignore !hashicorpmetrics
 
 package metrics
 
