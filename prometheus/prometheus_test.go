@@ -258,9 +258,9 @@ func fakeServer(q chan string) *httptest.Server {
 			Help: proto.String("default_one_two"),
 			Type: dto.MetricType_GAUGE.Enum(),
 			Metric: []*dto.Metric{
-				&dto.Metric{
+				{
 					Label: []*dto.LabelPair{
-						&dto.LabelPair{
+						{
 							Name:  proto.String("host"),
 							Value: proto.String(MockGetHostname()),
 						},
@@ -358,9 +358,9 @@ func TestDefinitionsWithLabels(t *testing.T) {
 		{Name: "version", Value: "some info"},
 	})
 	sink.gauges.Range(func(key, value interface{}) bool {
-		localGauge := *value.(*gauge)
-		if !strings.Contains(localGauge.Desc().String(), gaugeDef.Help) {
-			t.Fatalf("expected gauge to include correct help=%s, but was %s", gaugeDef.Help, localGauge.Desc().String())
+		g := value.(*gauge)
+		if !strings.Contains(g.Desc().String(), gaugeDef.Help) {
+			t.Fatalf("expected gauge to include correct help=%s, but was %s", gaugeDef.Help, g.Desc().String())
 		}
 		return true
 	})
@@ -369,9 +369,9 @@ func TestDefinitionsWithLabels(t *testing.T) {
 		{Name: "version", Value: "some info"},
 	})
 	sink.summaries.Range(func(key, value interface{}) bool {
-		metric := *value.(*summary)
-		if !strings.Contains(metric.Desc().String(), summaryDef.Help) {
-			t.Fatalf("expected gauge to include correct help=%s, but was %s", summaryDef.Help, metric.Desc().String())
+		s := value.(*summary)
+		if !strings.Contains(s.Desc().String(), summaryDef.Help) {
+			t.Fatalf("expected gauge to include correct help=%s, but was %s", summaryDef.Help, s.Desc().String())
 		}
 		return true
 	})
@@ -380,9 +380,9 @@ func TestDefinitionsWithLabels(t *testing.T) {
 		{Name: "version", Value: "some info"},
 	})
 	sink.counters.Range(func(key, value interface{}) bool {
-		metric := *value.(*counter)
-		if !strings.Contains(metric.Desc().String(), counterDef.Help) {
-			t.Fatalf("expected gauge to include correct help=%s, but was %s", counterDef.Help, metric.Desc().String())
+		c := value.(*counter)
+		if !strings.Contains(c.Desc().String(), counterDef.Help) {
+			t.Fatalf("expected gauge to include correct help=%s, but was %s", counterDef.Help, c.Desc().String())
 		}
 		return true
 	})
