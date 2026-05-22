@@ -140,6 +140,7 @@ CONNECT:
 		log.Printf("[ERR] Error connecting to statsite! Err: %s", err)
 		goto WAIT
 	}
+	defer sock.Close()
 
 	// Create a buffered writer
 	buffered = bufio.NewWriter(sock)
