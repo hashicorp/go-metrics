@@ -4,6 +4,7 @@
 package prometheus
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -112,6 +113,59 @@ func TestMultiplePrometheusSink(t *testing.T) {
 	if !ok {
 		t.Fatalf("Unregister(sink) = false, want true")
 	}
+}
+
+func TestPrometheusSink_BackgroundGC(t *testing.T) {
+	sink, err := NewPrometheusSinkFrom(PrometheusOpts{
+		Expiration: time.Millisecond * 10,
+		Name:       "test_sink",
+	})
+	if err != nil {
+		t.Fatalf("err = %v, want nil", err)
+	}
+
+	parts := []string{"one", "two"}
+
+	metricsConf := metrics.DefaultConfig("default")
+	metricsConf.HostName = MockGetHostname()
+	metricsConf.EnableHostnameLabel = true
+	_, _ = metrics.NewGlobal(metricsConf, sink)
+	metrics.SetPrecisionGauge(parts, 42)
+
+	var found bool
+	sink.gauges.Range(func(key, val any) bool {
+		if key != "default_one_two;host=test_hostname" {
+			t.Fatal("expected metric")
+		}
+		found = true
+		return true
+	})
+	if !found {
+		t.Fatalf("expected a metric")
+	}
+	ctx, cancel := context.WithTimeout(context.TODO(), 100*time.Millisecond)
+	t.Cleanup(cancel)
+	sink.RunBackgroundCleanup(ctx)
+
+	ticker := time.NewTicker(5 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			t.Fatal("metrics should have been GC'd")
+		case <-ticker.C:
+			found := false
+			sink.gauges.Range(func(key, val any) bool {
+				found = true
+				return true
+			})
+			if !found {
+				return
+			}
+		}
+	}
+
 }
 
 func TestDefinitions(t *testing.T) {

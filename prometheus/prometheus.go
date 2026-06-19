@@ -6,10 +6,12 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
@@ -56,12 +58,13 @@ type PrometheusOpts struct {
 
 type PrometheusSink struct {
 	// If these will ever be copied, they should be converted to *sync.Map values and initialized appropriately
-	gauges     sync.Map
-	summaries  sync.Map
-	counters   sync.Map
-	expiration time.Duration
-	help       map[string]string
-	name       string
+	gauges         sync.Map
+	summaries      sync.Map
+	counters       sync.Map
+	expiration     time.Duration
+	lastCollection atomic.Int64
+	help           map[string]string
+	name           string
 }
 
 // GaugeDefinition can be provided to PrometheusOpts to declare a constant gauge that is not deleted on expiry.
@@ -116,12 +119,13 @@ func NewPrometheusSinkFrom(opts PrometheusOpts) (*PrometheusSink, error) {
 		name = "default_prometheus_sink"
 	}
 	sink := &PrometheusSink{
-		gauges:     sync.Map{},
-		summaries:  sync.Map{},
-		counters:   sync.Map{},
-		expiration: opts.Expiration,
-		help:       make(map[string]string),
-		name:       name,
+		gauges:         sync.Map{},
+		summaries:      sync.Map{},
+		counters:       sync.Map{},
+		expiration:     opts.Expiration,
+		lastCollection: atomic.Int64{},
+		help:           make(map[string]string),
+		name:           name,
 	}
 
 	initGauges(&sink.gauges, opts.GaugeDefinitions, sink.help)
@@ -157,6 +161,7 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 // collectAtTime allows internal testing of the expiry based logic here without
 // mocking clocks or making tests timing sensitive.
 func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) {
+	p.lastCollection.Store(t.UnixNano())
 	expire := p.expiration != 0
 	p.gauges.Range(func(k, v interface{}) bool {
 		if v == nil {
@@ -201,6 +206,82 @@ func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) 
 			}
 		}
 		count.Collect(c)
+		return true
+	})
+}
+
+// RunBackgroundCleanup starts a background goroutine that periodically removes
+// expired metrics if it's been more than twice the expiration interval since
+// last collection. This ensures metrics are cleaned up even when the endpoint
+// is not being scraped to avoid resource leaks
+func (p *PrometheusSink) RunBackgroundCleanup(ctx context.Context) {
+	if p.expiration == 0 {
+		return
+	}
+	interval := p.expiration
+
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				last := time.Unix(0, p.lastCollection.Load())
+				if time.Since(last) > interval*2 {
+					p.cleanupExpiredAt(time.Now())
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+}
+
+func (p *PrometheusSink) cleanupExpiredAt(t time.Time) {
+	if p.expiration == 0 {
+		return
+	}
+
+	p.gauges.Range(func(k, v any) bool {
+		if v == nil {
+			return true
+		}
+		g := v.(*gauge)
+		lastUpdate := g.updatedAt
+		if lastUpdate.Add(p.expiration).Before(t) {
+			if g.canDelete {
+				p.gauges.Delete(k)
+				return true
+			}
+		}
+		return true
+	})
+	p.summaries.Range(func(k, v any) bool {
+		if v == nil {
+			return true
+		}
+		s := v.(*summary)
+		lastUpdate := s.updatedAt
+		if lastUpdate.Add(p.expiration).Before(t) {
+			if s.canDelete {
+				p.summaries.Delete(k)
+				return true
+			}
+		}
+		return true
+	})
+	p.counters.Range(func(k, v any) bool {
+		if v == nil {
+			return true
+		}
+		count := v.(*counter)
+		lastUpdate := count.updatedAt
+		if lastUpdate.Add(p.expiration).Before(t) {
+			if count.canDelete {
+				p.counters.Delete(k)
+				return true
+			}
+		}
 		return true
 	})
 }
