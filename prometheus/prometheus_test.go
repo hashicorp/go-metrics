@@ -238,7 +238,8 @@ func TestDefinitions(t *testing.T) {
 
 	// Collect the metrics as if it's some time in the future, way beyond the 5
 	// second expiry.
-	sink.collectAtTime(ch, timeAfterUpdates.Add(10*time.Second))
+	sink.collectAtTime(func(c prometheus.Collector) { c.Collect(ch) },
+		timeAfterUpdates.Add(10*time.Second))
 
 	// We should see all the metrics desired Expiry behavior
 	expectedNum := 3

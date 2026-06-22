@@ -155,12 +155,12 @@ func (p *PrometheusSink) Describe(c chan<- *prometheus.Desc) {
 // logic to clean up ephemeral metrics if their value haven't been set for a
 // duration exceeding our allowed expiration time.
 func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
-	p.collectAtTime(c, time.Now())
+	p.collectAtTime(func(p prometheus.Collector) { p.Collect(c) }, time.Now())
 }
 
 // collectAtTime allows internal testing of the expiry based logic here without
 // mocking clocks or making tests timing sensitive.
-func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) {
+func (p *PrometheusSink) collectAtTime(fn func(prometheus.Collector), t time.Time) {
 	p.lastCollection.Store(t.UnixNano())
 	expire := p.expiration != 0
 	p.gauges.Range(func(k, v interface{}) bool {
@@ -175,7 +175,7 @@ func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) 
 				return true
 			}
 		}
-		g.Collect(c)
+		fn(g)
 		return true
 	})
 	p.summaries.Range(func(k, v interface{}) bool {
@@ -190,7 +190,7 @@ func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) 
 				return true
 			}
 		}
-		s.Collect(c)
+		fn(s)
 		return true
 	})
 	p.counters.Range(func(k, v interface{}) bool {
@@ -205,7 +205,7 @@ func (p *PrometheusSink) collectAtTime(c chan<- prometheus.Metric, t time.Time) 
 				return true
 			}
 		}
-		count.Collect(c)
+		fn(count)
 		return true
 	})
 }
@@ -228,65 +228,13 @@ func (p *PrometheusSink) RunBackgroundCleanup(ctx context.Context) {
 			case <-ticker.C:
 				last := time.Unix(0, p.lastCollection.Load())
 				if time.Since(last) > interval*2 {
-					p.cleanupExpiredAt(time.Now())
+					p.collectAtTime(func(prometheus.Collector) {}, time.Now())
 				}
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
-}
-
-// cleanupExpiredAt deletes expired metrics. Since collection 
-// also deletes expired metrics, changes to one method often
-// require changes to the other.
-func (p *PrometheusSink) cleanupExpiredAt(t time.Time) {
-	if p.expiration == 0 {
-		return
-	}
-
-	p.gauges.Range(func(k, v any) bool {
-		if v == nil {
-			return true
-		}
-		g := v.(*gauge)
-		lastUpdate := g.updatedAt
-		if lastUpdate.Add(p.expiration).Before(t) {
-			if g.canDelete {
-				p.gauges.Delete(k)
-				return true
-			}
-		}
-		return true
-	})
-	p.summaries.Range(func(k, v any) bool {
-		if v == nil {
-			return true
-		}
-		s := v.(*summary)
-		lastUpdate := s.updatedAt
-		if lastUpdate.Add(p.expiration).Before(t) {
-			if s.canDelete {
-				p.summaries.Delete(k)
-				return true
-			}
-		}
-		return true
-	})
-	p.counters.Range(func(k, v any) bool {
-		if v == nil {
-			return true
-		}
-		count := v.(*counter)
-		lastUpdate := count.updatedAt
-		if lastUpdate.Add(p.expiration).Before(t) {
-			if count.canDelete {
-				p.counters.Delete(k)
-				return true
-			}
-		}
-		return true
-	})
 }
 
 func initGauges(m *sync.Map, gauges []GaugeDefinition, help map[string]string) {
