@@ -237,6 +237,9 @@ func (p *PrometheusSink) RunBackgroundCleanup(ctx context.Context) {
 	}()
 }
 
+// cleanupExpiredAt deletes expired metrics. Since collection 
+// also deletes expired metrics, changes to one method often
+// require changes to the other.
 func (p *PrometheusSink) cleanupExpiredAt(t time.Time) {
 	if p.expiration == 0 {
 		return
