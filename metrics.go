@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MIT
 
 package metrics
@@ -320,7 +320,7 @@ func insert(i int, v string, s []string) []string {
 	newS := make([]string, len(s)+1)
 
 	// Copy s[0, i-1] into newS
-	for j := 0; j < i; j++ {
+	for j := range i {
 		newS[j] = s[j]
 	}
 

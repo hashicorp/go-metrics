@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MIT
 
 package metrics
@@ -421,7 +421,7 @@ func TestMetrics_Filter_Blacklist(t *testing.T) {
 	}
 }
 
-func HasElem(s interface{}, elem interface{}) bool {
+func HasElem(s any, elem any) bool {
 	arrV := reflect.ValueOf(s)
 
 	if arrV.Kind() == reflect.Slice {

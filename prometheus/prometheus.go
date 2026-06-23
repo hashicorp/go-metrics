@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MIT
 
 //go:build go1.9
@@ -164,7 +164,7 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 func (p *PrometheusSink) collectAtTime(fn func(prometheus.Collector), t time.Time) {
 	p.lastCollection.Store(t.UnixNano())
 	expire := p.expiration != 0
-	p.gauges.Range(func(k, v interface{}) bool {
+	p.gauges.Range(func(k, v any) bool {
 		if v == nil {
 			return true
 		}
@@ -179,7 +179,7 @@ func (p *PrometheusSink) collectAtTime(fn func(prometheus.Collector), t time.Tim
 		fn(g)
 		return true
 	})
-	p.summaries.Range(func(k, v interface{}) bool {
+	p.summaries.Range(func(k, v any) bool {
 		if v == nil {
 			return true
 		}
@@ -194,7 +194,7 @@ func (p *PrometheusSink) collectAtTime(fn func(prometheus.Collector), t time.Tim
 		fn(s)
 		return true
 	})
-	p.counters.Range(func(k, v interface{}) bool {
+	p.counters.Range(func(k, v any) bool {
 		if v == nil {
 			return true
 		}
@@ -285,12 +285,13 @@ func flattenKey(parts []string, labels []metrics.Label) (string, string) {
 	key := strings.Join(parts, "_")
 	key = forbiddenCharsReplacer.Replace(key)
 
-	hash := key
+	var hash strings.Builder
+	hash.WriteString(key)
 	for _, label := range labels {
-		hash += ";" + label.Name + "=" + label.Value
+		hash.WriteString(";" + label.Name + "=" + label.Value)
 	}
 
-	return key, hash
+	return key, hash.String()
 }
 
 func prometheusLabels(labels []metrics.Label) prometheus.Labels {

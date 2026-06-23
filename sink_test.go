@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MIT
 
 package metrics
@@ -278,17 +278,17 @@ func TestNewMetricSinkFromURL(t *testing.T) {
 		{
 			desc:   "statsd scheme yields a StatsdSink",
 			input:  "statsd://someserver:123",
-			expect: reflect.TypeOf(&StatsdSink{}),
+			expect: reflect.TypeFor[*StatsdSink](),
 		},
 		{
 			desc:   "statsite scheme yields a StatsiteSink",
 			input:  "statsite://someserver:123",
-			expect: reflect.TypeOf(&StatsiteSink{}),
+			expect: reflect.TypeFor[*StatsiteSink](),
 		},
 		{
 			desc:   "inmem scheme yields an InmemSink",
 			input:  "inmem://?interval=30s&retain=30s",
-			expect: reflect.TypeOf(&InmemSink{}),
+			expect: reflect.TypeFor[*InmemSink](),
 		},
 		{
 			desc:      "unknown scheme yields an error",

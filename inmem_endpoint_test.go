@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MIT
 
 package metrics
@@ -315,7 +315,7 @@ func TestInmemSink_Stream(t *testing.T) {
 
 	decoder := json.NewDecoder(resp.Body)
 	var prevGaugeValue float32
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		var summary MetricsSummary
 		if err := decoder.Decode(&summary); err != nil {
 			t.Fatalf("expected no error while decoding response %d, got %v", i, err)
@@ -342,9 +342,9 @@ type encoder struct {
 	encoder *json.Encoder
 }
 
-func (e encoder) Encode(metrics interface{}) error {
+func (e encoder) Encode(metrics any) error {
 	if err := e.encoder.Encode(metrics); err != nil {
-		fmt.Println("failed to encode metrics summary", "error", err)
+		fmt.Println("failed to encode metrics summary", "error", err) //nolint:forbidigo
 		return err
 	}
 	e.flusher.Flush()
