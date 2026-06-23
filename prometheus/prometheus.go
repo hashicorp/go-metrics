@@ -159,7 +159,8 @@ func (p *PrometheusSink) Collect(c chan<- prometheus.Metric) {
 }
 
 // collectAtTime allows internal testing of the expiry based logic here without
-// mocking clocks or making tests timing sensitive.
+// mocking clocks or making tests timing sensitive. fn is the collection
+// callback that's called for each unexpired metric
 func (p *PrometheusSink) collectAtTime(fn func(prometheus.Collector), t time.Time) {
 	p.lastCollection.Store(t.UnixNano())
 	expire := p.expiration != 0
