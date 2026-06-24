@@ -1,6 +1,6 @@
 module github.com/hashicorp/go-metrics
 
-go 1.23.0
+go 1.25
 
 require (
 	github.com/DataDog/datadog-go v4.8.3+incompatible
