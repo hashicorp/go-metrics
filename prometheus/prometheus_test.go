@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -288,7 +287,7 @@ func TestDefinitions(t *testing.T) {
 					t.Fatalf("expected defined summary sum to have value 42 after expiring, got %f", *pb.Summary.SampleSum)
 				}
 			default:
-				t.Fatalf("unexpected metric type %v", pb)
+				t.Fatalf("unexpected metric type %v", pb.String())
 			}
 		case <-time.After(100 * time.Millisecond):
 			t.Fatalf("Timed out waiting to collect expected metric. Got %d, want %d", i, expectedNum)
@@ -305,7 +304,7 @@ func fakeServer(q chan string) *httptest.Server {
 		w.WriteHeader(202)
 		w.Header().Set("Content-Type", "application/json")
 		defer func() { _ = r.Body.Close() }()
-		dec := expfmt.NewDecoder(r.Body, expfmt.FmtProtoDelim)
+		dec := expfmt.NewDecoder(r.Body, expfmt.NewFormat(expfmt.TypeProtoDelim))
 		m := &dto.MetricFamily{}
 		_ = dec.Decode(m)
 		expectedm := &dto.MetricFamily{
@@ -326,8 +325,10 @@ func fakeServer(q chan string) *httptest.Server {
 				},
 			},
 		}
-		if !reflect.DeepEqual(m, expectedm) {
-			msg := fmt.Sprintf("Unexpected samples extracted, got: %+v, want: %+v", m, expectedm)
+		// dto.MetricFamily is not comparable but this gets us all the
+		// comparable fields we care about
+		if m.String() != expectedm.String() {
+			msg := fmt.Sprintf("Unexpected samples extracted\ngot:  %#v\nwant: %#v", m, expectedm)
 			q <- errors.New(msg).Error()
 		} else {
 			q <- "ok"
