@@ -17,6 +17,7 @@ to any type of backend. Currently the following sinks are provided:
 * PrometheusSink: Sinks to a [Prometheus](http://prometheus.io/) metrics endpoint (exposed via HTTP for scrapes)
 * InmemSink : Provides in-memory aggregation, can be used to export stats
 * FanoutSink : Sinks to multiple sinks. Enables writing to multiple statsite instances for example.
+* OTELSink : Sinks to an [OpenTelemetry](https://opentelemetry.io/) collector via OTLP/gRPC export
 * BlackholeSink : Sinks to nowhere
 
 In addition to the sinks, the `InmemSignal` can be used to catch a signal,
