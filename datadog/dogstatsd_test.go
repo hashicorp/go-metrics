@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MIT
 
 package datadog
@@ -47,7 +47,7 @@ var FlattenKeyTests = []struct {
 var MetricSinkTests = []struct {
 	Method            string
 	Metric            []string
-	Value             interface{}
+	Value             any
 	Tags              []metrics.Label
 	PropagateHostname bool
 	Expected          string
@@ -63,6 +63,7 @@ var MetricSinkTests = []struct {
 	{"SetGauge", []string{"foo", "bar"}, float32(42), []metrics.Label{{Name: "my_tag", Value: "my_value"}, {Name: "other_tag", Value: "other_value"}}, HostnameEnabled, "foo.bar:42|g|#my_tag:my_value,other_tag:other_value,host:test_hostname"},
 }
 
+//nolint:unparam
 func mockNewDogStatsdSink(addr string, labels []metrics.Label, tagWithHostname bool) *DogStatsdSink {
 	dog, _ := NewDogStatsdSink(addr, MockGetHostname())
 	_, tags := dog.getFlatkeyAndCombinedLabels(nil, labels)
