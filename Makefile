@@ -23,7 +23,7 @@ check: lint tidy copywriteheaders
 
 # lint covers go vet and go fmt
 lint:
-	golangci-lint run --build-tags "$(GO_TAGS)"
+	golangci-lint run
 
 # make sure our copyright headers are correct
 copywriteheaders:

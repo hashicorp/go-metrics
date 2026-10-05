@@ -1,6 +1,6 @@
 module github.com/hashicorp/go-metrics
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/DataDog/datadog-go v4.8.3+incompatible
@@ -9,7 +9,6 @@ require (
 	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/client_model v0.6.3
 	github.com/prometheus/common v0.71.0
-	google.golang.org/protobuf v1.36.12
 )
 
 require (
@@ -26,6 +25,7 @@ require (
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926 // indirect
 	golang.org/x/sys v0.47.0 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 )
 
 // Introduced undocumented breaking change to metrics sink interface

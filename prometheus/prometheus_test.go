@@ -15,11 +15,9 @@ import (
 	"testing"
 	"time"
 
-	dto "github.com/prometheus/client_model/go"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/hashicorp/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 )
 
@@ -308,19 +306,19 @@ func fakeServer(q chan string) *httptest.Server {
 		m := &dto.MetricFamily{}
 		_ = dec.Decode(m)
 		expectedm := &dto.MetricFamily{
-			Name: proto.String("default_one_two"),
-			Help: proto.String("default_one_two"),
+			Name: new("default_one_two"),
+			Help: new("default_one_two"),
 			Type: dto.MetricType_GAUGE.Enum(),
 			Metric: []*dto.Metric{
 				&dto.Metric{
 					Label: []*dto.LabelPair{
 						&dto.LabelPair{
-							Name:  proto.String("host"),
-							Value: proto.String(MockGetHostname()),
+							Name:  new("host"),
+							Value: new(MockGetHostname()),
 						},
 					},
 					Gauge: &dto.Gauge{
-						Value: proto.Float64(42),
+						Value: new(float64(42)),
 					},
 				},
 			},
