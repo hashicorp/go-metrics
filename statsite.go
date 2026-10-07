@@ -182,6 +182,7 @@ CONNECT:
 		s.logErr("Error connecting to statsite!", err)
 		goto WAIT
 	}
+	defer sock.Close()
 
 	// Create a buffered writer
 	buffered = bufio.NewWriter(sock)
