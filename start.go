@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MIT
 
 package metrics
@@ -24,23 +24,25 @@ type Config struct {
 	TimerGranularity     time.Duration // Granularity of timers.
 	ProfileInterval      time.Duration // Interval to profile runtime metrics
 
-	AllowedPrefixes []string // A list of metric prefixes to allow, with '.' as the separator
-	BlockedPrefixes []string // A list of metric prefixes to block, with '.' as the separator
-	AllowedLabels   []string // A list of metric labels to allow, with '.' as the separator
-	BlockedLabels   []string // A list of metric labels to block, with '.' as the separator
-	FilterDefault   bool     // Whether to allow metrics by default
+	AllowedPrefixes    []string // A list of metric prefixes to allow, with '.' as the separator
+	BlockedPrefixes    []string // A list of metric prefixes to block, with '.' as the separator
+	AllowedLabels      []string // A list of metric labels to allow, with '.' as the separator
+	BlockedLabels      []string // A list of metric labels to block, with '.' as the separator
+	BlockedLabelValues []Label  // Reject whole samples containing any exact name/value pair
+	FilterDefault      bool     // Whether to allow metrics by default
 }
 
 // Metrics represents an instance of a metrics sink that can
 // be used to emit
 type Metrics struct {
 	Config
-	lastNumGC     uint32
-	sink          MetricSink
-	filter        *iradix.Tree
-	allowedLabels map[string]bool
-	blockedLabels map[string]bool
-	filterLock    sync.RWMutex // Lock filters and allowedLabels/blockedLabels access
+	lastNumGC          uint32
+	sink               MetricSink
+	filter             *iradix.Tree
+	allowedLabels      map[string]bool
+	blockedLabels      map[string]bool
+	blockedLabelValues map[Label]struct{}
+	filterLock         sync.RWMutex // Lock filters and allowedLabels/blockedLabels access
 }
 
 // Shared global metrics instance
@@ -81,6 +83,7 @@ func New(conf *Config, sink MetricSink) (*Metrics, error) {
 	met.Config = *conf
 	met.sink = sink
 	met.UpdateFilterAndLabels(conf.AllowedPrefixes, conf.BlockedPrefixes, conf.AllowedLabels, conf.BlockedLabels)
+	met.UpdateBlockedLabelValues(conf.BlockedLabelValues)
 
 	// Start the runtime collector
 	if conf.EnableRuntimeMetrics {
@@ -161,6 +164,11 @@ func UpdateFilter(allow, block []string) {
 // values for a given label). See README.md for more information about usage.
 func UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels []string) {
 	globalMetrics.Load().(*Metrics).UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabels)
+}
+
+// UpdateBlockedLabelValues replaces the global metric sample blocklist.
+func UpdateBlockedLabelValues(blocked []Label) {
+	globalMetrics.Load().(*Metrics).UpdateBlockedLabelValues(blocked)
 }
 
 // Shutdown disables metric collection, then blocks while attempting to flush metrics to storage.

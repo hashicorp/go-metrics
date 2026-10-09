@@ -6,6 +6,19 @@ expose application metrics, and profile runtime performance in a flexible manner
 
 Current API: [![GoDoc](https://godoc.org/github.com/hashicorp/go-metrics?status.svg)](https://godoc.org/github.com/hashicorp/go-metrics)
 
+### Blocking samples by label value
+
+`Config.BlockedLabelValues` rejects a whole sample when any label matches an exact name/value pair.
+This is evaluated before label-name filtering, and includes generated host and service labels.
+
+```go
+conf.BlockedLabelValues = []metrics.Label{{Name: "status", Value: "bad"}}
+```
+
+Use `m.UpdateBlockedLabelValues` (or the package-level equivalent) to replace the blocklist atomically.
+Passing nil clears it. Configuration slices are copied, so callers can reuse them after the update.
+Metrics without a matching pair and unlabelled `EmitKey` events retain their existing prefix-filter behavior.
+
 Sinks
 -----
 

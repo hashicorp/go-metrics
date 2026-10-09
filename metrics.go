@@ -5,6 +5,7 @@ package metrics
 
 import (
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -209,6 +210,20 @@ func (m *Metrics) UpdateFilterAndLabels(allow, block, allowedLabels, blockedLabe
 	}
 }
 
+// UpdateBlockedLabelValues atomically replaces the sample blocklist. Values are
+// matched exactly before label-name filtering, including generated host/service
+// labels. The caller may reuse its slice after this method returns. Nil clears it.
+func (m *Metrics) UpdateBlockedLabelValues(blocked []Label) {
+	values := make(map[Label]struct{}, len(blocked))
+	for _, label := range blocked {
+		values[label] = struct{}{}
+	}
+	m.filterLock.Lock()
+	defer m.filterLock.Unlock()
+	m.BlockedLabelValues = slices.Clone(blocked)
+	m.blockedLabelValues = values
+}
+
 func (m *Metrics) Shutdown() {
 	if ss, ok := m.sink.(ShutdownSink); ok {
 		ss.Shutdown()
@@ -254,6 +269,11 @@ func (m *Metrics) filterLabels(labels []Label) []Label {
 func (m *Metrics) allowMetric(key []string, labels []Label) (bool, []Label) {
 	m.filterLock.RLock()
 	defer m.filterLock.RUnlock()
+	for _, label := range labels {
+		if _, blocked := m.blockedLabelValues[label]; blocked {
+			return false, nil
+		}
+	}
 
 	if m.filter == nil || m.filter.Len() == 0 {
 		return m.FilterDefault, m.filterLabels(labels)
