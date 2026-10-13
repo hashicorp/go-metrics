@@ -193,6 +193,7 @@ CONNECT:
 		s.logErr("Error connecting to statsd!", err)
 		goto WAIT
 	}
+	defer sock.Close()
 
 	for {
 		select {
